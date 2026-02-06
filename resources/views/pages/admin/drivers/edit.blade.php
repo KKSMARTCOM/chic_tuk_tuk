@@ -104,13 +104,13 @@
                         <select name="vehicle_type" id="vehicle_type"
                             class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500">
                             <option value="">Sélectionnez un type</option>
-                            <option value="standard"
+                            <option value="moto"
                                 {{ old('vehicle_type', $driver->driver->vehicle_type ?? '') == 'moto' ? 'selected' : '' }}>
                                 Moto</option>
-                            <option value="premium"
+                            <option value="tricycle"
                                 {{ old('vehicle_type', $driver->driver->vehicle_type ?? '') == 'tricycle' ? 'selected' : '' }}>
                                 Tricycle</option>
-                            <option value="van"
+                            <option value="car"
                                 {{ old('vehicle_type', $driver->driver->vehicle_type ?? '') == 'car' ? 'selected' : '' }}>
                                 Voiture</option>
                         </select>

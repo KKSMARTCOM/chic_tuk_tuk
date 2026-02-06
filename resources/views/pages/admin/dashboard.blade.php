@@ -183,10 +183,10 @@
                     class="block w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition text-center">
                     <i class="fas fa-user-plus mr-2"></i> Ajouter conducteur
                 </a>
-                <a href="{{ route('admin.promo-codes.create') }}"
+                {{-- <a href="{{ route('admin.promo-codes.create') }}"
                     class="block w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition text-center">
                     <i class="fas fa-ticket-alt mr-2"></i> Créer code promo
-                </a>
+                </a> --}}
             </div>
         </div>
 

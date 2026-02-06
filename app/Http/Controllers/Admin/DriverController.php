@@ -30,6 +30,52 @@ class DriverController extends Controller
         return view('pages.admin.drivers.index', compact('drivers', 'stats'));
     }
 
+    public function create()
+    {
+        return view('pages.admin.drivers.create');
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate(
+            [
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|unique:users,email',
+                'phone' => 'required|string|unique:users,phone',
+                'password' => 'required|string|min:8',
+                'license_number' => 'required|string|unique:drivers,license_number',
+                'vehicle_number' => 'required|string',
+                'vehicle_type' => 'required|string|in:moto,tricycle,car',
+            ],
+            [
+                'name.required' => 'Le nom est requis.',
+                'email.required' => 'L\'email est requis.',
+                'email.email' => 'L\'email doit être valide.',
+                'email.unique' => 'Cette adresse e-mail est déjà utilisée.',
+                'phone.required' => 'Le téléphone est requis.',
+                'phone.unique' => 'Ce numéro de téléphone est déjà utilisé.',
+                'password.required' => 'Le mot de passe est requis.',
+                'password.min' => 'Le mot de passe doit contenir au moins 8 caractères.',
+                'license_number.required' => 'Le numéro de permis est requis.',
+                'license_number.unique' => 'Ce numéro de permis est déjà utilisé.',
+                'vehicle_number.required' => 'Le numéro de véhicule est requis.',
+                'vehicle_type.required' => 'Le type de véhicule est requis.',
+                'vehicle_type.in' => 'Le type de véhicule sélectionné est invalide.',
+            ]
+        );
+
+        try {
+            $this->driverService->createDriver($validated);
+
+            return redirect()->route('admin.drivers.index')
+                ->with('success', 'Conducteur créé avec succès');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', $e->getMessage());
+        }
+    }
+
     public function show(User $driver)
     {
         $driverData = $this->driverService->getDriverById($driver->id);

@@ -37,7 +37,7 @@ class DriverService
             });
         }
 
-        return $query->latest()->paginate(20);
+        return $query->latest()->paginate(10);
     }
 
     public function getDriverStats()
@@ -91,6 +91,7 @@ class DriverService
             ->get();
 
         $totalMinutes = 0;
+
         foreach ($completedBookings as $booking) {
             $totalMinutes += $booking->started_at->diffInMinutes($booking->completed_at);
         }

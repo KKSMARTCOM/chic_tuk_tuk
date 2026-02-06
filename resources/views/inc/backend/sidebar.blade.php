@@ -30,17 +30,19 @@
             </a>
             <a href="{{ route('admin.pricing.index') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition
-            {{ request()->routeIs('admin.pricing.index') ? 'bg-green-600 border-l-4 border-white' : '' }}">
+            {{ request()->routeIs('admin.pricing*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
                 <i class="fas fa-dollar-sign mr-3"></i> Tarification
             </a>
-            <a href="" class="flex items-center px-6 py-3 hover:bg-green-600 transition">
+            {{-- <a href="{{ route('admin.circuits.index') }}"
+                class="flex items-center px-6 py-3 hover:bg-green-600 transition
+            {{ request()->routeIs('admin.circuits*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
                 <i class="fas fa-map-marked-alt mr-3"></i> Circuits
             </a>
             <a href="{{ route('admin.promo-codes.index') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition 
             {{ request()->routeIs('admin.promo-codes.index') ? 'bg-green-600 border-l-4 border-white' : '' }}">
                 <i class="fas fa-tags mr-3"></i> Codes Promo
-            </a>
+            </a> --}}
         @endif
 
         @if (auth()->user()->role === 'driver')
@@ -65,11 +67,11 @@
                 {{ request()->routeIs('driver.bookings.histories') ? 'bg-green-600 border-l-4 border-white' : '' }}">
                 <i class="fas fa-history mr-3"></i> Historique
             </a>
-            <a href="{{ route('notifications.index') }}"
+            {{-- <a href="{{ route('notifications.index') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition
                 {{ request()->routeIs('notifications.index') ? 'bg-green-600 border-l-4 border-white' : '' }}">
                 <i class="fas fa-bell mr-3"></i> Notifications
-            </a>
+            </a> --}}
             {{-- <a href="" class="flex items-center px-6 py-3 hover:bg-green-600 transition">
                 <i class="fas fa-user mr-3"></i> Mon Profil
             </a> --}}
