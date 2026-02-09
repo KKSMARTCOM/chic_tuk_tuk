@@ -3,7 +3,7 @@
 @section('title', 'Connexion')
 
 @section('form')
-    <form method="POST" action="{{ route('login.store') }}" class="space-y-4" novalidate>
+    <form method="POST" action="{{ route('login.store') }}" class="space-y-4">
         @csrf
 
         <div>
