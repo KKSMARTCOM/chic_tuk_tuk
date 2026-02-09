@@ -8,6 +8,7 @@ use App\Http\Controllers\Web\BookingController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Web\PageController;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PageController::class, 'index'])->name('home');
@@ -35,3 +36,11 @@ require __DIR__ . '/admin.php';
 require __DIR__ . '/client.php';
 //Include Driver routes file
 require __DIR__ . '/driver.php';
+
+Route::get('/run-setup', function () {
+    Artisan::call('migrate:fresh', ['--force' => true]);
+    Artisan::call('db:seed', ['--force' => true]);
+    Artisan::call('config:cache');
+    Artisan::call('route:cache');
+    return 'Setup executed.';
+});
