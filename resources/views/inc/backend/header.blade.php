@@ -35,8 +35,8 @@
             </div>
 
             <div class="flex items-center space-x-3">
-                <img src="{{ asset('assets/images/png/user_avatar.png') }}" alt="User Avatar"
-                    class="w-10 h-10 rounded-full object-cover">
+                <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode(auth()->user()->name) }}"
+                    class="w-8 h-8 rounded-full mr-3">
                 <span class="text-gray-800 font-medium">{{ auth()->user()->name }}</span>
             </div>
         </div>
@@ -115,19 +115,19 @@
                         let html = '';
                         data.data.forEach(notification => {
                             html += `
-                    <div class="p-4 border-b hover:bg-gray-50 cursor-pointer" onclick="markAsRead(${notification.id})">
-                        <div class="flex items-start space-x-3">
-                            <div class="flex-shrink-0">
-                                <i class="${notification.icon} text-lg"></i>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm font-medium text-gray-900 ${notification.is_read ? '' : 'font-bold'}">${notification.title}</p>
-                                <p class="text-sm text-gray-500">${notification.message}</p>
-                                <p class="text-xs text-gray-400 mt-1">${notification.created_at_human}</p>
-                            </div>
-                        </div>
+            <div class="p-4 border-b hover:bg-gray-50 cursor-pointer" onclick="markAsRead(${notification.id})">
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0">
+                        <i class="${notification.icon} text-lg"></i>
                     </div>
-                `;
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-900 ${notification.is_read ? '' : 'font-bold'}">${notification.title}</p>
+                        <p class="text-sm text-gray-500">${notification.message}</p>
+                        <p class="text-xs text-gray-400 mt-1">${notification.created_at_human}</p>
+                    </div>
+                </div>
+            </div>
+        `;
                         });
                         listElement.innerHTML = html;
                     } else {
