@@ -30,6 +30,7 @@
                         </option>
                         <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Terminé</option>
                         <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Annulé</option>
+                        <option value="expired" {{ request('status') == 'expired' ? 'selected' : '' }}>Expirée</option>
                     </select>
                 </div>
                 <div class="flex items-end space-x-2">
@@ -93,7 +94,7 @@
                                         <div class="text-sm text-gray-900">{{ $booking->driver->user->name ?? 'N/A' }}
                                         </div>
                                     </div>
-                                    @if ($booking->status !== 'completed')
+                                    @if (!in_array($booking->status, ['completed', 'cancelled', 'expired']))
                                         <button onclick="confirmRemoveDriver('{{ $booking->id }}')"
                                             class="text-red-600 hover:text-red-800 text-sm font-semibold">
                                             <i class="fas fa-user-times"></i> Retirer

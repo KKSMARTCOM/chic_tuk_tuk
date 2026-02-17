@@ -15,8 +15,9 @@
 </head>
 
 <body class="min-h-screen bg-gray-50 flex items-center justify-center">
-
     <div class="w-full max-w-xl px-4">
+        @include('inc.global.alerts')
+
         <div class="bg-white shadow-lg rounded-2xl overflow-hidden">
             <div class="p-6 sm:p-8">
                 <a href="{{ route('home') }}" class="flex justify-center mb-6">
@@ -26,13 +27,12 @@
 
                 <h1 class="text-center text-2xl font-bold text-gray-800 mb-6">@yield('title', 'Inscription')</h1>
 
-                @includeIf('inc.global.alerts')
-
                 @yield('form')
             </div>
         </div>
     </div>
 
+    <script src="{{ asset('assets/js/jquery.min.js') }}"></script>
     <script>
         // Toggle password visibility and switch Font Awesome icon
         document.addEventListener('click', function(e) {

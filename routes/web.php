@@ -21,6 +21,7 @@ Route::post('/bookings', [BookingController::class, 'store'])->name('bookings.st
 
 Route::middleware(['auth', 'role:admin,driver,client'])->group(function () {
     Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
+    Route::get('/bookings/histories', [PageController::class, 'historiesBookings'])->name('bookings.histories');
 
     // Notifications
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
@@ -36,11 +37,3 @@ require __DIR__ . '/admin.php';
 require __DIR__ . '/client.php';
 //Include Driver routes file
 require __DIR__ . '/driver.php';
-
-Route::get('/run-setup', function () {
-    Artisan::call('migrate:fresh', ['--force' => true]);
-    Artisan::call('db:seed', ['--force' => true]);
-    Artisan::call('config:cache');
-    Artisan::call('route:cache');
-    return 'Setup executed.';
-});

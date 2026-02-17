@@ -40,8 +40,7 @@
                 </div>
 
                 <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700">Email <span
-                            class="text-red-600">*</span></label>
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email </label>
                     <input type="email" name="email" id="email" value="{{ old('email') }}"
                         class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('email') border-red-500 @enderror"
                         placeholder="email@example.com">
@@ -71,6 +70,62 @@
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
+
+                <div>
+                    <label for="adresse" class="block text-sm font-medium text-gray-700">Adresse</label>
+                    <input type="text" name="adresse" id="adresse" value="{{ old('adresse') }}"
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('adresse') border-red-500 @enderror"
+                        placeholder="Adresse complète">
+                    @error('adresse')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
+
+            <!-- Informations du Contrat -->
+            <div class="border-t border-gray-200 pt-6">
+                <h4 class="text-lg font-medium text-gray-900 mb-4">Informations du Contrat</h4>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="agent_code" class="block text-sm font-medium text-gray-700">Code Agent</label>
+                        <input type="text" name="agent_code" id="agent_code" value="{{ old('agent_code') }}"
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('agent_code') border-red-500 @enderror"
+                            placeholder="Code agent">
+                        @error('agent_code')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="agent_id" class="block text-sm font-medium text-gray-700">ID Agent</label>
+                        <input type="text" name="agent_id" id="agent_id" value="{{ old('agent_id') }}"
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('agent_id') border-red-500 @enderror"
+                            placeholder="ID agent">
+                        @error('agent_id')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="contract_type" class="block text-sm font-medium text-gray-700">Type de Contrat</label>
+                        <input type="text" name="contract_type" id="contract_type" value="{{ old('contract_type') }}"
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('contract_type') border-red-500 @enderror"
+                            placeholder="Type de contrat">
+                        @error('contract_type')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="start_date" class="block text-sm font-medium text-gray-700">Date de Début</label>
+                        <input type="date" name="start_date" id="start_date" value="{{ old('start_date') }}"
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('start_date') border-red-500 @enderror">
+                        @error('start_date')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
             </div>
 
             <!-- Informations du véhicule -->
@@ -81,7 +136,8 @@
                     <div>
                         <label for="license_number" class="block text-sm font-medium text-gray-700">Numéro de permis <span
                                 class="text-red-600">*</span></label>
-                        <input type="text" name="license_number" id="license_number" value="{{ old('license_number') }}"
+                        <input type="text" name="license_number" id="license_number"
+                            value="{{ old('license_number') }}"
                             class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('license_number') border-red-500 @enderror"
                             placeholder="Numéro du permis">
                         @error('license_number')
@@ -90,9 +146,10 @@
                     </div>
 
                     <div>
-                        <label for="vehicle_number" class="block text-sm font-medium text-gray-700">Numéro du véhicule <span
-                                class="text-red-600">*</span></label>
-                        <input type="text" name="vehicle_number" id="vehicle_number" value="{{ old('vehicle_number') }}"
+                        <label for="vehicle_number" class="block text-sm font-medium text-gray-700">Numéro du véhicule
+                            <span class="text-red-600">*</span></label>
+                        <input type="text" name="vehicle_number" id="vehicle_number"
+                            value="{{ old('vehicle_number') }}"
                             class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('vehicle_number') border-red-500 @enderror"
                             placeholder="Numéro d'immatriculation">
                         @error('vehicle_number')
@@ -118,15 +175,12 @@
                 </div>
             </div>
 
-            <!-- Info Box -->
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p class="text-sm text-blue-800">
-                    <i class="fas fa-info-circle mr-2"></i>
-                    <strong>Note :</strong> Ce conducteur sera créé avec le statut <strong>Actif</strong> et la
-                    disponibilité <strong>Disponible</strong> par défaut. Vous pourrez modifier ces paramètres après la
-                    création.
-                </p>
-            </div>
+            <p class="text-sm text-blue-800">
+                <i class="fas fa-info-circle mr-2"></i>
+                <strong>Note :</strong> Ce conducteur sera créé avec le statut <strong>Actif</strong> et la
+                disponibilité <strong>Disponible</strong> par défaut. Vous pourrez modifier ces paramètres après la
+                création.
+            </p>
         </div>
 
         <!-- Boutons -->

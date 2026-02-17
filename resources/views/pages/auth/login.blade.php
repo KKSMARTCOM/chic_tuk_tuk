@@ -9,7 +9,7 @@
         <div>
             <label for="email" class="block text-sm font-medium text-gray-700">Adresse e-mail</label>
             <input id="email" type="email" name="email" value="{{ old('email') }}" required
-                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#286b41]">
             @error('email')
                 <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
             @enderror
@@ -18,7 +18,7 @@
         <div class="relative">
             <label for="password" class="block text-sm font-medium text-gray-700">Mot de passe</label>
             <input id="password" type="password" name="password" required
-                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 pr-12">
+                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#286b41] pr-12">
             <button type="button" data-target="#password"
                 class="toggle-password absolute inset-y-0 right-2 top-6 inline-flex items-center px-3 text-gray-500 hover:text-gray-700"
                 aria-label="Afficher le mot de passe">
@@ -37,7 +37,7 @@
 
         <div>
             <button type="submit"
-                class="w-full py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md font-semibold">Se
+                class="w-full py-2 px-4 bg-[#286b41] hover:opacity-90 text-white rounded-md font-semibold">Se
                 connecter</button>
         </div>
 

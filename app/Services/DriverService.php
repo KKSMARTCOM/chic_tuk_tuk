@@ -108,6 +108,7 @@ class DriverService
             'password' => Hash::make($data['password']),
             'role' => 'driver',
             'is_active' => $data['is_active'] ?? true,
+            'adresse' => $data['adresse'] ?? null,
         ]);
 
         $driver = Driver::create([
@@ -116,6 +117,10 @@ class DriverService
             'vehicle_number' => $data['vehicle_number'],
             'vehicle_type' => $data['vehicle_type'],
             'is_available' => $data['is_available'] ?? true,
+            'agent_code' => $data['agent_code'] ?? null,
+            'agent_id' => $data['agent_id'] ?? null,
+            'contract_type' => $data['contract_type'] ?? null,
+            'start_date' => $data['start_date'] ?? null,
         ]);
 
         return $user->load('driver');
@@ -130,6 +135,7 @@ class DriverService
             'email' => $data['email'],
             'phone' => $data['phone'],
             'is_active' => $data['is_active'] ?? $user->is_active,
+            'adresse' => $data['adresse'] ?? $user->adresse,
         ]);
 
         if ($user->driver) {
@@ -138,6 +144,10 @@ class DriverService
                 'vehicle_number' => $data['vehicle_number'],
                 'vehicle_type' => $data['vehicle_type'],
                 'is_available' => $data['is_available'] ?? $user->driver->is_available,
+                'agent_code' => $data['agent_code'] ?? $user->driver->agent_code,
+                'agent_id' => $data['agent_id'] ?? $user->driver->agent_id,
+                'contract_type' => $data['contract_type'] ?? $user->driver->contract_type,
+                'start_date' => $data['start_date'] ?? $user->driver->start_date,
             ]);
         }
 

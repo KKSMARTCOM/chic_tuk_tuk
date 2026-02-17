@@ -101,13 +101,13 @@
                         <option value="">Selectionner le statut</option>
                         <option value="pending" {{ $booking->status == 'pending' ? 'selected' : '' }}>En attente
                         </option>
-                        <option value="confirmed" {{ $booking->status == 'confirmed' ? 'selected' : '' }}>Confirmé
+                        <option value="confirmed" {{ $booking->status == 'confirmed' ? 'selected' : '' }}>Confirmée
                         </option>
                         {{-- <option value="" {{ $booking->status == 'in_progress' ? 'selected' : '' }}>En cours
                     </option>
                     <option value="" {{ $booking->status == 'completed' ? 'selected' : '' }}>Terminé
                     </option> --}}
-                        <option value="cancelled" {{ $booking->status == 'cancelled' ? 'selected' : '' }}>Annulé
+                        <option value="cancelled" {{ $booking->status == 'cancelled' ? 'selected' : '' }}>Annulée
                         </option>
                     </select>
                 </div>

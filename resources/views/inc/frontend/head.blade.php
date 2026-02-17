@@ -21,7 +21,7 @@
         }
 
         .step-active {
-            background: #286b41;
+            background: #FFB230;
         }
     </style>
 </head>

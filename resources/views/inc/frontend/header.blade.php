@@ -16,7 +16,7 @@
                     ça marche</a>
                 <a href="#avantages" class="text-gray-700 hover:text-[#286b41] transition font-medium">Avantages</a>
                 <a href="{{ route('login') }}"
-                    class="px-6 py-2 bg-emerald-600 text-white rounded-full hover:bg-[#286b41] shadow-lg shadow-emerald-600/30 transition font-medium">Connexion</a>
+                    class="px-6 py-2 bg-[#286b41] text-white rounded-full hover:opacity-90 shadow-lg shadow-emerald-600/30 transition font-medium">Connexion</a>
             </div>
 
             <!-- Bouton Hamburger Mobile -->
@@ -41,7 +41,7 @@
             <a href="#avantages"
                 class="mobile-link block px-4 py-2 text-gray-700 hover:bg-emerald-50 hover:text-[#286b41] transition rounded-lg font-medium">Avantages</a>
             <a href="{{ route('login') }}"
-                class="mobile-link block px-4 py-2 mt-4 bg-emerald-600 text-white rounded-lg hover:bg-[#286b41] shadow-lg shadow-emerald-600/30 transition font-medium text-center">Connexion</a>
+                class="mobile-link block px-4 py-2 mt-4 bg-[#286b41] text-white rounded-lg hover:opacity-90 shadow-lg shadow-emerald-600/30 transition font-medium text-center">Connexion</a>
         </div>
     </div>
 </nav>

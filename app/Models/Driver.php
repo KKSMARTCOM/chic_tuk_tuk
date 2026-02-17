@@ -19,7 +19,11 @@ class Driver extends Model
         'vehicle_type',
         'is_available',
         'rating',
-        'total_trips'
+        'total_trips',
+        'agent_code',
+        'agent_id',
+        'contract_type',
+        'start_date'
     ];
 
     protected $casts = [

@@ -22,6 +22,7 @@ class Booking extends Model
         'to_zone_id',
         'phone',
         'days',
+        'remaining_days',
         'pickup_datetime',
         'passengers',
         'special_requests',
@@ -33,7 +34,10 @@ class Booking extends Model
         'cancellation_reason',
         'started_at',
         'cancelled_at',
-        'completed_at'
+        'completed_at',
+        'parent_booking_id',
+        'is_recurring',
+        'next_recurring_date'
     ];
 
     protected $casts = [
@@ -41,9 +45,11 @@ class Booking extends Model
         'started_at' => 'datetime',
         'cancelled_at' => 'datetime',
         'completed_at' => 'datetime',
+        'next_recurring_date' => 'datetime',
         'base_price' => 'decimal:2',
         'discount' => 'decimal:2',
         'total_price' => 'decimal:2',
+        'is_recurring' => 'boolean',
     ];
 
     protected static function boot()
@@ -84,8 +90,7 @@ class Booking extends Model
     {
         return $this->status !== 'completed' &&
             $this->status !== 'cancelled' &&
-            $this->status !== 'in_progress' &&
-            $this->pickup_datetime->subHours(12)->isFuture();
+            $this->status !== 'expired';
     }
 
     public function canBeCompleted()
@@ -101,6 +106,16 @@ class Booking extends Model
     public function toZone()
     {
         return $this->belongsTo(Zone::class, 'to_zone_id');
+    }
+
+    public function parentBooking()
+    {
+        return $this->belongsTo(Booking::class, 'parent_booking_id');
+    }
+
+    public function childBookings()
+    {
+        return $this->hasMany(Booking::class, 'parent_booking_id');
     }
 
     public function getStartedAtTimestampAttribute()

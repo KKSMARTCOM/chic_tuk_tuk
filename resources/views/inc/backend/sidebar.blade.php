@@ -62,13 +62,8 @@
                 {{ request()->routeIs('driver.bookings.accepting') ? 'bg-green-600 border-l-4 border-white' : '' }}">
                 <i class="fas fa-calendar-check mr-3"></i> Mes Courses
             </a>
-            <a href="{{ route('driver.bookings.histories') }}"
-                class="flex items-center px-6 py-3 hover:bg-green-600 transition
-                {{ request()->routeIs('driver.bookings.histories') ? 'bg-green-600 border-l-4 border-white' : '' }}">
-                <i class="fas fa-history mr-3"></i> Historique
-            </a>
             {{-- <a href="{{ route('notifications.index') }}"
-                class="flex items-center px-6 py-3 hover:bg-green-600 transition
+            class="flex items-center px-6 py-3 hover:bg-green-600 transition
                 {{ request()->routeIs('notifications.index') ? 'bg-green-600 border-l-4 border-white' : '' }}">
                 <i class="fas fa-bell mr-3"></i> Notifications
             </a> --}}
@@ -76,6 +71,12 @@
                 <i class="fas fa-user mr-3"></i> Mon Profil
             </a> --}}
         @endif
+
+        <a href="{{ route('bookings.histories') }}"
+            class="flex items-center px-6 py-3 hover:bg-green-600 transition
+                {{ request()->routeIs('bookings.histories') ? 'bg-green-600 border-l-4 border-white' : '' }}">
+            <i class="fas fa-history mr-3"></i> Historique
+        </a>
 
         <a href="#" class="flex items-center px-6 py-3 hover:bg-green-600 transition mt-auto">
             <i class="fas fa-cog mr-3"></i> Paramètres

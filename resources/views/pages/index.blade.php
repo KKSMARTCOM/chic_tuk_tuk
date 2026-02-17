@@ -13,7 +13,7 @@
                     <div class="text-white hidden md:block">
                         <h2 class="text-5xl font-bold mb-6">Voyagez avec Style et Confort</h2>
                         <p class="text-xl mb-8 text-purple-100">Découvrez une nouvelle façon de vous déplacer avec nos
-                            tricycles chic. Rapide, confortable et écologique.</p>
+                            chic tuk tuk. Unique, modèle et confortable.</p>
                         <div class="flex space-x-6">
                             <div class="text-center">
                                 <div class="text-4xl font-bold">500+</div>
@@ -47,7 +47,7 @@
                             </div>
                             <div class="flex flex-col items-center flex-1">
                                 <div id="step2-indicator"
-                                    class="w-10 h-10 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center font-bold mb-2">
+                                    class="w-10 h-10 rounded-full bg-[#FFE7C1] text-gray-600 flex items-center justify-center font-bold mb-2">
                                     2</div>
                                 <span class="text-xs text-gray-600">Date & Heure</span>
                             </div>
@@ -56,7 +56,7 @@
                             </div>
                             <div class="flex flex-col items-center flex-1">
                                 <div id="step3-indicator"
-                                    class="w-10 h-10 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center font-bold mb-2">
+                                    class="w-10 h-10 rounded-full bg-[#FFE7C1] text-gray-600 flex items-center justify-center font-bold mb-2">
                                     3</div>
                                 <span class="text-xs text-gray-600">Détails</span>
                             </div>
@@ -245,6 +245,73 @@
                                     </button>
                                 </div>
                             </div>
+
+                            <!-- Étape 4: Succès (invisible dans l’indicateur) -->
+                            <div id="step4" class="step-content hidden">
+                                <div
+                                    class="relative overflow-hidden rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-emerald-50 p-8">
+                                    <!-- Confettis CSS -->
+                                    <div class="confetti">
+                                        @for ($i = 1; $i <= 18; $i++)
+                                            <span class="confetti-piece"></span>
+                                        @endfor
+                                    </div>
+
+                                    <div class="text-center">
+                                        <div
+                                            class="mx-auto w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center shadow-lg success-pop">
+                                            <i class="fas fa-check text-4xl text-emerald-600"></i>
+                                        </div>
+
+                                        <h4 class="mt-6 text-3xl font-extrabold text-gray-900 success-pop"
+                                            style="animation-delay:.05s">
+                                            Réservation envoyée !
+                                        </h4>
+
+                                        <p class="mt-2 text-gray-600 text-base success-pop" style="animation-delay:.1s">
+                                            Merci 🙌 Votre demande a bien été enregistrée. Un chauffeur vous contactera très
+                                            bientôt.
+                                        </p>
+
+                                        {{-- @php($sum = session('success_summary'))
+
+                                        @if (is_array($sum))
+                                            <div class="mt-6 mx-auto max-w-md text-left rounded-xl bg-white/80 backdrop-blur border border-emerald-100 p-4 shadow success-pop"
+                                                style="animation-delay:.15s">
+                                                <div class="flex items-center justify-between text-sm text-gray-700">
+                                                    <span class="font-medium">Départ</span>
+                                                    <span
+                                                        class="font-semibold text-gray-900">{{ $sum['from'] ?: '—' }}</span>
+                                                </div>
+                                                <div class="flex items-center justify-between text-sm text-gray-700 mt-2">
+                                                    <span class="font-medium">Destination</span>
+                                                    <span
+                                                        class="font-semibold text-gray-900">{{ $sum['to'] ?: '—' }}</span>
+                                                </div>
+                                                <div class="flex items-center justify-between text-sm text-gray-700 mt-2">
+                                                    <span class="font-medium">Date & Heure</span>
+                                                    <span
+                                                        class="font-semibold text-gray-900">{{ $sum['datetime'] ?: '—' }}</span>
+                                                </div>
+                                                <div class="flex items-center justify-between text-sm mt-2">
+                                                    <span class="font-medium text-gray-700">Total</span>
+                                                    <span class="font-extrabold text-emerald-700">
+                                                        {{ $sum['total'] ? number_format($sum['total'], 0, ',', ' ') . ' FCFA' : '—' }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        @endif --}}
+
+                                        <div class="mt-8">
+                                            <button type="button" onclick="newBooking()"
+                                                class="inline-flex items-center justify-center px-7 py-3 rounded-xl bg-[#286b41] text-white font-semibold shadow-lg hover:opacity-95 active:scale-[.99] transition success-pop"
+                                                style="animation-delay:.2s">
+                                                Nouvelle réservation <i class="fas fa-plus ml-2"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -263,9 +330,10 @@
             <div class="grid md:grid-cols-3 gap-12">
                 <div class="text-center">
                     <div
-                        class="w-20 h-20 gradient-bg rounded-full flex items-center justify-center text-white text-3xl font-bold mx-auto mb-6">
-                        1</div>
-                    <i class="fas fa-mobile-alt text-5xl text-[#286b41] mb-4"></i>
+                        class="w-20 h-20 bg-[#FFE7C1] border border-[#286b41] rounded-full flex items-center justify-center text-black text-3xl font-bold mx-auto mb-6">
+                        <i class="fas fa-mobile-alt text-3xl"></i>
+                    </div>
+
                     <h3 class="text-2xl font-bold text-gray-800 mb-4">Réservez en ligne</h3>
                     <p class="text-gray-600">Remplissez le formulaire avec vos informations de trajet. C'est simple et
                         rapide !</p>
@@ -273,19 +341,21 @@
 
                 <div class="text-center">
                     <div
-                        class="w-20 h-20 gradient-bg rounded-full flex items-center justify-center text-white text-3xl font-bold mx-auto mb-6">
-                        2</div>
-                    <i class="fas fa-user-check text-5xl text-[#286b41] mb-4"></i>
+                        class="w-20 h-20 bg-[#FFE7C1] border border-[#286b41] rounded-full flex items-center justify-center text-black text-3xl font-bold mx-auto mb-6">
+                        <i class="fas fa-user-check text-3xl"></i>
+                    </div>
+
                     <h3 class="text-2xl font-bold text-gray-800 mb-4">Confirmation instantanée</h3>
                     <p class="text-gray-600">Un conducteur accepte votre réservation et vous recevez une confirmation
-                        immédiate.</p>
+                        immédiate par whatsapp ou par appel téléphonique.</p>
                 </div>
 
                 <div class="text-center">
                     <div
-                        class="w-20 h-20 gradient-bg rounded-full flex items-center justify-center text-white text-3xl font-bold mx-auto mb-6">
-                        3</div>
-                    <i class="fas fa-route text-5xl text-[#286b41] mb-4"></i>
+                        class="w-20 h-20 bg-[#FFE7C1] border border-[#286b41] rounded-full flex items-center justify-center text-black text-3xl font-bold mx-auto mb-6">
+                        <i class="fas fa-route text-3xl"></i>
+                    </div>
+
                     <h3 class="text-2xl font-bold text-gray-800 mb-4">Profitez de votre trajet</h3>
                     <p class="text-gray-600">Votre conducteur vous attend à l'heure et au lieu convenus. Bon voyage !
                     </p>
@@ -302,38 +372,140 @@
                 <p class="text-xl text-gray-600">Des avantages qui font la différence</p>
             </div>
 
-            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-                <div class="bg-white rounded-xl shadow-lg p-8 hover:shadow-2xl transition transform hover:-translate-y-2">
-                    <div class="w-16 h-16 gradient-bg rounded-full flex items-center justify-center mb-6">
-                        <i class="fas fa-shield-alt text-3xl text-white"></i>
+            <div class="advantage-slider">
+                <!-- Carte 1 -->
+                <div
+                    class="bg-white rounded-2xl shadow-lg overflow-hidden group transition duration-300 hover:-translate-y-2">
+                    <div class="h-60 overflow-hidden">
+                        <img src="{{ asset('assets/images/jpg/child1.jpeg') }}"
+                            class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
                     </div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-3">Sécurité garantie</h3>
-                    <p class="text-gray-600">Tous nos conducteurs sont formés et vérifiés pour votre sécurité.</p>
+                    <div class="p-6 h-48">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">
+                            Transport scolaire en tricycle
+                        </h3>
+                        <p class="text-gray-600 text-sm">
+                            Réservez un tricycle pour assurer les trajets aller et retour de vos enfants
+                            vers l’école en toute sécurité. Une solution pratique, fiable et adaptée
+                            pour accompagner les élèves chaque jour.
+                        </p>
+                    </div>
                 </div>
 
-                <div class="bg-white rounded-xl shadow-lg p-8 hover:shadow-2xl transition transform hover:-translate-y-2">
-                    <div class="w-16 h-16 gradient-bg rounded-full flex items-center justify-center mb-6">
-                        <i class="fas fa-clock text-3xl text-white"></i>
+                <!-- Carte 2 -->
+                <div
+                    class="bg-white rounded-2xl shadow-lg overflow-hidden group transition duration-300 hover:-translate-y-2">
+                    <div class="h-60 overflow-hidden">
+                        <img src="{{ asset('assets/images/jpg/wifi.jpg') }}"
+                            class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
                     </div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-3">Ponctualité</h3>
-                    <p class="text-gray-600">Arrivée à l'heure garantie ou remboursement de votre trajet.</p>
+                    <div class="p-6 h-48">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">Tricycle connecté</h3>
+                        <p class="text-gray-600 text-sm">
+                            Profitez d’un tricycle équipé d’une connexion Wi-Fi fluide et stable,
+                            idéale pour rester connecté, travailler ou se divertir pendant vos trajets.
+                        </p>
+                    </div>
                 </div>
 
-                <div class="bg-white rounded-xl shadow-lg p-8 hover:shadow-2xl transition transform hover:-translate-y-2">
-                    <div class="w-16 h-16 gradient-bg rounded-full flex items-center justify-center mb-6">
-                        <i class="fas fa-leaf text-3xl text-white"></i>
+                <!-- Carte 3 -->
+                <div
+                    class="bg-white rounded-2xl shadow-lg overflow-hidden group transition duration-300 hover:-translate-y-2">
+                    <div class="h-60 overflow-hidden">
+                        <img src="{{ asset('assets/images/png/pub.png') }}"
+                            class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
                     </div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-3">Écologique</h3>
-                    <p class="text-gray-600">Réduisez votre empreinte carbone avec nos véhicules écologiques.</p>
+                    <div class="p-6 h-48">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">Publicité à travers la ville</h3>
+                        <p class="text-gray-600 text-sm">
+                            Faites connaître votre activité en affichant votre publicité sur nos tricycles.
+                            Votre message circule dans toute la ville et touche un large public de façon
+                            visible, dynamique et efficace.
+                        </p>
+                    </div>
                 </div>
 
-                <div class="bg-white rounded-xl shadow-lg p-8 hover:shadow-2xl transition transform hover:-translate-y-2">
-                    <div class="w-16 h-16 gradient-bg rounded-full flex items-center justify-center mb-6">
-                        <i class="fas fa-dollar-sign text-3xl text-white"></i>
+                <!-- Carte 4 -->
+                <div
+                    class="bg-white rounded-2xl shadow-lg overflow-hidden group transition duration-300 hover:-translate-y-2">
+                    <div class="h-60 overflow-hidden">
+                        <img src="{{ asset('assets/images/jpg/women2.jpeg') }}" alt="Security"
+                            class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
                     </div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-3">Prix compétitifs</h3>
-                    <p class="text-gray-600">Les meilleurs tarifs du marché sans compromis sur la qualité.</p>
+                    <div class="p-6 h-48">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">Sécurité garantie</h3>
+                        <p class="text-gray-600 text-sm">
+                            Tous nos conducteurs sont formés et vérifiés pour votre sécurité.
+                        </p>
+                    </div>
                 </div>
+
+                <!-- Carte 5 -->
+                <div
+                    class="bg-white rounded-2xl shadow-lg overflow-hidden group transition duration-300 hover:-translate-y-2">
+                    <div class="h-60 overflow-hidden">
+                        <img src="{{ asset('assets/images/jpg/women1.jpeg') }}"
+                            class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                    </div>
+                    <div class="p-6 h-48">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">Ponctualité</h3>
+                        <p class="text-gray-600 text-sm">
+                            Arrivée à l'heure garantie pour tous vos trajets.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Ils nous soutiennent -->
+    <section id="partenaire" class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-800 mb-4">Ils nous soutiennent</h2>
+                <p class="text-xl text-gray-600">Nos partenaires de confiance</p>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
+                <!-- Item -->
+                <span
+                    class="group rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-lg transition p-6 flex items-center justify-center">
+                    <img src="{{ asset('assets/images/png/gozem.png') }}" alt="Gozem"
+                        class="h-12 w-auto object-cover grayscale contrast-200 opacity-70 group-hover:grayscale-0 group-hover:contrast-100 group-hover:opacity-100 transition duration-300"
+                        loading="lazy" />
+                </span>
+
+                <span
+                    class="group rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-lg transition p-6 flex items-center justify-center">
+                    <img src="{{ asset('assets/images/png/yango.png') }}" alt="Yango"
+                        class="h-12 w-auto object-cover grayscale contrast-200 opacity-70 group-hover:grayscale-0 group-hover:contrast-100 group-hover:opacity-100 transition duration-300"
+                        loading="lazy" />
+                </span>
+
+                <span
+                    class="group rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-lg transition p-6 flex items-center justify-center">
+                    <img src="{{ asset('assets/images/png/bajaj.png') }}" alt="Bajaj"
+                        class="h-12 w-auto object-cover grayscale contrast-200 opacity-70 group-hover:grayscale-0 group-hover:contrast-100 group-hover:opacity-100 transition duration-300"
+                        loading="lazy" />
+                </span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Devenir investisseur -->
+    <section id="partenaire" class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-800 mb-4">Devenir investisseur</h2>
+                <p class="text-xl text-gray-600">Un modèle de microfinancement participatif pour équiper les chauffeurs de
+                    tricycles connectés et rentables.</p>
+            </div>
+
+            <div class="text-center">
+                <a href="http://pitch.kksmartcom.com/chictuktuk" target="_blank"
+                    class="px-6 py-2 bg-[#286b41] text-white rounded-full hover:opacity-90 shadow-lg shadow-emerald-600/30 transition font-medium">
+                    Devenir investisseur
+                </a>
             </div>
         </div>
     </section>
@@ -460,32 +632,94 @@
             $(function() {
                 var currentStep = 1;
 
-                window.nextStep = function(step) {
-                    $('#step' + currentStep).addClass('hidden');
-                    $('#step' + currentStep + '-indicator').removeClass('step-active').addClass(
-                        'bg-gray-300 text-gray-600');
+                function validateStep(stepNumber) {
+                    const $step = $('#step' + stepNumber);
+                    const $required = $step
+                        .find('input[required], select[required], textarea[required]')
+                        .filter(':visible');
+
+                    let isValid = true;
+
+                    $required.each(function() {
+                        if (!this.checkValidity()) {
+                            this.reportValidity();
+                            isValid = false;
+                            return false; // break
+                        }
+                    });
+
+                    return isValid;
+                }
+
+                function setIndicator(activeStep) {
+                    // Indicateurs seulement 1..3 (step4 est invisible)
+                    for (let i = 1; i <= 3; i++) {
+                        const $ind = $('#step' + i + '-indicator');
+                        if (!$ind.length) continue;
+
+                        if (i === activeStep) {
+                            $ind.addClass('step-active')
+                                .removeClass('bg-[#FFE7C1] text-gray-600 bg-gray-300');
+                        } else {
+                            $ind.removeClass('step-active')
+                                .addClass('bg-[#FFE7C1] text-gray-600');
+                        }
+                    }
+                }
+
+                function showStep(step) {
+                    // cacher 1..4
+                    for (let i = 1; i <= 4; i++) $('#step' + i).addClass('hidden');
+
+                    // afficher step demandé
+                    $('#step' + step).removeClass('hidden');
 
                     currentStep = step;
 
-                    $('#step' + currentStep).removeClass('hidden');
-                    $('#step' + currentStep + '-indicator').addClass('step-active').removeClass(
-                        'bg-gray-300 text-gray-600');
+                    // Indicateur : si step4 => on garde step3 actif (ou step1 si tu préfères)
+                    if (step === 4) {
+                        setIndicator(3);
+                    } else {
+                        setIndicator(step);
+                    }
 
-                    if (currentStep === 3) {
+                    // recalcul à l’entrée de l’étape 3 (si nécessaire)
+                    if (step === 3 && typeof calculatePrice === 'function') {
                         calculatePrice();
                     }
+                }
+
+                window.nextStep = function(step) {
+                    if (!validateStep(currentStep)) return;
+                    showStep(step);
                 };
 
                 window.prevStep = function(step) {
-                    $('#step' + currentStep).addClass('hidden');
-                    $('#step' + currentStep + '-indicator').removeClass('step-active').addClass(
-                        'bg-gray-300 text-gray-600');
+                    showStep(step);
+                };
 
-                    currentStep = step;
+                window.newBooking = function() {
+                    const form = document.getElementById('bookingForm');
+                    form.reset();
 
-                    $('#step' + currentStep).removeClass('hidden');
-                    $('#step' + currentStep + '-indicator').addClass('step-active').removeClass(
-                        'bg-gray-300 text-gray-600');
+                    // reset multi-day
+                    $('#days_hidden').val(1);
+                    $('#daysWrapper').addClass('hidden');
+                    $('#multi_day').prop('checked', false);
+
+                    // reset prix UI
+                    $('#pricePreview').addClass('hidden');
+                    $('#preview-price').text('-- FCFA');
+                    $('#total-price').text('-- FCFA');
+
+                    // reset message promo si tu l’utilises
+                    $('#promo-message').html('');
+
+                    showStep(1);
+                    window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                    });
                 };
 
                 window.selectTripType = function(e, type) {
@@ -623,6 +857,14 @@
                         }, 600);
                     }
                 });
+
+                // ✅ Afficher step4 automatiquement si succès (flash session)
+                const hasSuccess = @json((bool) session('success'));
+                if (hasSuccess) {
+                    showStep(4);
+                } else {
+                    showStep(1);
+                }
             });
         </script>
     @endpush

@@ -22,17 +22,21 @@ class BookingService
 
     public function create(array $data)
     {
+        $isRecurring = isset($data['days']) && $data['days'] > 1;
+
         $booking = Booking::create([
-            'from_zone_id' => $data['from_zone_id'],
-            'to_zone_id' => $data['to_zone_id'],
-            'phone' => $data['phone'],
-            'days' => $data['days'],
-            'pickup_datetime' => $data['pickup_datetime'],
-            //'passengers' => $data['passengers'],
-            'special_requests' => $data['special_requests'],
+            'from_zone_id'       => $data['from_zone_id'],
+            'to_zone_id'         => $data['to_zone_id'],
+            'phone'              => $data['phone'],
+            'days'               => $data['days'],
+            'remaining_days'     => $data['days'] ?? 1,
+            'pickup_datetime'    => $data['pickup_datetime'],
+            'special_requests'   => $data['special_requests'],
             'tourist_circuit_id' => $data['tourist_circuit_id'],
-            'base_price' => $data['base_price'],
-            'total_price' => $data['total_price'],
+            'base_price'         => $data['base_price'],
+            'total_price'        => $data['total_price'],
+            'is_recurring'       => $isRecurring,
+            'next_recurring_date' => $isRecurring ? Carbon::parse($data['pickup_datetime'])->addDay() : null,
         ]);
 
         return $booking;
@@ -40,10 +44,16 @@ class BookingService
 
     public function get(?string $status = null)
     {
-        return Booking::when($status, function ($query, $status) {
+        $query = Booking::query();
+
+        if ($status) {
             $query->where('status', $status);
-        })->orderBy('pickup_datetime')
-            ->get();
+        } else {
+            // Exclure les courses expirées si aucun statut n'est spécifié
+            $query->where('status', '!=', 'expired');
+        }
+
+        return $query->orderBy('pickup_datetime')->get();
     }
 
     public function getById(string $bookingId)
@@ -51,22 +61,51 @@ class BookingService
         return Booking::findOrFail($bookingId);
     }
 
-    public function getByUserId(string $userId)
+    public function getByUserId(string $userId, ?string $search = null)
     {
-        return Booking::where('user_id', $userId)->get();
+        $query = Booking::where('user_id', $userId)
+            ->whereIn('status', ['completed', 'cancelled']);
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('booking_number', 'LIKE', "%{$search}%")
+                    ->orWhere('phone', 'LIKE', "%{$search}%")
+                    ->orWhereHas('fromZone', function ($zoneQuery) use ($search) {
+                        $zoneQuery->where('name', 'LIKE', "%{$search}%");
+                    })
+                    ->orWhereHas('toZone', function ($zoneQuery) use ($search) {
+                        $zoneQuery->where('name', 'LIKE', "%{$search}%");
+                    });
+            });
+        }
+
+        return $query->orderBy('pickup_datetime', 'desc')->get();
     }
 
-    public function getByDriverId(string $driverId, string|array|null $status = null)
+    public function getByDriverId(string $driverId, string|array|null $status = null, ?string $search = null)
     {
-        return Booking::query()
+        $query = Booking::query()
             ->where('driver_id', $driverId)
             ->when($status, function ($query, $status) {
                 is_array($status)
                     ? $query->whereIn('status', $status)
                     : $query->where('status', $status);
-            })
-            ->orderBy('pickup_datetime')
-            ->get();
+            });
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('booking_number', 'LIKE', "%{$search}%")
+                    ->orWhere('phone', 'LIKE', "%{$search}%")
+                    ->orWhereHas('fromZone', function ($zoneQuery) use ($search) {
+                        $zoneQuery->where('name', 'LIKE', "%{$search}%");
+                    })
+                    ->orWhereHas('toZone', function ($zoneQuery) use ($search) {
+                        $zoneQuery->where('name', 'LIKE', "%{$search}%");
+                    });
+            });
+        }
+
+        return $query->orderBy('pickup_datetime')->get();
     }
 
     public function take(string $bookingId, string $driverId)
@@ -124,6 +163,24 @@ class BookingService
                 'status'               => 'cancelled',
                 'cancelled_at'         => now(),
                 'cancellation_reason'  => $reason,
+            ]);
+
+            // Créer une nouvelle course avec les mêmes données
+            $newBooking = Booking::create([
+                'from_zone_id'       => $booking->from_zone_id,
+                'to_zone_id'         => $booking->to_zone_id,
+                'phone'              => $booking->phone,
+                'days'               => $booking->days,
+                'remaining_days'     => $booking->remaining_days,
+                'pickup_datetime'    => $booking->pickup_datetime,
+                'special_requests'   => $booking->special_requests,
+                'tourist_circuit_id' => $booking->tourist_circuit_id,
+                'base_price'         => $booking->base_price,
+                'discount'           => $booking->discount,
+                'total_price'        => $booking->total_price,
+                'promo_code_id'      => $booking->promo_code_id,
+                'status'             => 'pending',
+                'is_recurring'       => $booking->is_recurring,
             ]);
 
             return $booking;
@@ -206,5 +263,62 @@ class BookingService
     {
         $booking = Booking::findOrFail($bookingId);
         $booking->delete();
+    }
+
+    public function markExpiredBookings()
+    {
+        $expiredBookings = Booking::where('status', 'pending')
+            ->where('pickup_datetime', '<', now())
+            ->where('expired_at', null)
+            ->get();
+
+        foreach ($expiredBookings as $booking) {
+            $booking->update(['status' => 'expired']);
+        }
+
+        return $expiredBookings->count();
+    }
+
+    public function createRecurringBookings()
+    {
+        $recurringBookings = Booking::where('is_recurring', true)
+            ->where('remaining_days', '>', 0)
+            ->where(function ($query) {
+                $query->whereNull('next_recurring_date')
+                    ->orWhere('next_recurring_date', '<=', now());
+            })
+            ->get();
+
+        foreach ($recurringBookings as $booking) {
+            // Créer la nouvelle course pour le jour suivant
+            $newPickupDate = $booking->pickup_datetime->addDay();
+
+            Booking::create([
+                'from_zone_id'       => $booking->from_zone_id,
+                'to_zone_id'         => $booking->to_zone_id,
+                'phone'              => $booking->phone,
+                'days'               => $booking->days,
+                'remaining_days'     => $booking->remaining_days - 1,
+                'pickup_datetime'    => $newPickupDate,
+                'special_requests'   => $booking->special_requests,
+                'tourist_circuit_id' => $booking->tourist_circuit_id,
+                'base_price'         => $booking->base_price,
+                'discount'           => $booking->discount,
+                'total_price'        => $booking->total_price,
+                'promo_code_id'      => $booking->promo_code_id,
+                'status'             => 'pending',
+                'is_recurring'       => true,
+                'parent_booking_id'  => $booking->parent_booking_id ?? $booking->id,
+                'next_recurring_date' => $newPickupDate->addDay(),
+            ]);
+
+            // Mettre à jour la course actuelle avec le nombre de jours restants
+            $booking->update([
+                'remaining_days' => $booking->remaining_days - 1,
+                'next_recurring_date' => $newPickupDate->addDay(),
+            ]);
+        }
+
+        return $recurringBookings->count();
     }
 }

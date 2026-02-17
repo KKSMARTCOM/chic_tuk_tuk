@@ -11,7 +11,6 @@ Route::middleware(['auth', 'role:driver'])->prefix('driver')->name('driver.')->g
     Route::get('/dashboard', [DashboardController::class, 'driver'])->name('dashboard');
     Route::get('/bookings/available', [PageController::class, 'availableBookings'])->name('bookings.available');
     Route::get('/bookings/accepting', [PageController::class, 'acceptingBookings'])->name('bookings.accepting');
-    Route::get('/bookings/histories', [PageController::class, 'historiesBookings'])->name('bookings.histories');
 
     Route::post('/bookings/{booking}/accept', [BookingController::class, 'acceptBooking'])->name('bookings.accept');
     Route::post('/bookings/{booking}/start', [BookingController::class, 'startBooking'])->name('bookings.start');

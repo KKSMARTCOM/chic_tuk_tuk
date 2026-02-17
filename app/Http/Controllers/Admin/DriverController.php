@@ -40,16 +40,21 @@ class DriverController extends Controller
         $validated = $request->validate(
             [
                 'name' => 'required|string|max:255',
-                'email' => 'required|email|unique:users,email',
+                'email' => 'nullable|email|unique:users,email',
                 'phone' => 'required|string|unique:users,phone',
                 'password' => 'required|string|min:8',
+                'adresse' => 'nullable|string|max:255',
                 'license_number' => 'required|string|unique:drivers,license_number',
                 'vehicle_number' => 'required|string',
                 'vehicle_type' => 'required|string|in:moto,tricycle,car',
+                'agent_code' => 'nullable|string|max:255',
+                'agent_id' => 'nullable|string|max:255',
+                'contract_type' => 'nullable|string|max:255',
+                'start_date' => 'nullable|date',
             ],
             [
                 'name.required' => 'Le nom est requis.',
-                'email.required' => 'L\'email est requis.',
+                //'email.required' => 'L\'email est requis.',
                 'email.email' => 'L\'email doit être valide.',
                 'email.unique' => 'Cette adresse e-mail est déjà utilisée.',
                 'phone.required' => 'Le téléphone est requis.',
@@ -61,6 +66,7 @@ class DriverController extends Controller
                 'vehicle_number.required' => 'Le numéro de véhicule est requis.',
                 'vehicle_type.required' => 'Le type de véhicule est requis.',
                 'vehicle_type.in' => 'Le type de véhicule sélectionné est invalide.',
+                'start_date.date' => 'La date de début doit être une date valide.',
             ]
         );
 
@@ -100,15 +106,21 @@ class DriverController extends Controller
                 'email' => 'required|email|unique:users,email,' . $driver->id,
                 'phone' => 'required|string|unique:users,phone,' . $driver->id,
                 'is_active' => 'boolean',
+                'adresse' => 'nullable|string|max:255',
                 'license_number' => 'required|string|unique:drivers,license_number,' . $driver->driver->id,
                 'vehicle_number' => 'required|string',
                 'vehicle_type' => 'required|string',
                 'is_available' => 'boolean',
+                'agent_code' => 'nullable|string|max:255',
+                'agent_id' => 'nullable|string|max:255',
+                'contract_type' => 'nullable|string|max:255',
+                'start_date' => 'nullable|date',
             ],
             [
                 'email.unique' => 'Cette adresse e-mail est déjà utilisée.',
                 'phone.unique' => 'Ce numéro de téléphone est déjà utilisé.',
                 'license_number.unique' => 'Ce numéro de permis est déjà utilisé.',
+                'start_date.date' => 'La date de début doit être une date valide.',
             ]
         );
 

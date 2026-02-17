@@ -9,6 +9,12 @@
 
         <!-- Content -->
         <div class="p-6">
+            <form method="GET" action="{{ route('bookings.histories') }}" class="mb-6 flex gap-2">
+                <input type="text" name="search" value="{{ request()->get('search') }}"
+                    placeholder="Rechercher numéro, téléphone, zone..." class="w-full px-3 py-2 border rounded-lg" />
+
+                <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg">Rechercher</button>
+            </form>
             @if ($bookings->count())
                 <div class="space-y-4">
                     @foreach ($bookings as $booking)
@@ -27,6 +33,22 @@
                                             {{ $booking->booking_number }}
                                         </span>
                                     </div>
+
+                                    @if (auth()->user() && auth()->user()->role === 'admin')
+                                        <div class="text-sm text-gray-600 mt-1">
+                                            <strong>Conducteur :</strong>
+                                            @if ($booking->driver && $booking->driver->user)
+                                                {{ $booking->driver->user->name }}
+                                            @else
+                                                Non assigné
+                                            @endif
+
+                                            @if (isset($booking->remaining_days) && $booking->remaining_days > 0)
+                                                <span class="ml-3">• <strong>Jours restants :</strong>
+                                                    {{ $booking->remaining_days }}</span>
+                                            @endif
+                                        </div>
+                                    @endif
 
                                     <!-- Zones -->
                                     <div class="bg-gray-50 rounded-lg p-3 mb-3">
@@ -99,9 +121,9 @@
                 </div>
 
                 <!-- Pagination -->
-                {{-- <div class="mt-6">
-                    {{ $bookings->links() }}
-                </div> --}}
+                <div class="mt-6">
+                    {{ $bookings->links('pagination::tailwind') }}
+                </div>
             @else
                 <div class="text-center py-12">
                     <i class="fas fa-history text-6xl text-gray-300 mb-4"></i>

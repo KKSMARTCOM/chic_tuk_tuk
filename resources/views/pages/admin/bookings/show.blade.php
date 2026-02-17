@@ -132,16 +132,21 @@
                             class="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
                             <i class="fas fa-user-plus mr-2"></i> Assigner un conducteur
                         </button>
-                    @else
+                    @elseif(!in_array($booking->status, ['completed', 'cancelled', 'expired']))
                         <button onclick="confirmRemoveDriver('{{ $booking->id }}')"
                             class="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">
                             <i class="fas fa-user-times mr-2"></i> Retirer le conducteur
+                        </button>
+                    @else
+                        <button onclick="confirmRemoveDriver('{{ $booking->id }}')"
+                            class="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">
+                            <i class="fas fa-user-times mr-2"></i> Supprimer la réservation
                         </button>
                     @endif
 
                     @if (in_array($booking->status, ['pending', 'confirmed']))
                         <button onclick="openCancelModal('{{ $booking->id }}')"
-                            class="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">
+                            class="w-full text-red-600 border border-red-600 px-4 py-2 rounded-lg hover:text-red-700 hover:border-red-700 transition">
                             <i class="fas fa-times mr-2"></i> Annuler la course
                         </button>
                     @endif

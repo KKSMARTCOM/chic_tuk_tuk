@@ -121,7 +121,7 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Email</label>
-                            <p class="mt-1 text-sm text-gray-900">{{ $driverData->email }}</p>
+                            <p class="mt-1 text-sm text-gray-900">{{ $driverData->email ?? 'N/A' }}</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Téléphone</label>
@@ -133,6 +133,36 @@
                                 class="mt-1 px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $driverData->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
                                 {{ $driverData->is_active ? 'Actif' : 'Inactif' }}
                             </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informations du Contrat -->
+            <div class="bg-white rounded-lg shadow-md">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-800">Informations du Contrat</h3>
+                </div>
+                <div class="px-6 py-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Code Agent</label>
+                            <p class="mt-1 text-sm text-gray-900">{{ $driverData->driver->agent_code ?? 'N/A' }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">ID Agent</label>
+                            <p class="mt-1 text-sm text-gray-900">{{ $driverData->driver->agent_id ?? 'N/A' }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Type de Contrat</label>
+                            <p class="mt-1 text-sm text-gray-900">
+                                {{ $driverData->driver->contract_type . ' mois' ?? 'N/A' }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Date de Début</label>
+                            <p class="mt-1 text-sm text-gray-900">
+                                {{ $driverData->driver->start_date ? formatDateFr($driverData->driver->start_date) : 'N/A' }}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -155,7 +185,8 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Type de véhicule</label>
-                            <p class="mt-1 text-sm text-gray-900">{{ $driverData->driver->vehicle_type ?? 'N/A' }}</p>
+                            <p class="mt-1 text-sm text-gray-900">
+                                {{ vehiculeType($driverData->driver->vehicle_type) ?? 'N/A' }}</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Disponibilité</label>
@@ -186,7 +217,7 @@
 
                     <button
                         onclick="openStatusModal('{{ $driverData->id }}', {{ $driverData->is_active ? 'false' : 'true' }}, '{{ $driverData->name }}', '{{ $driverData->is_active ? 'désactiver' : 'activer' }}')"
-                        class="w-full {{ $driverData->is_active ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700' }} text-white px-4 py-2 rounded-lg transition">
+                        class="w-full {{ $driverData->is_active ? 'text-red-600 border border-red-600 hover:text-red-700' : 'text-green-600 border border-green-700 hover:text-green-700' }} px-4 py-2 rounded-lg transition">
                         <i class="fas {{ $driverData->is_active ? 'fa-user-times' : 'fa-user-check' }} mr-2"></i>
                         {{ $driverData->is_active ? 'Désactiver le compte' : 'Activer le compte' }}
                     </button>

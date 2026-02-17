@@ -57,8 +57,80 @@ class PageController extends Controller
 
     public function historiesBookings()
     {
-        $driver = Auth::user()->driver;
-        $bookings = $this->bookingService->getByDriverId($driver->id, ['completed', 'cancelled']);
+        $user = Auth::user();
+        $perPage = 10;
+        $globalSearch = request()->get('search');
+
+        // Si c'est un conducteur, afficher son historique
+        if ($user->role === 'driver' && $user->driver) {
+            $query = \App\Models\Booking::query()
+                ->where('driver_id', $user->driver->id)
+                ->whereIn('status', ['completed', 'cancelled']);
+
+            if ($globalSearch) {
+                $query->where(function ($q) use ($globalSearch) {
+                    $q->where('booking_number', 'LIKE', "%{$globalSearch}%")
+                        ->orWhere('phone', 'LIKE', "%{$globalSearch}%")
+                        ->orWhereHas('fromZone', function ($zq) use ($globalSearch) {
+                            $zq->where('name', 'LIKE', "%{$globalSearch}%");
+                        })
+                        ->orWhereHas('toZone', function ($zq) use ($globalSearch) {
+                            $zq->where('name', 'LIKE', "%{$globalSearch}%");
+                        });
+                });
+            }
+
+            $bookings = $query->with(['user', 'driver.user', 'fromZone', 'toZone'])
+                ->orderBy('pickup_datetime', 'desc')
+                ->paginate($perPage)
+                ->withQueryString();
+        }
+        // Si c'est un admin, afficher l'historique avec toutes les courses (incluant expired)
+        elseif ($user->role === 'admin') {
+            $query = \App\Models\Booking::query()->whereIn('status', ['completed', 'cancelled', 'expired']);
+
+            if ($globalSearch) {
+                $query->where(function ($q) use ($globalSearch) {
+                    $q->where('booking_number', 'LIKE', "%{$globalSearch}%")
+                        ->orWhere('phone', 'LIKE', "%{$globalSearch}%")
+                        ->orWhereHas('fromZone', function ($zoneQuery) use ($globalSearch) {
+                            $zoneQuery->where('name', 'LIKE', "%{$globalSearch}%");
+                        })
+                        ->orWhereHas('toZone', function ($zoneQuery) use ($globalSearch) {
+                            $zoneQuery->where('name', 'LIKE', "%{$globalSearch}%");
+                        });
+                });
+            }
+
+            $bookings = $query->with(['user', 'driver.user', 'fromZone', 'toZone'])
+                ->orderBy('pickup_datetime', 'desc')
+                ->paginate($perPage)
+                ->withQueryString();
+        }
+        // Pour les clients, afficher l'historique de leurs réservations
+        else {
+            $query = \App\Models\Booking::query()
+                ->where('user_id', $user->id)
+                ->whereIn('status', ['completed', 'cancelled']);
+
+            if ($globalSearch) {
+                $query->where(function ($q) use ($globalSearch) {
+                    $q->where('booking_number', 'LIKE', "%{$globalSearch}%")
+                        ->orWhere('phone', 'LIKE', "%{$globalSearch}%")
+                        ->orWhereHas('fromZone', function ($zoneQuery) use ($globalSearch) {
+                            $zoneQuery->where('name', 'LIKE', "%{$globalSearch}%");
+                        })
+                        ->orWhereHas('toZone', function ($zoneQuery) use ($globalSearch) {
+                            $zoneQuery->where('name', 'LIKE', "%{$globalSearch}%");
+                        });
+                });
+            }
+
+            $bookings = $query->with(['user', 'driver.user', 'fromZone', 'toZone'])
+                ->orderBy('pickup_datetime', 'desc')
+                ->paginate($perPage)
+                ->withQueryString();
+        }
 
         return view('pages.driver.bookings.history', compact('bookings'));
     }

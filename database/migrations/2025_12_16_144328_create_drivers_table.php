@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('vehicle_number');
             $table->string('vehicle_type')->default('tricycle');
             $table->boolean('is_available')->default(true);
-            $table->decimal('rating', 3, 2)->default(5.00);
+            $table->decimal('rating', 3, 2)->default(0.00);
             $table->integer('total_trips')->default(0);
             $table->timestamps();
         });
