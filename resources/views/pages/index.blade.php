@@ -159,7 +159,8 @@
                                     <!-- Visible input shown only when multi-day checked (no name attribute) -->
                                     <div id="daysWrapper" class="mt-3 hidden">
                                         <label class="block text-gray-700 font-semibold mb-2">Nombre de jours</label>
-                                        <input type="number" id="days_input" min="2" value="2"
+                                        <input type="text" id="days_input" inputmode="numeric" min="2"
+                                            value="2"
                                             class="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent"
                                             placeholder="Entrez le nombre de jours">
                                     </div>
@@ -839,12 +840,29 @@
                 });
 
                 $('#days_input').on('input', function() {
-                    var v = parseInt($(this).val(), 10);
-                    if (isNaN(v) || v < 2) {
-                        v = 2;
-                        $(this).val(v);
+                    // Remove non-numeric characters in real-time
+                    var v = $(this).val().replace(/[^0-9]/g, '');
+                    $(this).val(v);
+
+                    // Update hidden input while typing
+                    if (v) {
+                        $('#days_hidden').val(v);
                     }
-                    $('#days_hidden').val(v);
+                    calculatePrice();
+                });
+
+                // Validate on blur (when user leaves the field)
+                $('#days_input').on('blur', function() {
+                    var v = $(this).val().replace(/[^0-9]/g, '');
+                    var num = parseInt(v, 10);
+
+                    // If empty or less than 2, set to 2
+                    if (isNaN(num) || num < 2) {
+                        num = 2;
+                    }
+
+                    $(this).val(num);
+                    $('#days_hidden').val(num);
                     calculatePrice();
                 });
 
