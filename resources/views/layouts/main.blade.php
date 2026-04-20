@@ -5,7 +5,9 @@
 
 <body class="bg-gray-50">
     {{-- Global alerts (success / error / validation) --}}
-    @include('inc.global.alerts')
+    @if (!isset($hideGlobalAlerts) || !$hideGlobalAlerts)
+        @include('inc.global.alerts')
+    @endif
 
     <!-- Navigation -->
     @include('inc.frontend.header')

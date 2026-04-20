@@ -138,7 +138,7 @@
                                     {{ $booking->toZone->name ?? 'N/A' }}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ formatDateTimeFr($booking->pickup_datetime) }}
+                                {{ formatDateTimeFr($booking->pickup_date_time) }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
 

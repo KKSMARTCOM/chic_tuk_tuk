@@ -16,7 +16,7 @@
                         <div class="border-2 border-gray-200 rounded-lg p-4 hover:border-green-500 transition">
                             <div class="flex items-center justify-between mb-3">
                                 <span
-                                    class="text-xs font-semibold text-gray-600">{{ formatTimeFr($booking->pickup_datetime) }}</span>
+                                    class="text-xs font-semibold text-gray-600">{{ formatTimeFr($booking->pickup_date_time) }}</span>
                                 {{-- <span class="text-lg font-bold text-green-600">{{ $booking->base_price }}
                                     FCFA</span> --}}
                             </div>
@@ -24,17 +24,17 @@
                             <div class="mb-3">
                                 <div class="flex items-center text-sm text-gray-700 mb-1">
                                     <i class="fas fa-map-marker-alt text-green-500 mr-2"></i>
-                                    <span class="font-semibold">{{ $booking->fromZone->name }}</span>
+                                    <span class="font-semibold">{{ $booking->from_location }}</span>
                                 </div>
                                 <div class="flex items-center text-sm text-gray-700">
                                     <i class="fas fa-map-marker-alt text-red-500 mr-2"></i>
-                                    <span>{{ $booking->toZone->name }}</span>
+                                    <span>{{ $booking->to_location }}</span>
                                 </div>
                             </div>
 
                             <div class="flex items-center justify-between text-xs text-gray-600 mb-3">
                                 <span><i class="far fa-clock mr-1"></i>
-                                    {{ formatDateFr($booking->pickup_datetime) }}</span>
+                                    {{ formatDateFr($booking->pickup_date_time) }}</span>
                                 {{-- <span><i class="fas fa-users mr-1"></i> {{ $booking->passengers }}
                                     pers.</span> --}}
                             </div>

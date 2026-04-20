@@ -19,11 +19,11 @@ class Zone extends Model
 
     public function pricesFrom()
     {
-        return $this->hasMany(Pricing::class, 'from_zone_id');
+        return $this->hasMany(Pricing::class, 'from_zone');
     }
 
     public function pricesTo()
     {
-        return $this->hasMany(Pricing::class, 'to_zone_id');
+        return $this->hasMany(Pricing::class, 'to_zone');
     }
 }

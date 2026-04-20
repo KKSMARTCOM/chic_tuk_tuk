@@ -81,7 +81,7 @@ class PageController extends Controller
             }
 
             $bookings = $query->with(['user', 'driver.user', 'fromZone', 'toZone'])
-                ->orderBy('pickup_datetime', 'desc')
+                ->orderByRaw("CONCAT(pickup_date, ' ', pickup_time) DESC")
                 ->paginate($perPage)
                 ->withQueryString();
         }
@@ -103,7 +103,7 @@ class PageController extends Controller
             }
 
             $bookings = $query->with(['user', 'driver.user', 'fromZone', 'toZone'])
-                ->orderBy('pickup_datetime', 'desc')
+                ->orderByRaw("CONCAT(pickup_date, ' ', pickup_time) DESC")
                 ->paginate($perPage)
                 ->withQueryString();
         }
@@ -127,7 +127,7 @@ class PageController extends Controller
             }
 
             $bookings = $query->with(['user', 'driver.user', 'fromZone', 'toZone'])
-                ->orderBy('pickup_datetime', 'desc')
+                ->orderByRaw("CONCAT(pickup_date, ' ', pickup_time) DESC")
                 ->paginate($perPage)
                 ->withQueryString();
         }

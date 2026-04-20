@@ -4,6 +4,7 @@
 
 use App\Http\Controllers\Admin\BookingController;
 use App\Http\Controllers\Admin\DriverController;
+use App\Http\Controllers\Admin\LeaveController;
 use App\Http\Controllers\Admin\PricingController;
 use App\Http\Controllers\Admin\PromoCodeController;
 use App\Http\Controllers\Admin\TouristCircuitController;
@@ -38,4 +39,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // Promo Codes
     Route::resource('promo-codes', PromoCodeController::class);
+    Route::post('promo-codes/{promo_code}/toggle-status', [PromoCodeController::class, 'toggleStatus'])->name('promo-codes.toggle-status');
+
+    // Leaves
+    Route::get('leaves', [LeaveController::class, 'index'])->name('leaves.index');
+    Route::get('leaves/{driver}', [LeaveController::class, 'show'])->name('leaves.show');
+    Route::post('leaves/{driver}/approve', [LeaveController::class, 'approveLeave'])->name('leaves.approve');
+    Route::post('leaves/{driver}/revoke', [LeaveController::class, 'revokeLeave'])->name('leaves.revoke');
 });

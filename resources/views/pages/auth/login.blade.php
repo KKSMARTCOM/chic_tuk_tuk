@@ -7,7 +7,7 @@
         @csrf
 
         <div>
-            <label for="email" class="block text-sm font-medium text-gray-700">Adresse e-mail</label>
+            <label for="email" class="block text-lg font-medium text-gray-700">E-mail</label>
             <input id="email" type="email" name="email" value="{{ old('email') }}" required
                 class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#286b41]">
             @error('email')
@@ -16,7 +16,7 @@
         </div>
 
         <div class="relative">
-            <label for="password" class="block text-sm font-medium text-gray-700">Mot de passe</label>
+            <label for="password" class="block text-lg font-medium text-gray-700">Mot de passe</label>
             <input id="password" type="password" name="password" required
                 class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#286b41] pr-12">
             <button type="button" data-target="#password"
@@ -55,9 +55,6 @@
                 <a href="#" aria-label="Facebook"
                     class="inline-flex items-center justify-center w-10 h-10 bg-gray-100 rounded-full text-gray-600"><i
                         class="fab fa-facebook"></i></a>
-                <a href="#" aria-label="Twitter"
-                    class="inline-flex items-center justify-center w-10 h-10 bg-gray-100 rounded-full text-gray-600"><i
-                        class="fab fa-twitter"></i></a>
             </div>
         </div>
     </form>

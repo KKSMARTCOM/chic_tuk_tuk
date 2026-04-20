@@ -25,18 +25,23 @@ class BookingService
         $isRecurring = isset($data['days']) && $data['days'] > 1;
 
         $booking = Booking::create([
-            'from_zone_id'       => $data['from_zone_id'],
-            'to_zone_id'         => $data['to_zone_id'],
+            'from_location'       => $data['from_location'],
+            'to_location'         => $data['to_location'],
+            'from_lng'         => $data['from_lng'],
+            'from_lat'         => $data['from_lat'],
+            'to_lng'         => $data['to_lng'],
+            'to_lat'         => $data['to_lat'],
+            'distance'           => $data['distance'] ?? null,
             'phone'              => $data['phone'],
             'days'               => $data['days'],
             'remaining_days'     => $data['days'] ?? 1,
-            'pickup_datetime'    => $data['pickup_datetime'],
+            'pickup_date'        => $data['pickup_date'],
+            'pickup_time'        => $data['pickup_time'],
             'special_requests'   => $data['special_requests'],
-            'tourist_circuit_id' => $data['tourist_circuit_id'],
             'base_price'         => $data['base_price'],
             'total_price'        => $data['total_price'],
             'is_recurring'       => $isRecurring,
-            'next_recurring_date' => $isRecurring ? Carbon::parse($data['pickup_datetime'])->addDay() : null,
+            'next_recurring_date' => $isRecurring ? Carbon::parse($data['pickup_date'] . ' ' . $data['pickup_time'])->addDay() : null,
         ]);
 
         return $booking;
@@ -53,7 +58,7 @@ class BookingService
             $query->where('status', '!=', 'expired');
         }
 
-        return $query->orderBy('pickup_datetime')->get();
+        return $query->orderByRaw("CONCAT(pickup_date, ' ', pickup_time) DESC")->get();
     }
 
     public function getById(string $bookingId)
@@ -79,7 +84,7 @@ class BookingService
             });
         }
 
-        return $query->orderBy('pickup_datetime', 'desc')->get();
+        return $query->orderByRaw("CONCAT(pickup_date, ' ', pickup_time) DESC")->get();
     }
 
     public function getByDriverId(string $driverId, string|array|null $status = null, ?string $search = null)
@@ -105,7 +110,7 @@ class BookingService
             });
         }
 
-        return $query->orderBy('pickup_datetime')->get();
+        return $query->orderByRaw("CONCAT(pickup_date, ' ', pickup_time) DESC")->get();
     }
 
     public function take(string $bookingId, string $driverId)
@@ -120,7 +125,7 @@ class BookingService
 
             $driver = Driver::lockForUpdate()->findOrFail($driverId);
 
-            $pickup = Carbon::parse($booking->pickup_datetime);
+            $pickup = Carbon::parse($booking->pickup_date_time);
 
             // ❌ Fenêtre de blocage ±2h
             if ($driver->hasConflictWithinTwoHours($pickup)) {
@@ -167,12 +172,18 @@ class BookingService
 
             // Créer une nouvelle course avec les mêmes données
             $newBooking = Booking::create([
-                'from_zone_id'       => $booking->from_zone_id,
-                'to_zone_id'         => $booking->to_zone_id,
+                'from_location'       => $booking->from_location,
+                'to_location'         => $booking->to_location,
+                'from_lng'         => $booking->from_lng,
+                'from_lat'         => $booking->from_lat,
+                'to_lng'         => $booking->to_lng,
+                'to_lat'         => $booking->to_lat,
+                'distance'         => $booking->distance,
                 'phone'              => $booking->phone,
                 'days'               => $booking->days,
                 'remaining_days'     => $booking->remaining_days,
-                'pickup_datetime'    => $booking->pickup_datetime,
+                'pickup_date'        => $booking->pickup_date,
+                'pickup_time'        => $booking->pickup_time,
                 'special_requests'   => $booking->special_requests,
                 'tourist_circuit_id' => $booking->tourist_circuit_id,
                 'base_price'         => $booking->base_price,
@@ -253,8 +264,34 @@ class BookingService
 
     public function update(string $bookingId, array $data)
     {
+        $isRecurring = isset($data['days']) && $data['days'] > 1;
+
         $booking = Booking::findOrFail($bookingId);
-        $booking->update($data);
+
+        $pickup_date = $data['pickup_date'] instanceof Carbon ? $data['pickup_date']->format('Y-m-d') : $data['pickup_date'];
+
+        $booking->update(
+            [
+                'user_id'             => $data['user_id'],
+                'from_location'       => $data['from_location'],
+                'to_location'         => $data['to_location'],
+                'from_lng'            => $data['from_lng'],
+                'from_lat'            => $data['from_lat'],
+                'to_lng'              => $data['to_lng'],
+                'to_lat'              => $data['to_lat'],
+                'distance'            => $data['distance'] ?? null,
+                'phone'               => $data['phone'],
+                'days'                => $data['days'],
+                'remaining_days'      => $data['days'] ?? 1,
+                'pickup_date'         => $data['pickup_date'],
+                'pickup_time'         => $data['pickup_time'],
+                'special_requests'    => $data['special_requests'],
+                'base_price'          => $data['base_price'],
+                'total_price'         => $data['total_price'],
+                'is_recurring'        => $isRecurring,
+                'next_recurring_date' => $isRecurring ? Carbon::parse($pickup_date . ' ' . $data['pickup_time'])->addDay() : null,
+            ]
+        );
 
         return $booking;
     }
@@ -268,7 +305,7 @@ class BookingService
     public function markExpiredBookings()
     {
         $expiredBookings = Booking::where('status', 'pending')
-            ->where('pickup_datetime', '<', now())
+            ->whereRaw("CONCAT(pickup_date, ' ', pickup_time) < ?", [now()])
             ->where('expired_at', null)
             ->get();
 
@@ -291,15 +328,21 @@ class BookingService
 
         foreach ($recurringBookings as $booking) {
             // Créer la nouvelle course pour le jour suivant
-            $newPickupDate = $booking->pickup_datetime->addDay();
+            $newPickupDate = Carbon::parse($booking->pickup_date . ' ' . $booking->pickup_time)->addDay();
 
             Booking::create([
-                'from_zone_id'       => $booking->from_zone_id,
-                'to_zone_id'         => $booking->to_zone_id,
+                'from_location'      => $booking->from_location,
+                'to_location'        => $booking->to_location,
+                'from_lng'           => $booking->from_lng,
+                'from_lat'           => $booking->from_lat,
+                'to_lng'             => $booking->to_lng,
+                'to_lat'             => $booking->to_lat,
+                'distance'           => $booking->distance,
                 'phone'              => $booking->phone,
                 'days'               => $booking->days,
                 'remaining_days'     => $booking->remaining_days - 1,
-                'pickup_datetime'    => $newPickupDate,
+                'pickup_date'        => $newPickupDate->toDateString(),
+                'pickup_time'        => $newPickupDate->format('H:i'),
                 'special_requests'   => $booking->special_requests,
                 'tourist_circuit_id' => $booking->tourist_circuit_id,
                 'base_price'         => $booking->base_price,

@@ -57,7 +57,7 @@
                                             <div>
                                                 <p class="text-sm font-semibold text-gray-800">Départ</p>
                                                 <p class="text-sm text-gray-600">
-                                                    {{ $booking->fromZone->name }}
+                                                    {{ $booking->from_location }}
                                                 </p>
                                             </div>
                                         </div>
@@ -67,7 +67,7 @@
                                             <div>
                                                 <p class="text-sm font-semibold text-gray-800">Destination</p>
                                                 <p class="text-sm text-gray-600">
-                                                    {{ $booking->toZone->name }}
+                                                    {{ $booking->to_location }}
                                                 </p>
                                             </div>
                                         </div>
@@ -77,7 +77,7 @@
                                     <div class="flex flex-wrap gap-4 text-sm text-gray-600">
                                         <span>
                                             <i class="far fa-calendar mr-1"></i>
-                                            {{ formatDateTimeFr($booking->pickup_datetime) }}
+                                            {{ formatDateTimeFr($booking->pickup_date_time) }}
                                         </span>
 
                                         {{-- <span>

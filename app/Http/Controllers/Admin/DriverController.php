@@ -51,6 +51,8 @@ class DriverController extends Controller
                 'agent_id' => 'nullable|string|max:255',
                 'contract_type' => 'nullable|string|max:255',
                 'start_date' => 'nullable|date',
+                'tricycle_owner' => 'nullable|string|max:255',
+                'owner_phone' => 'nullable|string|max:255',
             ],
             [
                 'name.required' => 'Le nom est requis.',
@@ -115,6 +117,8 @@ class DriverController extends Controller
                 'agent_id' => 'nullable|string|max:255',
                 'contract_type' => 'nullable|string|max:255',
                 'start_date' => 'nullable|date',
+                'tricycle_owner' => 'nullable|string|max:255',
+                'owner_phone' => 'nullable|string|max:255',
             ],
             [
                 'email.unique' => 'Cette adresse e-mail est déjà utilisée.',

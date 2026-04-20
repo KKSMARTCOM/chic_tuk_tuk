@@ -5,17 +5,22 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Driver;
+use App\Models\TouristCircuit;
 use App\Models\User;
+use App\Models\Zone;
 use App\Services\BookingService;
+use App\Services\PricingService;
 use Illuminate\Http\Request;
 
 class BookingController extends Controller
 {
     protected $bookingService;
+    protected $pricingService;
 
-    public function __construct(BookingService $bookingService)
+    public function __construct(BookingService $bookingService, PricingService $pricingService)
     {
         $this->bookingService = $bookingService;
+        $this->pricingService = $pricingService;
     }
 
     public function index(Request $request)
@@ -182,8 +187,8 @@ class BookingController extends Controller
     public function edit(Booking $booking)
     {
         $booking->load(['user', 'driver', 'touristCircuit', 'promoCode', 'fromZone', 'toZone']);
-        $zones = \App\Models\Zone::all();
-        $touristCircuits = \App\Models\TouristCircuit::all();
+        $zones = Zone::all();
+        $touristCircuits = TouristCircuit::all();
 
         return view('pages.admin.bookings.edit', compact('booking', 'zones', 'touristCircuits'));
     }
@@ -194,9 +199,16 @@ class BookingController extends Controller
             [
                 'user_id' => 'nullable|exists:users,id',
                 'phone' => 'required|string|max:20',
-                'from_zone_id' => 'required|exists:zones,id',
-                'to_zone_id' => 'required|exists:zones,id',
-                'pickup_datetime' => 'required|date',
+
+                'from_location' => 'required',
+                'to_location' => 'required',
+                'from_lat' => 'required_with:from_location|numeric',
+                'from_lng' => 'required_with:from_location|numeric',
+                'to_lat' => 'required_with:to_location|numeric',
+                'to_lng' => 'required_with:to_location|numeric',
+
+                'pickup_date' => 'required|date',
+                'pickup_time' => 'required|date_format:H:i',
                 'days' => 'nullable|integer|min:1',
                 'total_price' => 'required|numeric|min:0',
                 'status' => 'required|in:pending,confirmed,in_progress,completed,cancelled',
@@ -204,15 +216,53 @@ class BookingController extends Controller
                 'special_requests' => 'nullable|string|max:1000',
             ],
             [
+                'from_location.required' => 'Veuillez sélectionner une ville de départ.',
+                'to_location.required' => 'Veuillez sélectionner une ville de destination.',
+                'from_lat.required_with' => 'Ville de départ manquantes.',
+                'to_lat.required_with' => 'Ville de destination manquantes.',
+
                 'user_id.exists' => 'L\'utilisateur sélectionné n\'existe pas.',
-                'from_zone_id.exists' => 'La zone de départ sélectionnée n\'existe pas.',
-                'to_zone_id.exists' => 'La zone d\'arrivée sélectionnée n\'existe pas.',
                 'tourist_circuit_id.exists' => 'Le circuit touristique sélectionné n\'existe pas.',
             ]
         );
 
-        $this->bookingService->update($booking->id, $validated);
+        try {
+            $distance = $this->pricingService->getDistance($request->from_lng, $request->from_lat, $request->to_lng, $request->to_lat);
 
-        return redirect()->route('admin.bookings.show', $booking)->with('success', 'Réservation mise à jour avec succès');
+            if (!$distance) {
+                return redirect()->back()->withErrors('Erreur lors du calcul de l\'itinéraire.');
+            }
+
+            $price = $this->pricingService->getPrice($distance);
+
+            $updateData = [
+                'user_id' => $request->user_id ?? $booking->user_id,
+
+                'from_location' => $request->from_location,
+                'to_location' => $request->to_location,
+                'from_lng' => $request->from_lng,
+                'from_lat' => $request->from_lat,
+                'to_lng' => $request->to_lng,
+                'to_lat' => $request->to_lat,
+
+                'distance' => $distance,
+
+                'phone' => $request->phone ?? $booking->phone,
+                'days' => $request->days ?? $booking->days,
+                'pickup_date' => $request->pickup_date ?? $booking->pickup_date,
+                'pickup_time' =>  $request->pickup_time ?? $booking->pickup_time,
+                'special_requests' => $request->special_requests ?? $booking->special_requests,
+
+                'base_price' => $price,
+                'discount' => $booking->discount,
+                'total_price' => $price,
+            ];
+
+            $this->bookingService->update($booking->id, $updateData);
+
+            return redirect()->route('admin.bookings.show', $booking)->with('success', 'Réservation mise à jour avec succès');
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['error' => 'Une erreur est survenue: ' . $e->getMessage()])->withInput();
+        }
     }
 }

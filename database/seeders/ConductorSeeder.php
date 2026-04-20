@@ -18,8 +18,8 @@ class ConductorSeeder extends Seeder
         // Conducteurs
         for ($i = 1; $i <= 10; $i++) {
             $user = User::create([
-                'name' => "Conducteur $i",
-                'email' => "driver$i@chictuktuk.bj",
+                'name' => "Agent $i",
+                'email' => "agent$i@chictuktuk.bj",
                 'phone' => "+22990000" . str_pad($i, 3, '0', STR_PAD_LEFT),
                 'password' => Hash::make('password'),
                 'role' => 'driver',
