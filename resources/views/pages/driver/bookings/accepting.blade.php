@@ -48,7 +48,7 @@
                                                 <p class="text-sm font-semibold text-gray-800">Point de
                                                     départ</p>
                                                 <p class="text-sm text-gray-600">
-                                                    {{ $booking->fromZone->name }}</p>
+                                                    {{ $booking->from_location }}</p>
                                             </div>
                                         </div>
                                         <div class="flex items-start">
@@ -57,7 +57,7 @@
                                                 <p class="text-sm font-semibold text-gray-800">
                                                     Destination</p>
                                                 <p class="text-sm text-gray-600">
-                                                    {{ $booking->toZone->name }}</p>
+                                                    {{ $booking->to_location }}</p>
                                             </div>
                                         </div>
                                         {{-- @if ($booking->dropoff_location)
@@ -74,7 +74,7 @@
 
                                     <div class="flex items-center space-x-4 text-sm text-gray-600">
                                         <span><i class="far fa-clock mr-1"></i>
-                                            {{ formatDateTimeFr($booking->pickup_datetime) }}</span>
+                                            {{ formatDateTimeFr($booking->pickup_date_time) }}</span>
                                         {{-- <span><i class="fas fa-users mr-1"></i> {{ $booking->passengers }}
                                             passager(s)</span> --}}
                                         <span class="font-bold text-green-600"><i class="fas fa-money-bill mr-1"></i>

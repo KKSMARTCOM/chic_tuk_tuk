@@ -23,13 +23,11 @@ class Booking extends Model
         'phone',
         'days',
         'remaining_days',
-        'pickup_datetime',
+        'pickup_date',
+        'pickup_time',
         'passengers',
         'special_requests',
         'base_price',
-        'discount',
-        'total_price',
-        'promo_code_id',
         'status',
         'cancellation_reason',
         'started_at',
@@ -37,11 +35,26 @@ class Booking extends Model
         'completed_at',
         'parent_booking_id',
         'is_recurring',
-        'next_recurring_date'
+        'next_recurring_date',
+
+        //Champs code promo
+        'discount',
+        'total_price',
+        'promo_code_id',
+
+        // Nouveau champs pour calcul distance
+        'from_location',
+        'to_location',
+        'from_lng',
+        'from_lat',
+        'to_lng',
+        'to_lat',
+        'distance',
     ];
 
     protected $casts = [
-        'pickup_datetime' => 'datetime',
+        'pickup_date' => 'date',
+        'pickup_time' => 'string',
         'started_at' => 'datetime',
         'cancelled_at' => 'datetime',
         'completed_at' => 'datetime',
@@ -57,8 +70,27 @@ class Booking extends Model
         parent::boot();
 
         static::creating(function ($booking) {
-            $booking->booking_number = 'GZM-' . strtoupper(Str::random(8));
+            $booking->booking_number = 'CTT-' . strtoupper(Str::random(8));
         });
+    }
+
+    public function getPickupTimeFormattedAttribute()
+    {
+        if (!$this->pickup_time) {
+            return null;
+        }
+
+        return $this->pickup_time instanceof Carbon
+            ? $this->pickup_time->format('H:i')
+            : Carbon::parse($this->pickup_time)->format('H:i');
+    }
+
+    public function getPickupDateTimeAttribute()
+    {
+        $date = $this->pickup_date instanceof Carbon ? $this->pickup_date->format('Y-m-d') : $this->pickup_date;
+        $time = $this->pickup_time_formatted;
+
+        return trim($date . ' ' . $time);
     }
 
     public function user()
@@ -100,12 +132,12 @@ class Booking extends Model
 
     public function fromZone()
     {
-        return $this->belongsTo(Zone::class, 'from_zone_id');
+        return $this->belongsTo(Zone::class, 'from_zone');
     }
 
     public function toZone()
     {
-        return $this->belongsTo(Zone::class, 'to_zone_id');
+        return $this->belongsTo(Zone::class, 'to_zone');
     }
 
     public function parentBooking()

@@ -62,14 +62,20 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Trajet</label>
                             <div class="mt-1">
-                                <p class="text-sm text-gray-900">{{ $booking->fromZone->name ?? 'N/A' }}</p>
+                                <p class="text-sm text-gray-900">{{ $booking->from_location ?? 'N/A' }}</p>
                                 <p class="text-sm text-gray-500"><i class="fas fa-arrow-right"></i>
-                                    {{ $booking->toZone->name ?? 'N/A' }}</p>
+                                    {{ $booking->to_location ?? 'N/A' }}</p>
                             </div>
                         </div>
                         <div>
+                            <label class="block text-sm font-medium text-gray-700">Distance estimée</label>
+                            <p class="mt-1 text-sm text-gray-900">{{ $booking->distance ?? 'N/A' }} km</p>
+                        </div>
+                        <div>
                             <label class="block text-sm font-medium text-gray-700">Date et heure de départ</label>
-                            <p class="mt-1 text-sm text-gray-900">{{ formatDateTimeFr($booking->pickup_datetime) }}</p>
+                            <p class="mt-1 text-sm text-gray-900">
+                                {{ formatDateTimeFr($booking->pickup_date_time) }}</p>
+                            </p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Prix total</label>
@@ -110,6 +116,21 @@
                             <label class="block text-sm font-medium text-gray-700">Nombre de jours</label>
                             <p class="mt-1 text-sm text-gray-900">{{ $booking->days ?? 1 }}</p>
                         </div>
+                        @if ($booking->is_recurring)
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Prochaine date</label>
+                                <p class="mt-1 text-sm text-gray-900">{{ formatDateTimeFr($booking->next_recurring_date) }}
+                                </p>
+                            </div>
+                        @endif
+                        @if ($booking->remaining_days && $booking->remaining_days > 1)
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Nombre de jours restant</label>
+                                <p class="mt-1 text-sm text-gray-900">
+                                    {{ $booking->remaining_days > 1 ? $booking->remaining_days : 'Dernier jour' }}
+                                </p>
+                            </div>
+                        @endif
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700">Instructions spéciales</label>
                             <p class="mt-1 text-sm text-gray-900">{{ $booking->special_instructions ?? 'Aucune' }}</p>

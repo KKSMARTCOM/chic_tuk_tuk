@@ -16,8 +16,6 @@
 
 <body class="min-h-screen bg-gray-50 flex items-center justify-center">
     <div class="w-full max-w-xl px-4">
-        @include('inc.global.alerts')
-
         <div class="bg-white shadow-lg rounded-2xl overflow-hidden">
             <div class="p-6 sm:p-8">
                 <a href="{{ route('home') }}" class="flex justify-center mb-6">

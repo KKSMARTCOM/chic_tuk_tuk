@@ -109,12 +109,12 @@
                             </td>
                             <td class="px-6 py-4">
                                 <div class="text-sm text-gray-900">
-                                    {{ $booking->fromZone->name ?? 'N/A' }}</div>
+                                    {{ Str::limit($booking->from_location, 25, '...') ?? 'N/A' }}</div>
                                 <div class="text-sm text-gray-500"><i class="fas fa-arrow-right"></i>
-                                    {{ $booking->toZone->name ?? 'N/A' }}</div>
+                                    {{ Str::limit($booking->to_location, 25, '...') ?? 'N/A' }}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ formatDateTimeFr($booking->pickup_datetime) }}
+                                {{ formatDateTimeFr($booking->pickup_date_time) }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
                                 {{ number_format($booking->total_price, 0, ',', ' ') }} FCFA

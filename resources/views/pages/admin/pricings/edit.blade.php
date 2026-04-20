@@ -32,17 +32,17 @@
                 <div>
                     <label for="from_zone_id" class="block text-sm font-medium text-gray-700 mb-2">Zone de départ <span
                             class="text-red-600">*</span></label>
-                    <select name="from_zone_id" id="from_zone_id"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('from_zone_id') border-red-500 @enderror">
+                    <select name="from_zone" id="from_zone_id"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('from_zone') border-red-500 @enderror">
                         <option value="">-- Sélectionnez une zone --</option>
                         @foreach ($zones as $zone)
                             <option value="{{ $zone->id }}"
-                                {{ old('from_zone_id', $pricing->from_zone_id) === $zone->id ? 'selected' : '' }}>
+                                {{ old('from_zone', $pricing->from_zone) === $zone->id ? 'selected' : '' }}>
                                 {{ $zone->name }}
                             </option>
                         @endforeach
                     </select>
-                    @error('from_zone_id')
+                    @error('from_zone')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
@@ -50,17 +50,17 @@
                 <div>
                     <label for="to_zone_id" class="block text-sm font-medium text-gray-700 mb-2">Zone de destination <span
                             class="text-red-600">*</span></label>
-                    <select name="to_zone_id" id="to_zone_id"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('to_zone_id') border-red-500 @enderror">
+                    <select name="to_zone" id="to_zone_id"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('to_zone') border-red-500 @enderror">
                         <option value="">-- Sélectionnez une zone --</option>
                         @foreach ($zones as $zone)
                             <option value="{{ $zone->id }}"
-                                {{ old('to_zone_id', $pricing->to_zone_id) === $zone->id ? 'selected' : '' }}>
+                                {{ old('to_zone', $pricing->to_zone) === $zone->id ? 'selected' : '' }}>
                                 {{ $zone->name }}
                             </option>
                         @endforeach
                     </select>
-                    @error('to_zone_id')
+                    @error('to_zone')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>

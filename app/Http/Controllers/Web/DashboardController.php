@@ -58,7 +58,7 @@ class DashboardController extends Controller
 
         $recentBookings = Booking::where('status', 'pending')
             ->with(['fromZone', 'toZone'])
-            ->orderBy('pickup_datetime')
+            ->orderByRaw("CONCAT(pickup_date, ' ', pickup_time) DESC")
             ->latest()
             ->take(5)
             ->get();

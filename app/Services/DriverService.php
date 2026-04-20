@@ -60,7 +60,7 @@ class DriverService
         return User::where('role', 'driver')
             ->with(['driver', 'driver.bookings' => function ($query) {
                 $query->with(['fromZone', 'toZone'])
-                    ->orderBy('pickup_datetime', 'desc');
+                    ->orderByRaw("CONCAT(pickup_date, ' ', pickup_time) DESC");
             }])
             ->findOrFail($driverId);
     }
@@ -121,6 +121,8 @@ class DriverService
             'agent_id' => $data['agent_id'] ?? null,
             'contract_type' => $data['contract_type'] ?? null,
             'start_date' => $data['start_date'] ?? null,
+            'tricycle_owner' => $data['tricycle_owner'] ?? null,
+            'owner_phone' => $data['owner_phone'] ?? null,
         ]);
 
         return $user->load('driver');
@@ -148,6 +150,8 @@ class DriverService
                 'agent_id' => $data['agent_id'] ?? $user->driver->agent_id,
                 'contract_type' => $data['contract_type'] ?? $user->driver->contract_type,
                 'start_date' => $data['start_date'] ?? $user->driver->start_date,
+                'tricycle_owner' => $data['tricycle_owner'] ?? $user->driver->tricycle_owner,
+                'owner_phone' => $data['owner_phone'] ?? $user->driver->owner_phone,
             ]);
         }
 

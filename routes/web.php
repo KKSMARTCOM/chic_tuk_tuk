@@ -1,20 +1,17 @@
 <?php
 
-use App\Http\Controllers\Admin\DriverController;
-use App\Http\Controllers\Admin\PromoCodeController;
 use App\Http\Controllers\Api\PricingController;
 use App\Http\Controllers\Web\AuthController;
 use App\Http\Controllers\Web\BookingController;
-use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Web\PageController;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PageController::class, 'index'])->name('home');
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+
 // Prix public: récupère le tarif entre deux zones (option: ?days=)
-Route::get('/pricing/price/{fromZoneId}/{toZoneId}', [PricingController::class, 'calculatePrice'])->name('pricing.get-price');
+Route::post('/pricing/price', [PricingController::class, 'calculatePrice'])->name('pricing.get-price');
 
 Route::post('/login-store', [AuthController::class, 'loginStore'])->name('login.store');
 Route::post('/bookings', [BookingController::class, 'store'])->name('bookings.store');

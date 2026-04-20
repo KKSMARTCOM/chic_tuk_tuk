@@ -123,13 +123,13 @@
                     @forelse($recentBookings as $booking)
                         <tr>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ \Carbon\Carbon::parse($booking->pickup_datetime)->format('d/m/Y H:i') }}
+                                {{ formatDateTimeFr($booking->pickup_date_time) }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ $booking->fromZone->name ?? 'N/A' }}
+                                {{ $booking->from_location ?? 'N/A' }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ $booking->toZone->name ?? 'N/A' }}
+                                {{ $booking->to_location ?? 'N/A' }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 <form action="{{ route('driver.bookings.accept', $booking) }}" method="POST"
