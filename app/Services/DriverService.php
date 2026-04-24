@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Booking;
 use App\Models\Driver;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
@@ -168,5 +169,93 @@ class DriverService
         }
 
         $user->delete();
+    }
+
+    public function getDriverDashboardStats(Driver $driver)
+    {
+        // Calcul du temps total de courses en minutes
+        $total_duration_seconds = Booking::where('driver_id', $driver->id)
+            ->where('status', 'completed')
+            ->whereNotNull('started_at')
+            ->whereNotNull('completed_at')
+            ->get()
+            ->sum(function ($booking) {
+                return $booking->started_at->diffInSeconds($booking->completed_at);
+            });
+
+        $recentBookings = Booking::where('status', 'pending')
+            ->with(['fromZone', 'toZone'])
+            ->orderByRaw("CONCAT(pickup_date, ' ', pickup_time) DESC")
+            ->latest()
+            ->take(5)
+            ->get();
+
+        $recentBookingsAccepting = Booking::where('driver_id', $driver->id)
+            ->where('status', 'confirmed')
+            ->with(['fromZone', 'toZone'])
+            ->orderByRaw("CONCAT(pickup_date, ' ', pickup_time) DESC")
+            ->latest()
+            ->take(5)
+            ->get();
+
+        $stats = [
+            'total_trips' => $driver->total_trips,
+            'rating' => $driver->rating,
+            'confirmed_trips' => Booking::where('driver_id', $driver->id)
+                ->where('status', 'confirmed')->count(),
+            'completed_trips' => Booking::where('driver_id', $driver->id)
+                ->where('status', 'completed')->count(),
+            'cancelled_trips' => Booking::where('driver_id', $driver->id)
+                ->where('status', 'cancelled')->count(),
+            'earnings_today' => Booking::where('driver_id', $driver->id)
+                ->where('status', 'completed')
+                ->whereDate('completed_at', today())
+                ->sum('driver_earning'),
+            'total_earnings' => Booking::where('driver_id', $driver->id)
+                ->where('status', 'completed')
+                ->sum('driver_earning'),
+            'commission_today' => Booking::where('driver_id', $driver->id)
+                ->where('status', 'completed')
+                ->whereDate('completed_at', today())
+                ->sum('commission'),
+            'total_commission' => Booking::where('driver_id', $driver->id)
+                ->where('status', 'completed')
+                ->sum('commission'),
+            'total_duration_minutes' => round($total_duration_seconds / 60),
+            'recent_bookings' => $recentBookings,
+            'recent_bookings_accepting' => $recentBookingsAccepting
+        ];
+
+        return $stats;
+    }
+
+    public function getAllDriversForExport($filters = [])
+    {
+        $query = User::where('role', 'driver')->with('driver');
+
+        if (isset($filters['search']) && !empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                    ->orWhere('email', 'like', '%' . $search . '%')
+                    ->orWhere('phone', 'like', '%' . $search . '%')
+                    ->orWhereHas('driver', function ($driverQuery) use ($search) {
+                        $driverQuery->where('license_number', 'like', '%' . $search . '%')
+                            ->orWhere('vehicle_number', 'like', '%' . $search . '%');
+                    });
+            });
+        }
+
+        if (isset($filters['is_active'])) {
+            $query->where('is_active', $filters['is_active']);
+        }
+
+        if (isset($filters['is_available'])) {
+            $query->whereHas('driver', function ($q) use ($filters) {
+                $q->where('is_available', $filters['is_available']);
+            });
+        }
+
+        return $query->latest()->get();
     }
 }

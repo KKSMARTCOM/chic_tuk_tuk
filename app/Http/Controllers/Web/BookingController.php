@@ -6,19 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\PromoCode;
 use App\Services\BookingService;
-use App\Services\PricingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Http;
 
 class BookingController extends Controller
 {
     protected $pricingService;
     protected $bookingService;
 
-    public function __construct(PricingService $pricingService, BookingService $bookingService)
+    public function __construct(BookingService $bookingService)
     {
-        $this->pricingService = $pricingService;
         $this->bookingService = $bookingService;
     }
 
@@ -128,31 +125,6 @@ class BookingController extends Controller
         );
 
         try {
-            // Calcul de la distance
-            $distance = $this->pricingService->getDistance($request->from_lng, $request->from_lat, $request->to_lng, $request->to_lat);
-
-            if (!$distance) {
-                return redirect()->back()->withErrors('Erreur lors du calcul de l\'itinéraire.');
-            }
-
-            $price = $this->pricingService->getPrice($distance);
-
-            // Gestion promo
-            $discount = 0;
-            $promoCodeId = null;
-            if ($request->promo_code) {
-                $promo = PromoCode::where('code', $request->promo_code)->first();
-
-                if ($promo && $promo->isValid()) {
-                    $discount = $promo->applyDiscount($price);
-                    $promoCodeId = $promo->id;
-                    $promo->increment('used_count');
-                } else {
-                    return redirect()->back()->withErrors(['promo_code' => 'Code promo invalide ou expiré.'])->withInput();
-                }
-            }
-
-            $totalPrice = $price - $discount;
 
             $bookingData = [
                 'from_location' => $request->from_location,
@@ -161,22 +133,19 @@ class BookingController extends Controller
                 'from_lat' => $request->from_lat,
                 'to_lng' => $request->to_lng,
                 'to_lat' => $request->to_lat,
-                'distance' => $distance,
                 'phone' => $request->phone,
                 'days' => $request->days ? $request->days : 1,
                 'pickup_date' => $request->pickup_date,
                 'pickup_time' => $request->pickup_time,
                 'special_requests' => $request->special_requests,
-                'base_price' => $price,
-                'discount' => $discount,
-                'total_price' => $totalPrice,
+                'promo_code' => $request->promo_code,
             ];
 
             $this->bookingService->create($bookingData);
 
             return redirect()->back()->with('success', 'Réservation créée avec succès!');
         } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['error' => 'Une erreur est survenue: ' . $e->getMessage()])->withInput();
+            return redirect()->back()->withErrors(['error' => 'Une erreur est survenue. Veuillez réessayer ! ' . $e->getMessage()])->withInput();
         }
     }
 

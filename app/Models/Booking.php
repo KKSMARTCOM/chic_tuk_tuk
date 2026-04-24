@@ -41,6 +41,8 @@ class Booking extends Model
         'discount',
         'total_price',
         'promo_code_id',
+        'commission',
+        'driver_earning',
 
         // Nouveau champs pour calcul distance
         'from_location',
@@ -50,6 +52,7 @@ class Booking extends Model
         'to_lng',
         'to_lat',
         'distance',
+
     ];
 
     protected $casts = [

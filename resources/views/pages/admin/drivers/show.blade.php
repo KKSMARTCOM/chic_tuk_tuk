@@ -51,7 +51,8 @@
 
                     <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div class="text-center p-4 bg-purple-50 rounded-lg">
-                            <div class="text-2xl font-bold text-purple-600">{{ $bookingStats['total_minutes'] }}</div>
+                            <div class="text-2xl font-bold text-purple-600">
+                                {{ number_format($bookingStats['total_minutes'], 2) }}</div>
                             <div class="text-sm text-gray-600">Minutes conduites</div>
                         </div>
                         <div class="text-center p-4 bg-indigo-50 rounded-lg">
@@ -62,6 +63,37 @@
                         <div class="text-center p-4 bg-orange-50 rounded-lg">
                             <div class="text-2xl font-bold text-orange-600">{{ $bookingStats['in_progress'] }}</div>
                             <div class="text-sm text-gray-600">En cours</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistiques des Commissions -->
+            <div class="bg-white rounded-lg shadow-md">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-800">Statistiques des Commissions</h3>
+                </div>
+                <div class="px-6 py-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="text-center p-4 bg-yellow-50 rounded-lg">
+                            <div class="text-2xl font-bold text-yellow-600">
+                                {{ number_format($commissionStats['driver_earning'], 0, ',', ' ') }}</div>
+                            <div class="text-sm text-gray-600">Revenue Total Agent (FCFA)</div>
+                        </div>
+                        <div class="text-center p-4 bg-green-50 rounded-lg">
+                            <div class="text-2xl font-bold text-green-600">
+                                {{ number_format($commissionStats['total_revenue'], 0, ',', ' ') }}</div>
+                            <div class="text-sm text-gray-600">Commission Total (FCFA)</div>
+                        </div>
+                        <div class="text-center p-4 bg-blue-50 rounded-lg">
+                            <div class="text-2xl font-bold text-blue-600">
+                                {{ number_format($commissionStats['paid_revenue'], 0, ',', ' ') }}</div>
+                            <div class="text-sm text-gray-600">Commission Payée (FCFA)</div>
+                        </div>
+                        <div class="text-center p-4 bg-red-50 rounded-lg">
+                            <div class="text-2xl font-bold text-red-600">
+                                {{ number_format($commissionStats['unpaid_revenue'], 0, ',', ' ') }}</div>
+                            <div class="text-sm text-gray-600">Commission Due (FCFA)</div>
                         </div>
                     </div>
                 </div>
@@ -86,8 +118,8 @@
                                         </div>
                                         <div>
                                             <p class="text-sm font-medium text-gray-900">
-                                                {{ $booking->fromZone->name ?? 'N/A' }} →
-                                                {{ $booking->toZone->name ?? 'N/A' }}
+                                                {{ $booking->from_location ?? 'N/A' }} <br>
+                                                → {{ $booking->to_location ?? 'N/A' }}
                                             </p>
                                             <p class="text-sm text-gray-500">
                                                 {{ formatDateTimeFr($booking->pickup_date_time) }}
@@ -95,8 +127,10 @@
                                         </div>
                                     </div>
                                     <div class="text-right">
-                                        <p class="text-sm font-medium text-gray-900">
-                                            {{ number_format($booking->total_price, 0, ',', ' ') }} FCFA</p>
+                                        <p class="text-sm font-medium text-gray-900">Revenue :
+                                            {{ number_format($booking->driver_earning, 0, ',', ' ') }} FCFA</p>
+                                        <p class="text-sm font-medium text-gray-900">Commission :
+                                            {{ number_format($booking->commission, 0, ',', ' ') }} FCFA</p>
                                         <p class="text-sm text-gray-500">{{ $booking->passengers }} passager(s)</p>
                                     </div>
                                 </div>
@@ -156,12 +190,25 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Type de Contrat</label>
                             <p class="mt-1 text-sm text-gray-900">
-                                {{ $driverData->driver->contract_type . ' mois' ?? 'N/A' }}</p>
+                                {{ $driverData->driver->contract_type ? $driverData->driver->contract_type . ' mois' : 'N/A' }}
+                            </p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Date de Début</label>
                             <p class="mt-1 text-sm text-gray-900">
                                 {{ $driverData->driver->start_date ? formatDateFr($driverData->driver->start_date) : 'N/A' }}
+                            </p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Nom complet propriétaire</label>
+                            <p class="mt-1 text-sm text-gray-900">
+                                {{ $driverData->driver->tricycle_owner ?? 'N/A' }}
+                            </p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Numéro propriétaire</label>
+                            <p class="mt-1 text-sm text-gray-900">
+                                {{ $driverData->driver->owner_phone ?? 'N/A' }}
                             </p>
                         </div>
                     </div>
