@@ -8,10 +8,33 @@
                 <h1 class="text-2xl font-bold text-gray-800">Gestion des Conducteurs</h1>
                 <p class="text-gray-600">Gérez vos conducteurs et leurs véhicules</p>
             </div>
-            <a href="{{ route('admin.drivers.create') }}"
-                class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
-                <i class="fas fa-plus mr-2"></i> Nouveau Conducteur
-            </a>
+            <div class="flex items-center space-x-3">
+                <div class="relative group">
+                    <button
+                        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center">
+                        <i class="fas fa-download mr-2"></i> Importer/Exporter
+                    </button>
+                    <div
+                        class="absolute right-0 mt-0 w-64 bg-white rounded-lg shadow-lg border hidden group-hover:block z-10">
+                        <a href="{{ route('admin.drivers.export') }}"
+                            class="block px-4 py-2 text-gray-700 hover:bg-blue-50 border-b transition">
+                            <i class="fas fa-file-excel mr-2 text-green-600"></i> Exporter en Excel
+                        </a>
+                        <a href="{{ route('admin.drivers.import.form') }}"
+                            class="block px-4 py-2 text-gray-700 hover:bg-blue-50 border-b transition">
+                            <i class="fas fa-file-import mr-2 text-blue-600"></i> Importer des Conducteurs
+                        </a>
+                        <a href="{{ route('admin.drivers.template.download') }}"
+                            class="block px-4 py-2 text-gray-700 hover:bg-blue-50 transition">
+                            <i class="fas fa-file-csv mr-2 text-orange-600"></i> Télécharger le Template
+                        </a>
+                    </div>
+                </div>
+                <a href="{{ route('admin.drivers.create') }}"
+                    class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
+                    <i class="fas fa-plus mr-2"></i> Nouveau Conducteur
+                </a>
+            </div>
         </div>
     </div>
 

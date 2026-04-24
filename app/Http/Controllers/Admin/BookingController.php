@@ -126,7 +126,7 @@ class BookingController extends Controller
                 'status' => 'pending',
             ];
 
-            $this->bookingService->update($booking->id, $data);
+            $this->bookingService->update($booking, $data);
 
             if (request()->wantsJson()) {
                 return response()->json(['success' => true, 'message' => 'Conducteur retiré avec succès']);
@@ -168,7 +168,7 @@ class BookingController extends Controller
                 }
             }
 
-            $this->bookingService->update($booking->id, $updateData);
+            $this->bookingService->update($booking, $updateData);
 
             if ($request->wantsJson()) {
                 return response()->json(['success' => true, 'message' => 'Statut mis à jour avec succès']);
@@ -227,16 +227,8 @@ class BookingController extends Controller
         );
 
         try {
-            $distance = $this->pricingService->getDistance($request->from_lng, $request->from_lat, $request->to_lng, $request->to_lat);
-
-            if (!$distance) {
-                return redirect()->back()->withErrors('Erreur lors du calcul de l\'itinéraire.');
-            }
-
-            $price = $this->pricingService->getPrice($distance);
-
             $updateData = [
-                'user_id' => $request->user_id ?? $booking->user_id,
+                'user_id' => $request->user_id,
 
                 'from_location' => $request->from_location,
                 'to_location' => $request->to_location,
@@ -245,20 +237,18 @@ class BookingController extends Controller
                 'to_lng' => $request->to_lng,
                 'to_lat' => $request->to_lat,
 
-                'distance' => $distance,
+                'phone' => $request->phone,
+                'days' => $request->days,
+                'pickup_date' => $request->pickup_date,
+                'pickup_time' =>  $request->pickup_time,
+                'status' => $request->status,
+                'special_requests' => $request->special_requests,
+                'tourist_circuit_id' => $request->tourist_circuit_id,
 
-                'phone' => $request->phone ?? $booking->phone,
-                'days' => $request->days ?? $booking->days,
-                'pickup_date' => $request->pickup_date ?? $booking->pickup_date,
-                'pickup_time' =>  $request->pickup_time ?? $booking->pickup_time,
-                'special_requests' => $request->special_requests ?? $booking->special_requests,
-
-                'base_price' => $price,
-                'discount' => $booking->discount,
-                'total_price' => $price,
+                'total_price' => $request->total_price,
             ];
 
-            $this->bookingService->update($booking->id, $updateData);
+            $this->bookingService->update($booking, $updateData);
 
             return redirect()->route('admin.bookings.show', $booking)->with('success', 'Réservation mise à jour avec succès');
         } catch (\Exception $e) {

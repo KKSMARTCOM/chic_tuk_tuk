@@ -35,7 +35,7 @@
                     </div>
 
                     <!-- Formulaire de Réservation Multi-étapes -->
-                    <div class="bg-white rounded-2xl shadow-2xl p-8">
+                    <div class="bg-white rounded-2xl shadow-2xl p-8 max-h-[600px] overflow-y-auto custom-scrollbar">
                         <h3 class="text-2xl font-bold text-gray-800 mb-6">Réservez votre course</h3>
 
                         @if (session('error'))
@@ -92,7 +92,8 @@
                                 <div id="normalTrip">
 
                                     <div class="mb-4">
-                                        <label class="block text-gray-700 font-semibold mb-2">Point de départ</label>
+                                        <label class="block text-gray-700 font-semibold mb-2">Point de départ <span
+                                                class="text-red-500">*</span></label>
                                         <div class="relative">
                                             <input type="text" id="from_input" name="from_location"
                                                 class="w-full px-4 py-3 border rounded-lg outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent"
@@ -120,7 +121,8 @@
                                     </div>
 
                                     <div class="mb-4">
-                                        <label class="block text-gray-700 font-semibold mb-2">Destination</label>
+                                        <label class="block text-gray-700 font-semibold mb-2">Destination <span
+                                                class="text-red-500">*</span></label>
                                         <div class="relative">
                                             <input type="text" id="to_input" name="to_location"
                                                 class="w-full px-4 py-3 border rounded-lg outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent"
@@ -166,7 +168,8 @@
                                 <div class="mb-4">
                                     <!-- Carte -->
 
-                                    <label class="block text-gray-700 font-semibold mb-2">Date et heure</label>
+                                    <label class="block text-gray-700 font-semibold mb-2">Date et heure <span
+                                            class="text-red-500">*</span></label>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <input type="date" name="pickup_date" value="{{ old('pickup_date') }}"
                                             id="pickup_date"
@@ -200,7 +203,8 @@
 
                                     <!-- Visible input shown only when multi-day checked (no name attribute) -->
                                     <div id="daysWrapper" class="mt-3 hidden">
-                                        <label class="block text-gray-700 font-semibold mb-2">Nombre de jours</label>
+                                        <label class="block text-gray-700 font-semibold mb-2">Nombre de jours <span
+                                                class="text-red-500">*</span></label>
                                         <input type="text" id="days_input" inputmode="numeric" min="2"
                                             value="2"
                                             class="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent"
@@ -228,7 +232,8 @@
                             <!-- Étape 3: Détails et Confirmation -->
                             <div id="step3" class="step-content hidden">
                                 <div class="mb-4">
-                                    <label class="block text-gray-700 font-semibold mb-2">Numéro de téléphone</label>
+                                    <label class="block text-gray-700 font-semibold mb-2">Numéro de téléphone <span
+                                            class="text-red-500">*</span></label>
                                     <input type="tel" name="phone" value="{{ old('phone') }}" id="phone"
                                         placeholder="01 90 12 34 56" pattern="^\d{6,15}$"
                                         class="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent"

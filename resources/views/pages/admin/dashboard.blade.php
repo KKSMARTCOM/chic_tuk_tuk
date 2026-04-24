@@ -52,7 +52,7 @@
         <div class="bg-white rounded-lg shadow-md p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-gray-500 text-sm font-semibold">Revenus</p>
+                    <p class="text-gray-500 text-sm font-semibold">Revenue</p>
                     <p class="text-3xl font-bold text-gray-800 mt-2">
                         {{ number_format($stats['total_revenue'], 0, ',', ' ') }}</p>
                 </div>
@@ -133,9 +133,9 @@
                             </td>
                             <td class="px-6 py-4">
                                 <div class="text-sm text-gray-900">
-                                    {{ $booking->fromZone->name ?? 'N/A' }}</div>
+                                    {{ Str::limit($booking->from_location, 25, '...') ?? 'N/A' }}</div>
                                 <div class="text-sm text-gray-500"><i class="fas fa-arrow-right"></i>
-                                    {{ $booking->toZone->name ?? 'N/A' }}</div>
+                                    {{ Str::limit($booking->to_location, 25, '...') ?? 'N/A' }}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 {{ formatDateTimeFr($booking->pickup_date_time) }}
@@ -172,41 +172,108 @@
 
     <!-- Quick Actions -->
     <div class="grid md:grid-cols-3 gap-6 mt-8">
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h4 class="text-lg font-bold text-gray-800 mb-4">Actions rapides</h4>
-            <div class="space-y-3">
-                <a href="{{ route('admin.bookings.index') }}"
-                    class="block w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition text-center">
-                    <i class="fas fa-plus mr-2"></i> Voir les réservations
-                </a>
-                <a href="{{ route('admin.drivers.create') }}"
-                    class="block w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition text-center">
-                    <i class="fas fa-user-plus mr-2"></i> Ajouter conducteur
-                </a>
-                {{-- <a href="{{ route('admin.promo-codes.create') }}"
-                    class="block w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition text-center">
-                    <i class="fas fa-ticket-alt mr-2"></i> Créer code promo
-                </a> --}}
+        <!-- Top Drivers Revenue -->
+        <div class="bg-white rounded-lg shadow-md mb-8 md:col-span-2">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">Top 5 Conducteurs par Revenu</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Rang
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Conducteur</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Revenu
+                                Total</th>
+                            <th class="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @forelse($stats['driver_revenues'] as $index => $driver)
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span
+                                        class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-purple-100 text-purple-600 font-bold">
+                                        {{ $index + 1 }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($driver->user->name) }}"
+                                            class="w-10 h-10 rounded-full mr-3">
+                                        <div>
+                                            <div class="text-sm font-medium text-gray-900">{{ $driver->user->name }}</div>
+                                            <div class="text-sm text-gray-500">{{ $driver->user->phone }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="text-lg font-semibold text-green-600">
+                                        {{ number_format($driver->commissions_sum_amount ?? 0, 0, ',', ' ') }} FCFA
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right">
+                                    <a href="{{ route('admin.drivers.show', $driver->user) }}"
+                                        class="text-blue-600 hover:text-blue-800">
+                                        <i class="fas fa-eye mr-2"></i> Voir
+                                    </a>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="4" class="px-6 py-4 text-center text-gray-500">
+                                    Aucune donnée de revenu disponible
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h4 class="text-lg font-bold text-gray-800 mb-4">Statistiques du jour</h4>
-            <div class="space-y-3">
-                <div class="flex justify-between items-center">
-                    <span class="text-gray-600">Courses complétées</span>
-                    <span class="font-bold text-green-600">{{ $todayStats['completed_today'] }}</span>
+        <div class="space-y-6">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h4 class="text-lg font-bold text-gray-800 mb-4">Actions rapides</h4>
+                <div class="space-y-3">
+                    <a href="{{ route('admin.bookings.index') }}"
+                        class="block w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition text-center">
+                        <i class="fas fa-plus mr-2"></i> Voir les réservations
+                    </a>
+                    <a href="{{ route('admin.drivers.create') }}"
+                        class="block w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition text-center">
+                        <i class="fas fa-user-plus mr-2"></i> Ajouter conducteur
+                    </a>
+                    {{-- <a href="{{ route('admin.promo-codes.create') }}"
+                        class="block w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition text-center">
+                        <i class="fas fa-ticket-alt mr-2"></i> Créer code promo
+                    </a> --}}
                 </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-gray-600">En cours</span>
-                    <span class="font-bold text-blue-600">{{ $todayStats['in_progress_today'] }}</span>
-                </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-gray-600">Annulées</span>
-                    <span class="font-bold text-red-600">{{ $todayStats['cancelled_today'] }}</span>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h4 class="text-lg font-bold text-gray-800 mb-4">Statistiques du jour</h4>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Courses complétées</span>
+                        <span class="font-bold text-green-600">{{ $todayStats['completed_today'] }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">En cours</span>
+                        <span class="font-bold text-blue-600">{{ $todayStats['in_progress_today'] }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Annulées</span>
+                        <span class="font-bold text-red-600">{{ $todayStats['cancelled_today'] }}</span>
+                    </div>
                 </div>
             </div>
         </div>
+
 
         {{-- <div class="bg-white rounded-lg shadow-md p-6">
             <h4 class="text-lg font-bold text-gray-800 mb-4">Notifications</h4>

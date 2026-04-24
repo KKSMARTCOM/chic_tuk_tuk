@@ -43,7 +43,7 @@
                                                 Non assigné
                                             @endif
 
-                                            @if (isset($booking->remaining_days) && $booking->remaining_days > 0)
+                                            @if (isset($booking->remaining_days) && $booking->remaining_days > 1)
                                                 <span class="ml-3">• <strong>Jours restants :</strong>
                                                     {{ $booking->remaining_days }}</span>
                                             @endif
@@ -85,10 +85,17 @@
                                             {{ $booking->passengers }} passager(s)
                                         </span> --}}
 
-                                        <span class="font-bold text-green-600">
-                                            <i class="fas fa-money-bill mr-1"></i>
-                                            {{ $booking->total_price ?? $booking->base_price }} FCFA
-                                        </span>
+                                        @if ($booking->status === 'completed')
+                                            <span class="font-bold text-green-600">
+                                                <i class="fas fa-money-bill mr-1"></i>
+                                                {{ $booking->driver_earning ?? $booking->total_price }} FCFA
+                                            </span>
+
+                                            <span class="font-bold text-yellow-600">
+                                                <i class="fas fa-percent mr-1"></i>
+                                                {{ $booking->commission ? $booking->commission . ' FCFA' : 'Aucune commission' }}
+                                            </span>
+                                        @endif
 
                                         @if ($booking->started_at && $booking->completed_at)
                                             <span class="font-semibold text-blue-600">

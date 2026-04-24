@@ -5,6 +5,7 @@
 use App\Http\Controllers\Web\BookingController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\PageController;
+use App\Http\Controllers\Web\DriverLeaveController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'role:driver'])->prefix('driver')->name('driver.')->group(function () {
@@ -20,4 +21,9 @@ Route::middleware(['auth', 'role:driver'])->prefix('driver')->name('driver.')->g
     Route::get('/history', [DashboardController::class, 'history'])->name('history');
     Route::get('/profile', [DashboardController::class, 'profile'])->name('profile');
     Route::put('/profile', [DashboardController::class, 'updateProfile'])->name('profile.update');
+
+    // Leaves
+    Route::get('/leaves', [DriverLeaveController::class, 'index'])->name('leaves.index');
+    Route::get('/leaves/request', [DriverLeaveController::class, 'create'])->name('leaves.create');
+    Route::post('/leaves', [DriverLeaveController::class, 'store'])->name('leaves.store');
 });

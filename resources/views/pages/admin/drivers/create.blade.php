@@ -54,7 +54,7 @@
                             class="text-red-600">*</span></label>
                     <input type="text" name="phone" id="phone" value="{{ old('phone') }}"
                         class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('phone') border-red-500 @enderror"
-                        placeholder="+226 XX XX XX XX">
+                        placeholder="+229 XX XX XX XX XX">
                     @error('phone')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
@@ -109,9 +109,13 @@
 
                     <div>
                         <label for="contract_type" class="block text-sm font-medium text-gray-700">Type de Contrat</label>
-                        <input type="text" name="contract_type" id="contract_type" value="{{ old('contract_type') }}"
-                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('contract_type') border-red-500 @enderror"
-                            placeholder="Type de contrat">
+                        <select name="contract_type" id="contract_type"
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('vehicle_type') border-red-500 @enderror">
+                            <option value="">-- Sélectionnez un type --</option>
+                            <option value="24" {{ old('contract_type') == '24' ? 'selected' : '' }}>24 Mois</option>
+                            <option value="30" {{ old('contract_type') == '30' ? 'selected' : '' }}>30 Mois</option>
+                            <option value="36" {{ old('contract_type') == '36' ? 'selected' : '' }}>36 Mois</option>
+                        </select>
                         @error('contract_type')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
@@ -122,6 +126,28 @@
                         <input type="date" name="start_date" id="start_date" value="{{ old('start_date') }}"
                             class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('start_date') border-red-500 @enderror">
                         @error('start_date')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="tricycle_owner" class="block text-sm font-medium text-gray-700">Nom complet du
+                            propriétaire</label>
+                        <input type="text" name="tricycle_owner" id="tricycle_owner"
+                            value="{{ old('tricycle_owner') }}"
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('tricycle_owner') border-red-500 @enderror">
+                        @error('tricycle_owner')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="owner_phone" class="block text-sm font-medium text-gray-700">Numéro du
+                            propriétaire</label>
+                        <input type="phone" name="owner_phone" id="owner_phone" value="{{ old('owner_phone') }}"
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('owner_phone') border-red-500 @enderror"
+                            placeholder="+229 XX XX XX XX XX">
+                        @error('owner_phone')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>

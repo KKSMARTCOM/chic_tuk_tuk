@@ -77,8 +77,10 @@
                                             {{ formatDateTimeFr($booking->pickup_date_time) }}</span>
                                         {{-- <span><i class="fas fa-users mr-1"></i> {{ $booking->passengers }}
                                             passager(s)</span> --}}
+                                        <span><i class="fas fa-route mr-1"></i> {{ $booking->distance }}
+                                            km estimé</span>
                                         <span class="font-bold text-green-600"><i class="fas fa-money-bill mr-1"></i>
-                                            {{ $booking->base_price }} FCFA</span>
+                                            {{ $booking->total_price }} FCFA</span>
                                     </div>
 
                                     @if ($booking->special_requests)

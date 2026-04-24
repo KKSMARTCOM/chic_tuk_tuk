@@ -15,7 +15,7 @@
                 </button>
                 <!-- Dropdown -->
                 <div id="notification-dropdown"
-                    class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border z-50 hidden">
+                    class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border z-20 hidden">
                     <div class="p-4 border-b">
                         <h3 class="text-lg font-semibold text-gray-800">Notifications</h3>
                     </div>
@@ -34,14 +34,39 @@
                 </div>
             </div>
 
-            <div class="flex items-center space-x-3">
-                <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode(auth()->user()->name) }}"
-                    class="w-8 h-8 rounded-full mr-3">
-                <span class="text-gray-800 font-medium">{{ auth()->user()->name }}</span>
+            <div class="flex items-center space-x-3 relative">
+                <button id="profile-btn" class="flex items-center space-x-3 cursor-pointer hover:opacity-80 transition">
+                    <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode(auth()->user()->name) }}"
+                        class="w-8 h-8 rounded-full mr-3">
+                </button>
+
+                <!-- Profile Dropdown -->
+                <div id="profile-dropdown"
+                    class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border z-20 hidden top-8">
+                    <div class="p-4 border-b">
+                        <p class="text-sm text-gray-600">Connecté en tant que</p>
+                        <p class="text-lg font-semibold text-gray-800">{{ auth()->user()->name }}</p>
+                    </div>
+                    <div class="p-2">
+                        <a href=""
+                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded transition">
+                            <i class="fas fa-user mr-2"></i>Mon profil
+                        </a>
+                    </div>
+                    <div class="p-2 border-t">
+                        <button onclick="showLogoutModal()"
+                            class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded transition">
+                            <i class="fas fa-sign-out-alt mr-2"></i>Déconnexion
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </header>
+
+<!-- Logout Confirmation Modal -->
+@include('inc.global.logout')
 
 @push('scripts')
     <!-- Sidebar Toggle Script -->
@@ -92,6 +117,22 @@
             }
         });
 
+        // Profile Dropdown Toggle
+        document.getElementById('profile-btn').addEventListener('click', function(e) {
+            e.stopPropagation();
+            const dropdown = document.getElementById('profile-dropdown');
+            dropdown.classList.toggle('hidden');
+        });
+
+        // Close profile dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('profile-dropdown');
+            const btn = document.getElementById('profile-btn');
+            if (!dropdown.contains(e.target) && !btn.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
         // Charger les notifications
         function loadNotifications() {
             fetch('/notifications/unread-count')
@@ -108,13 +149,13 @@
 
             // Charger les 5 dernières notifications pour le dropdown
             /* fetch('/notifications?limit=5')
-                .then(response => response.json())
-                .then(data => {
-                    const listElement = document.getElementById('notification-list');
-                    if (data.data && data.data.length > 0) {
-                        let html = '';
-                        data.data.forEach(notification => {
-                            html += `
+                                                                                .then(response => response.json())
+                                                                                .then(data => {
+                                                                                    const listElement = document.getElementById('notification-list');
+                                                                                    if (data.data && data.data.length > 0) {
+                                                                                        let html = '';
+                                                                                        data.data.forEach(notification => {
+                                                                                            html += `
             <div class="p-4 border-b hover:bg-gray-50 cursor-pointer" onclick="markAsRead(${notification.id})">
                 <div class="flex items-start space-x-3">
                     <div class="flex-shrink-0">
@@ -128,17 +169,17 @@
                 </div>
             </div>
         `;
-                        });
-                        listElement.innerHTML = html;
-                    } else {
-                        listElement.innerHTML = '<div class="p-4 text-center text-gray-500">Aucune notification</div>';
-                    }
-                })
-                .catch(error => {
-                    console.error('Erreur lors du chargement des notifications:', error);
-                    document.getElementById('notification-list').innerHTML =
-                        `<div class="p-4 text-center text-gray-500">Erreur de chargement</div>`;
-                }); */
+                                                                                        });
+                                                                                        listElement.innerHTML = html;
+                                                                                    } else {
+                                                                                        listElement.innerHTML = '<div class="p-4 text-center text-gray-500">Aucune notification</div>';
+                                                                                    }
+                                                                                })
+                                                                                .catch(error => {
+                                                                                    console.error('Erreur lors du chargement des notifications:', error);
+                                                                                    document.getElementById('notification-list').innerHTML =
+                                                                                        `<div class="p-4 text-center text-gray-500">Erreur de chargement</div>`;
+                                                                                }); */
         }
 
         // Marquer une notification comme lue depuis le dropdown
@@ -159,5 +200,13 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadNotifications();
         });
+
+        function showLogoutModal() {
+            document.getElementById('logoutModal').classList.remove('hidden');
+        }
+
+        function hideLogoutModal() {
+            document.getElementById('logoutModal').classList.add('hidden');
+        }
     </script>
 @endpush
