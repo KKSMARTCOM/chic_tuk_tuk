@@ -25,21 +25,18 @@ class PricingService
         }
 
         $data = $response->json();
-        $distance = $data['routes'][0]['summary']['distance'] / 1000;
+        $distanceFloat = $data['routes'][0]['summary']['distance'] / 1000;
+        $distance = ceil($distanceFloat);
 
         return $distance;
     }
 
     public function getPrice(float $distance): int
     {
-        $price_km = 200;
+        $price_km = 150;
 
-        $commission = 200;
+        $price = $distance * $price_km;
 
-        $price = ($distance * $price_km) + $commission;
-
-        $roundedPrice = ceil($price / 50) * 50;
-
-        return $roundedPrice;
+        return $price;
     }
 }

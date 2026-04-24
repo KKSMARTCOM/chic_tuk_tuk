@@ -46,6 +46,16 @@ class Driver extends Model
         return $this->hasMany(Booking::class, 'driver_id', 'id');
     }
 
+    public function commissions()
+    {
+        return $this->hasMany(Commission::class, 'driver_id', 'id');
+    }
+
+    public function leaveRequests()
+    {
+        return $this->hasMany(LeaveRequest::class, 'driver_id', 'id');
+    }
+
     public function hasConflictWithinTwoHours(Carbon $pickupDatetime): bool
     {
         $windowStart = $pickupDatetime->copy()->subHours(2);
@@ -80,7 +90,7 @@ class Driver extends Model
 
     public function getContractMonths(): int
     {
-        return (int) $this->contract_type ?? 24; // default 24 months
+        return (int) ($this->contract_type ?? 24); // default 24 months
     }
 
     public function getTotalLeaveDays(): int
@@ -95,15 +105,6 @@ class Driver extends Model
 
     public function canRequestLeave(int $days = 1): bool
     {
-        $currentMonth = now()->month;
-        $currentYear = now()->year;
-
-        // Check if requesting in current month
-        if (now()->month != $currentMonth || now()->year != $currentYear) {
-            return false;
-        }
-
-        // Check remaining days
         return $this->getRemainingLeaveDays() >= $days;
     }
 
@@ -118,5 +119,43 @@ class Driver extends Model
     public function hasLeaveOnDate(string $date): bool
     {
         return in_array($date, $this->leave_dates ?? []);
+    }
+
+    public function removeLeaveDates(array $dates): void
+    {
+        $existing = $this->leave_dates ?? [];
+        $this->leave_dates = array_values(array_diff($existing, $dates));
+        $this->leave_days_used -= count($dates);
+        $this->save();
+    }
+
+    /**
+     * Get pending leave requests for the current month
+     */
+    public function getPendingLeaveRequestsForCurrentMonth()
+    {
+        $currentMonth = now()->startOfMonth();
+        $nextMonth = now()->copy()->addMonth()->startOfMonth();
+
+        return $this->leaveRequests()
+            ->where('status', 'pending')
+            ->where('created_at', '>=', $currentMonth)
+            ->where('created_at', '<', $nextMonth)
+            ->get();
+    }
+
+    /**
+     * Get approved leave requests for the current month
+     */
+    public function getApprovedLeaveRequestsForCurrentMonth()
+    {
+        $currentMonth = now()->startOfMonth();
+        $nextMonth = now()->copy()->addMonth()->startOfMonth();
+
+        return $this->leaveRequests()
+            ->where('status', 'approved')
+            ->where('created_at', '>=', $currentMonth)
+            ->where('created_at', '<', $nextMonth)
+            ->get();
     }
 }

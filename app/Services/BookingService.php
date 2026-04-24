@@ -4,11 +4,24 @@ namespace App\Services;
 
 use App\Models\Booking;
 use App\Models\Driver;
+use App\Models\PromoCode;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Support\Facades\DB;
+
+use function Symfony\Component\Clock\now;
 
 class BookingService
 {
+    protected $pricingService;
+    protected $commissionService;
+
+    public function __construct(PricingService $pricingService, CommissionService $commissionService)
+    {
+        $this->pricingService = $pricingService;
+        $this->commissionService = $commissionService;
+    }
+
     public function calculateTotalPrice(int $basePrice, int $days, int $discount = 0): int
     {
         if ($days < 1) {
@@ -22,25 +35,55 @@ class BookingService
 
     public function create(array $data)
     {
+        // Calcul de la distance
+        $distance = $this->pricingService->getDistance($data['from_lng'], $data['from_lat'], $data['to_lng'], $data['to_lat']);
+
+        if (!$distance) {
+            throw new \Exception('Erreur lors du calcul de l\'itinéraire.');
+        }
+
+        $basePrice = $this->pricingService->getPrice($distance);
+
+        // Gestion promo
+        $discount = 0;
+        $promoCodeId = null;
+        if ($data['promo_code']) {
+            $promo = PromoCode::where('code', $data['promo_code'])->first();
+
+            if ($promo && $promo->isValid()) {
+                $discount = $promo->applyDiscount($basePrice);
+                $promoCodeId = $promo->id;
+                $promo->increment('used_count');
+            } else {
+                throw new \Exception('Code promo invalide ou expiré.');
+            }
+        }
+
+        $totalPrice = $basePrice - $discount;
+        $commission = ceil((($totalPrice * 15) / 100) / 50) * 50;
+        $driverEarning = $totalPrice - $commission;
+
         $isRecurring = isset($data['days']) && $data['days'] > 1;
 
         $booking = Booking::create([
             'from_location'       => $data['from_location'],
             'to_location'         => $data['to_location'],
-            'from_lng'         => $data['from_lng'],
-            'from_lat'         => $data['from_lat'],
-            'to_lng'         => $data['to_lng'],
-            'to_lat'         => $data['to_lat'],
-            'distance'           => $data['distance'] ?? null,
-            'phone'              => $data['phone'],
-            'days'               => $data['days'],
-            'remaining_days'     => $data['days'] ?? 1,
-            'pickup_date'        => $data['pickup_date'],
-            'pickup_time'        => $data['pickup_time'],
-            'special_requests'   => $data['special_requests'],
-            'base_price'         => $data['base_price'],
-            'total_price'        => $data['total_price'],
-            'is_recurring'       => $isRecurring,
+            'from_lng'            => $data['from_lng'],
+            'from_lat'            => $data['from_lat'],
+            'to_lng'              => $data['to_lng'],
+            'to_lat'              => $data['to_lat'],
+            'phone'               => $data['phone'],
+            'days'                => $data['days'],
+            'remaining_days'      => $data['days'] ?? 1,
+            'pickup_date'         => $data['pickup_date'],
+            'pickup_time'         => $data['pickup_time'],
+            'special_requests'    => $data['special_requests'],
+            'distance'            => $distance,
+            'base_price'          => $basePrice,
+            'total_price'         => $totalPrice,
+            'commission'          => $commission,
+            'driver_earning'      => $driverEarning,
+            'is_recurring'        => $isRecurring,
             'next_recurring_date' => $isRecurring ? Carbon::parse($data['pickup_date'] . ' ' . $data['pickup_time'])->addDay() : null,
         ]);
 
@@ -110,7 +153,7 @@ class BookingService
             });
         }
 
-        return $query->orderByRaw("CONCAT(pickup_date, ' ', pickup_time) DESC")->get();
+        return $query->orderByRaw("CONCAT(pickup_date, ' ', pickup_time) ASC")->get();
     }
 
     public function take(string $bookingId, string $driverId)
@@ -172,13 +215,13 @@ class BookingService
 
             // Créer une nouvelle course avec les mêmes données
             $newBooking = Booking::create([
-                'from_location'       => $booking->from_location,
-                'to_location'         => $booking->to_location,
-                'from_lng'         => $booking->from_lng,
-                'from_lat'         => $booking->from_lat,
-                'to_lng'         => $booking->to_lng,
-                'to_lat'         => $booking->to_lat,
-                'distance'         => $booking->distance,
+                'from_location'      => $booking->from_location,
+                'to_location'        => $booking->to_location,
+                'from_lng'           => $booking->from_lng,
+                'from_lat'           => $booking->from_lat,
+                'to_lng'             => $booking->to_lng,
+                'to_lat'             => $booking->to_lat,
+                'distance'           => $booking->distance,
                 'phone'              => $booking->phone,
                 'days'               => $booking->days,
                 'remaining_days'     => $booking->remaining_days,
@@ -186,10 +229,12 @@ class BookingService
                 'pickup_time'        => $booking->pickup_time,
                 'special_requests'   => $booking->special_requests,
                 'tourist_circuit_id' => $booking->tourist_circuit_id,
-                'base_price'         => $booking->base_price,
                 'discount'           => $booking->discount,
-                'total_price'        => $booking->total_price,
                 'promo_code_id'      => $booking->promo_code_id,
+                'base_price'         => $booking->base_price,
+                'total_price'        => $booking->total_price,
+                'commission'         => $booking->commission,
+                'driver_earning'     => $booking->driver_earning,
                 'status'             => 'pending',
                 'is_recurring'       => $booking->is_recurring,
             ]);
@@ -258,42 +303,75 @@ class BookingService
                 ->lockForUpdate()
                 ->increment('total_trips');
 
+            $commissionData = [
+                'driver_id'       => $driverId,
+                'booking_id'      => $bookingId,
+                'amount'          => $booking->commission,
+                'date'            => now(),
+            ];
+
+            $this->commissionService->create($commissionData);
+
             return $booking;
         });
     }
 
-    public function update(string $bookingId, array $data)
+    public function update(Booking $booking, array $data)
     {
-        $isRecurring = isset($data['days']) && $data['days'] > 1;
+        $distance = $booking->distance;
+        $basePrice = $booking->base_price;
+        if (isset($data['from_lng']) && (float) $data['from_lng'] !== (float) $booking->from_lng || isset($data['to_lng']) && (float) $data['to_lng'] !== (float) $booking->to_lng) {
+            $distance = $this->pricingService->getDistance($data['from_lng'], $data['from_lat'], $data['to_lng'], $data['to_lat']);
+            $basePrice = $this->pricingService->getPrice($distance);
+        }
 
-        $booking = Booking::findOrFail($bookingId);
+        $commission = $booking->commission;
+        $driverEarning = $booking->driver_earning;
+        if (isset($data['total_price']) && (int) $data['total_price'] !== (int) $booking->total_price) {
+            $commission = ceil((($data['total_price'] * 15) / 100) / 50) * 50;
+            $driverEarning = $data['total_price'] - $commission;
+        }
 
-        $pickup_date = $data['pickup_date'] instanceof Carbon ? $data['pickup_date']->format('Y-m-d') : $data['pickup_date'];
+        $isRecurring = $booking->is_recurring;
+        $nextRecurringDate = $booking->next_recurring_date;
+        if (isset($data['days']) && $data['days'] !== $booking->days) {
+            $isRecurring = isset($data['days']) && $data['days'] > 1;
+            $pickup_date = $data['pickup_date'] instanceof Carbon ? $data['pickup_date']->format('Y-m-d') : $data['pickup_date'];
+            $nextRecurringDate = $isRecurring ?  Carbon::parse($pickup_date . ' ' . $data['pickup_time'])->addDay() : null;
+        }
+
+        if (isset($data['status']) || isset($data['driver_id'])) {
+            $booking->update($data);
+            return $booking->refresh();
+        }
 
         $booking->update(
             [
-                'user_id'             => $data['user_id'],
-                'from_location'       => $data['from_location'],
-                'to_location'         => $data['to_location'],
-                'from_lng'            => $data['from_lng'],
-                'from_lat'            => $data['from_lat'],
-                'to_lng'              => $data['to_lng'],
-                'to_lat'              => $data['to_lat'],
-                'distance'            => $data['distance'] ?? null,
-                'phone'               => $data['phone'],
-                'days'                => $data['days'],
-                'remaining_days'      => $data['days'] ?? 1,
-                'pickup_date'         => $data['pickup_date'],
-                'pickup_time'         => $data['pickup_time'],
-                'special_requests'    => $data['special_requests'],
-                'base_price'          => $data['base_price'],
-                'total_price'         => $data['total_price'],
+                'user_id'             => $data['user_id'] ?? $booking->user_id,
+                'from_location'       => $data['from_location'] ?? $booking->from_location,
+                'to_location'         => $data['to_location'] ?? $booking->to_location,
+                'from_lng'            => $data['from_lng'] ?? $booking->from_lng,
+                'from_lat'            => $data['from_lat'] ?? $booking->from_lat,
+                'to_lng'              => $data['to_lng'] ?? $booking->to_lng,
+                'to_lat'              => $data['to_lat'] ?? $booking->to_lat,
+                'phone'               => $data['phone'] ?? $booking->phone,
+                'days'                => $data['days'] ?? $booking->days,
+                'remaining_days'      => $data['days'] ?? $booking->days,
+                'pickup_date'         => $data['pickup_date'] ?? $booking->pickup_date,
+                'pickup_time'         => $data['pickup_time'] ?? $booking->pickup_time,
+                'status'              => $data['status'] ?? $booking->status,
+                'special_requests'    => $data['special_requests'] ?? $booking->special_requests,
+                'total_price'         => $data['total_price'] ?? $booking->total_price,
+                'distance'            => $distance,
+                'base_price'          => $basePrice,
+                'commission'          => $commission,
+                'driver_earning'      => $driverEarning,
                 'is_recurring'        => $isRecurring,
-                'next_recurring_date' => $isRecurring ? Carbon::parse($pickup_date . ' ' . $data['pickup_time'])->addDay() : null,
+                'next_recurring_date' => $nextRecurringDate,
             ]
         );
 
-        return $booking;
+        return $booking->refresh();
     }
 
     public function delete(string $bookingId)
@@ -331,27 +409,29 @@ class BookingService
             $newPickupDate = Carbon::parse($booking->pickup_date . ' ' . $booking->pickup_time)->addDay();
 
             Booking::create([
-                'from_location'      => $booking->from_location,
-                'to_location'        => $booking->to_location,
-                'from_lng'           => $booking->from_lng,
-                'from_lat'           => $booking->from_lat,
-                'to_lng'             => $booking->to_lng,
-                'to_lat'             => $booking->to_lat,
-                'distance'           => $booking->distance,
-                'phone'              => $booking->phone,
-                'days'               => $booking->days,
-                'remaining_days'     => $booking->remaining_days - 1,
-                'pickup_date'        => $newPickupDate->toDateString(),
-                'pickup_time'        => $newPickupDate->format('H:i'),
-                'special_requests'   => $booking->special_requests,
-                'tourist_circuit_id' => $booking->tourist_circuit_id,
-                'base_price'         => $booking->base_price,
-                'discount'           => $booking->discount,
-                'total_price'        => $booking->total_price,
-                'promo_code_id'      => $booking->promo_code_id,
-                'status'             => 'pending',
-                'is_recurring'       => true,
-                'parent_booking_id'  => $booking->parent_booking_id ?? $booking->id,
+                'from_location'       => $booking->from_location,
+                'to_location'         => $booking->to_location,
+                'from_lng'            => $booking->from_lng,
+                'from_lat'            => $booking->from_lat,
+                'to_lng'              => $booking->to_lng,
+                'to_lat'              => $booking->to_lat,
+                'distance'            => $booking->distance,
+                'phone'               => $booking->phone,
+                'days'                => $booking->days,
+                'remaining_days'      => $booking->remaining_days - 1,
+                'pickup_date'         => $newPickupDate->toDateString(),
+                'pickup_time'         => $newPickupDate->format('H:i'),
+                'special_requests'    => $booking->special_requests,
+                'tourist_circuit_id'  => $booking->tourist_circuit_id,
+                'promo_code_id'       => $booking->promo_code_id,
+                'discount'            => $booking->discount,
+                'base_price'          => $booking->base_price,
+                'total_price'         => $booking->total_price,
+                'commission'          => $booking->commission,
+                'driver_earning'      => $booking->driver_earning,
+                'status'              => 'pending',
+                'is_recurring'        => true,
+                'parent_booking_id'   => $booking->parent_booking_id ?? $booking->id,
                 'next_recurring_date' => $newPickupDate->addDay(),
             ]);
 

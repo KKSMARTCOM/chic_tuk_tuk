@@ -3,6 +3,7 @@
 // Admin Routes
 
 use App\Http\Controllers\Admin\BookingController;
+use App\Http\Controllers\Admin\CommissionController;
 use App\Http\Controllers\Admin\DriverController;
 use App\Http\Controllers\Admin\LeaveController;
 use App\Http\Controllers\Admin\PricingController;
@@ -15,6 +16,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/dashboard', [DashboardController::class, 'admin'])->name('dashboard');
 
     // Drivers
+    Route::get('drivers/export/excel', [DriverController::class, 'export'])->name('drivers.export');
+    Route::get('drivers/import/form', [DriverController::class, 'importForm'])->name('drivers.import.form');
+    Route::post('drivers/import', [DriverController::class, 'import'])->name('drivers.import');
+    Route::get('drivers/template/download', [DriverController::class, 'downloadTemplate'])->name('drivers.template.download');
     Route::resource('drivers', DriverController::class);
     Route::post('drivers/{driver}/toggle-availability', [DriverController::class, 'toggleAvailability'])->name('drivers.toggle-availability');
     Route::post('drivers/{driver}/toggle-status', [DriverController::class, 'toggleStatus'])->name('drivers.toggle-status');
@@ -44,6 +49,14 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Leaves
     Route::get('leaves', [LeaveController::class, 'index'])->name('leaves.index');
     Route::get('leaves/{driver}', [LeaveController::class, 'show'])->name('leaves.show');
-    Route::post('leaves/{driver}/approve', [LeaveController::class, 'approveLeave'])->name('leaves.approve');
+    Route::get('leave/requests', [LeaveController::class, 'requests'])->name('leave.requests.index');
+    Route::post('leave/requests/{leaveRequest}/approve', [LeaveController::class, 'approveRequest'])->name('leave.requests.approve');
+    Route::post('leave/requests/{leaveRequest}/reject', [LeaveController::class, 'rejectRequest'])->name('leave.requests.reject');
     Route::post('leaves/{driver}/revoke', [LeaveController::class, 'revokeLeave'])->name('leaves.revoke');
+
+    // Commissions
+    Route::get('commissions', [CommissionController::class, 'index'])->name('commissions.index');
+    Route::get('commissions/{commission}', [CommissionController::class, 'show'])->name('commissions.show');
+    Route::patch('commissions/{commission}/mark-paid', [CommissionController::class, 'markAsPaid'])->name('commissions.mark-paid');
+    Route::patch('commissions/{commission}/mark-unpaid', [CommissionController::class, 'markAsUnpaid'])->name('commissions.mark-unpaid');
 });
