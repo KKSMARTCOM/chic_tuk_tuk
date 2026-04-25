@@ -1,0 +1,26 @@
+[setup]
+nixPkgs = [
+  "php",
+  "phpExtensions.gd",
+  "phpExtensions.pdo_pgsql",
+  "phpExtensions.redis",
+  "nodejs"
+]
+
+[install]
+cmds = [
+  "composer install --no-interaction --prefer-dist --optimize-autoloader --ignore-platform-req=ext-gd",
+  "npm install && npm run build"
+]
+
+[build]
+cmds = [
+  "php artisan config:clear",
+  "php artisan config:cache",
+  "php artisan route:cache",
+  "php artisan view:cache",
+  "php artisan migrate --force"
+]
+
+[start]
+cmd = "php -S 0.0.0.0:$PORT -t public"
