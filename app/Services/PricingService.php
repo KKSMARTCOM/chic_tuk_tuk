@@ -21,7 +21,19 @@ class PricingService
         ]);
 
         if (!$response->successful()) {
-            throw new \Exception('Erreur lors du calcul de l\'itinéraire.');
+
+            $errorMessage = 'Erreur inconnue';
+
+            // essayer de récupérer le message de l'API
+            if ($response->json()) {
+                $errorMessage = $response->json()['error']['message']
+                    ?? $response->json()['message']
+                    ?? json_encode($response->json());
+            }
+
+            throw new \Exception(
+                "Erreur OpenRouteService ({$response->status()}): " . $errorMessage
+            );
         }
 
         $data = $response->json();
