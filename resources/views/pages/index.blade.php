@@ -232,12 +232,12 @@
                             <!-- Étape 3: Détails et Confirmation -->
                             <div id="step3" class="step-content hidden">
                                 <div class="mb-4">
-                                    <label class="block text-gray-700 font-semibold mb-2">Numéro de téléphone <span
-                                            class="text-red-500">*</span></label>
-                                    <input type="tel" name="phone" value="{{ old('phone') }}" id="phone"
-                                        placeholder="01 90 12 34 56" pattern="^\d{6,15}$"
-                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent"
-                                        required>
+                                    <label class="block text-gray-700 font-semibold mb-2">Numéro de téléphone <spani
+                                            class="text-red-500">*</spani< /label>
+                                            <input type="tel" name="phone" value="{{ old('phone') }}"
+                                                id="phone" placeholder="01 90 12 34 56" pattern="^\d{6,15}$"
+                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent"
+                                                required>
                                 </div>
                                 <p class="text-red-500 text-sm mt-1 hidden error-message"></p>
                                 @error('phone')
