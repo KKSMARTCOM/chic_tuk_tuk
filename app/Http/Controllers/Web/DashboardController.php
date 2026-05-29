@@ -40,15 +40,28 @@ class DashboardController extends Controller
             ->take(10)
             ->get();
 
-        // Revenue par agent/conducteur
+        // Revenue par agent/Agent
         $driverRevenues = Driver::with('user')
-            ->whereHas('commissions', function ($q) {
-                $q->where('amount', '>', 0);
+
+            ->whereHas('bookings', function ($query) {
+                $query->where('driver_earning', '>', 0);
             })
+
+            ->withSum('bookings', 'driver_earning')
+
             ->withSum('commissions', 'amount')
-            ->orderByDesc('commissions_sum_amount')
+
+            ->withSum('payments', 'amount')
+
+            ->orderBy('bookings_sum_driver_earning')
+
             ->limit(5)
+
             ->get();
+
+        foreach ($driverRevenues as $driver) {
+            $driver->commission_due = ($driver->commissions_sum_amount ?? 0) - ($driver->payments_sum_amount ?? 0);
+        }
 
         $stats = [
             'total_bookings' => Booking::count(),

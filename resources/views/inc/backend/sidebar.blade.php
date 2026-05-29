@@ -26,17 +26,22 @@
             <a href="{{ route('admin.drivers.index') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition
             {{ request()->routeIs('admin.drivers*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
-                <i class="fas fa-users mr-3"></i> Conducteurs
+                <i class="fas fa-users mr-3"></i> Agents
             </a>
             <a href="{{ route('admin.commissions.index') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition
                 {{ request()->routeIs('admin.commissions*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
                 <i class="fas fa-percent mr-3"></i> Commissions
             </a>
+            <a href="{{ route('admin.payments.index') }}"
+                class="flex items-center px-6 py-3 hover:bg-green-600 transition
+                {{ request()->routeIs('admin.payments*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
+                <i class="fas fa-money-bill mr-3"></i> Paiements
+            </a>
             <a href="{{ route('admin.leaves.index') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition
             {{ request()->routeIs('admin.leaves*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
-                <i class="fas fa-calendar-alt mr-3"></i> Congés
+                <i class="fas fa-calendar-alt mr-3"></i> Pauses
             </a>
             <a href="{{ route('admin.pricing.index') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition
@@ -75,7 +80,7 @@
             <a href="{{ route('driver.leaves.index') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition
             {{ request()->routeIs('driver.leaves*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
-                <i class="fas fa-calendar-alt mr-3"></i> Congés
+                <i class="fas fa-calendar-alt mr-3"></i> Pauses
             </a>
             {{-- <a href="{{ route('notifications.index') }}"
             class="flex items-center px-6 py-3 hover:bg-green-600 transition
@@ -93,7 +98,9 @@
             <i class="fas fa-history mr-3"></i> Historique
         </a>
 
-        <a href="#" class="flex items-center px-6 py-3 hover:bg-green-600 transition mt-auto">
+        <a href="{{ route('settings.settings') }}"
+            class="flex items-center px-6 py-3 hover:bg-green-600 transition
+                {{ request()->routeIs('settings.settings') || request()->routeIs('profile') ? 'bg-green-600 border-l-4 border-white' : '' }}">
             <i class="fas fa-cog mr-3"></i> Paramètres
         </a>
 

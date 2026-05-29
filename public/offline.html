@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Mode Hors Ligne - ChicTukTuk</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        />
+    </head>
+    <body class="bg-gray-100">
+        <div class="min-h-screen flex items-center justify-center px-4">
+            <div class="max-w-md w-full">
+                <!-- Card -->
+                <div class="bg-white rounded-lg shadow-lg p-8 text-center">
+                    <!-- Icon -->
+                    <div class="mb-6">
+                        <div
+                            class="inline-flex items-center justify-center w-24 h-24 bg-yellow-50 rounded-full"
+                        >
+                            <i
+                                class="fas fa-wifi-slash text-yellow-600 text-4xl"
+                            ></i>
+                        </div>
+                    </div>
+
+                    <!-- Title -->
+                    <h1 class="text-2xl font-bold text-gray-800 mb-2">
+                        Mode Hors Ligne
+                    </h1>
+
+                    <!-- Description -->
+                    <p class="text-gray-600 mb-6">
+                        Vous êtes actuellement en mode hors ligne. La connexion
+                        Internet n'est pas disponible.
+                    </p>
+
+                    <!-- Status -->
+                    <div
+                        class="mb-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200"
+                    >
+                        <p class="text-sm text-yellow-800">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            <span id="status">Tentative de reconnexion...</span>
+                        </p>
+                    </div>
+
+                    <!-- What You Can Do -->
+                    <div class="mb-6 text-left">
+                        <h2 class="font-semibold text-gray-800 mb-3 text-sm">
+                            Vous pouvez:
+                        </h2>
+                        <ul class="space-y-2 text-sm text-gray-600">
+                            <li class="flex items-start">
+                                <i
+                                    class="fas fa-check text-green-600 mr-2 mt-1 flex-shrink-0"
+                                ></i>
+                                <span
+                                    >Consulter vos réservations précédemment
+                                    chargées</span
+                                >
+                            </li>
+                            <li class="flex items-start">
+                                <i
+                                    class="fas fa-check text-green-600 mr-2 mt-1 flex-shrink-0"
+                                ></i>
+                                <span>Accéder à votre profil</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i
+                                    class="fas fa-check text-green-600 mr-2 mt-1 flex-shrink-0"
+                                ></i>
+                                <span
+                                    >Lire les notifications stockées
+                                    localement</span
+                                >
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="space-y-3">
+                        <button
+                            onclick="retryConnection()"
+                            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 flex items-center justify-center"
+                        >
+                            <i class="fas fa-redo mr-2"></i>
+                            Réessayer la connexion
+                        </button>
+                        <button
+                            onclick="goHome()"
+                            class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg transition duration-200 flex items-center justify-center"
+                        >
+                            <i class="fas fa-home mr-2"></i>
+                            Aller à l'accueil
+                        </button>
+                    </div>
+
+                    <!-- Tips -->
+                    <div
+                        class="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200 text-left"
+                    >
+                        <h3 class="font-semibold text-blue-900 mb-2 text-sm">
+                            <i class="fas fa-lightbulb mr-2"></i>
+                            Conseils:
+                        </h3>
+                        <ul class="text-xs text-blue-800 space-y-1">
+                            <li>• Vérifiez votre connexion Wi-Fi ou mobile</li>
+                            <li>
+                                • Assurez-vous que le mode avion est désactivé
+                            </li>
+                            <li>• Essayez de vous rapprocher du routeur</li>
+                            <li>• Redémarrez votre routeur ou modem</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="text-center mt-6 text-gray-600 text-sm">
+                    <p>ChicTukTuk v1.0</p>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // Vérifier la connexion internet
+            function checkConnection() {
+                if (navigator.onLine) {
+                    document.getElementById("status").textContent =
+                        "Connexion rétablie! Redirection en cours...";
+                    document
+                        .querySelector('[onclick="retryConnection()"]')
+                        .classList.add("opacity-50", "cursor-not-allowed");
+                    setTimeout(() => {
+                        window.location.href = "/";
+                    }, 2000);
+                    return true;
+                }
+                return false;
+            }
+
+            // Relancer la vérification automatique
+            window.addEventListener("online", () => {
+                document.getElementById("status").textContent =
+                    "Connexion rétablie!";
+                setTimeout(() => {
+                    window.location.href = "/";
+                }, 1500);
+            });
+
+            window.addEventListener("offline", () => {
+                document.getElementById("status").textContent =
+                    "Connexion perdue";
+            });
+
+            // Fonction de retry
+            function retryConnection() {
+                checkConnection();
+            }
+
+            // Aller à l'accueil
+            function goHome() {
+                window.location.href = "/";
+            }
+
+            // Vérifier la connexion au chargement
+            window.addEventListener("load", () => {
+                checkConnection();
+
+                // Vérifier toutes les 3 secondes
+                setInterval(checkConnection, 3000);
+            });
+        </script>
+    </body>
+</html>

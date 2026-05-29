@@ -38,7 +38,7 @@ class DriverService
             });
         }
 
-        return $query->latest()->paginate(10);
+        return $query->latest()->get();
     }
 
     public function getDriverStats()
@@ -165,7 +165,7 @@ class DriverService
 
         // Vérifier s'il a des courses en cours
         if ($user->driver && $user->driver->bookings()->whereIn('status', ['confirmed', 'in_progress'])->exists()) {
-            throw new \Exception('Impossible de supprimer un conducteur avec des courses en cours.');
+            throw new \Exception('Impossible de supprimer un Agent avec des courses en cours.');
         }
 
         $user->delete();

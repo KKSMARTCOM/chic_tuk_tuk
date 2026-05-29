@@ -1,8 +1,8 @@
-# 📋 Résumé des modifications - Gestion des Congés
+# 📋 Résumé des modifications - Gestion des Pauses
 
 ## 🎯 Objectif réalisé
 
-Implémentation d'un système complet de gestion des congés avec flux de demande → validation → approbation/refus.
+Implémentation d'un système complet de gestion des Pauses avec flux de demande → validation → approbation/refus.
 
 ---
 
@@ -10,17 +10,17 @@ Implémentation d'un système complet de gestion des congés avec flux de demand
 
 ### Modèles
 
-- ✅ `app/Models/LeaveRequest.php` - Modèle pour les demandes de congé
+- ✅ `app/Models/LeaveRequest.php` - Modèle pour les demandes de Pause
 
 ### Contrôleurs
 
-- ✅ `app/Http/Controllers/Web/DriverLeaveController.php` - Gestion côté conducteur
+- ✅ `app/Http/Controllers/Web/DriverLeaveController.php` - Gestion côté Agent
 
 ### Vues
 
 - ✅ `resources/views/pages/admin/leaves/requests.blade.php` - Liste demandes en attente
-- ✅ `resources/views/pages/driver/leaves/create.blade.php` - Formulaire conducteur
-- ✅ `resources/views/pages/driver/leaves/index.blade.php` - Historique conducteur
+- ✅ `resources/views/pages/driver/leaves/create.blade.php` - Formulaire Agent
+- ✅ `resources/views/pages/driver/leaves/index.blade.php` - Historique Agent
 
 ### Migrations
 
@@ -29,7 +29,7 @@ Implémentation d'un système complet de gestion des congés avec flux de demand
 ### Documentation
 
 - ✅ `LEAVE_MANAGEMENT.md` - Documentation technique complète
-- ✅ `LEAVE_USAGE_GUIDE.md` - Guide d'utilisation pour conducteurs et admins
+- ✅ `LEAVE_USAGE_GUIDE.md` - Guide d'utilisation pour Agents et admins
 
 ---
 
@@ -93,8 +93,8 @@ Implémentation d'un système complet de gestion des congés avec flux de demand
 
 - ✅ Ajout section contrat (dates, durée)
 - ✅ Ajout section "Demandes en attente" (jaune)
-- ✅ Ajout section "Congés approuvés ce mois" (vert)
-- ✅ Renommer "Dates de congé prises" → "Tous les congés"
+- ✅ Ajout section "Pauses approuvés ce mois" (vert)
+- ✅ Renommer "Dates de Pause prises" → "Tous les Pauses"
 - ✅ Ajout modal pour rejeter avec motif
 - ✅ Suppression formulaire d'approbation directe
 
@@ -105,9 +105,9 @@ Implémentation d'un système complet de gestion des congés avec flux de demand
 ### AVANT
 
 ```
-Admin ajoute directement des congés au conducteur
+Admin ajoute directement des Pauses au Agent
 │
-└─ Pas de demande des conducteurs
+└─ Pas de demande des Agents
 └─ Pas de validation de requête
 └─ Admin décide unilatéralement
 ```
@@ -115,13 +115,13 @@ Admin ajoute directement des congés au conducteur
 ### APRÈS
 
 ```
-Conducteur soumet demande (pending)
+Agent soumet demande (pending)
 │
 ├─ Admin examine
 │  ├─ ✓ Approuve (approved) → jours ajoutés
 │  └─ ✗ Rejette (rejected) + motif → attendre
 │
-└─ Conducteur voit statut
+└─ Agent voit statut
    ├─ En attente (pending)
    ├─ Approuvé (approved) → jour pris
    └─ Rejeté (rejected) → peut redemander
@@ -196,7 +196,7 @@ CREATE TABLE leave_requests (
 
 ## 🧪 Tests suggérés
 
-### Test conducteur
+### Test Agent
 
 1. ✓ Aller à `/driver/leaves` - voir 0 demandes
 2. ✓ Aller à `/driver/leaves/request` - voir formulaire
@@ -209,11 +209,11 @@ CREATE TABLE leave_requests (
 
 1. ✓ Aller à `/admin/leaves` - voir compteur
 2. ✓ Cliquer "Demandes en attente" → `/admin/leave-requests`
-3. ✓ Voir demande conducteur
+3. ✓ Voir demande Agent
 4. ✓ Cliquer "Approuver" - voir message
 5. ✓ Retour `/admin/leaves` - voir compteur réduit
-6. ✓ Cliquer détails conducteur
-7. ✓ Voir congés dans "Approuvés"
+6. ✓ Cliquer détails Agent
+7. ✓ Voir Pauses dans "Approuvés"
 8. ✓ Cliquer "Révoquer" - retirer 1 jour
 
 ---
@@ -253,7 +253,7 @@ CREATE TABLE leave_requests (
 - Tests E2E
 - Notifications email
 - Audit logs
-- Rapports de congés
+- Rapports de Pauses
 
 ---
 

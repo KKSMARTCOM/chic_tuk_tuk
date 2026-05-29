@@ -48,7 +48,7 @@
                         <p class="text-lg font-semibold text-gray-800">{{ auth()->user()->name }}</p>
                     </div>
                     <div class="p-2">
-                        <a href=""
+                        <a href="{{ route('profile') }}"
                             class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded transition">
                             <i class="fas fa-user mr-2"></i>Mon profil
                         </a>
@@ -148,14 +148,14 @@
                 });
 
             // Charger les 5 dernières notifications pour le dropdown
-            /* fetch('/notifications?limit=5')
-                                                                                .then(response => response.json())
-                                                                                .then(data => {
-                                                                                    const listElement = document.getElementById('notification-list');
-                                                                                    if (data.data && data.data.length > 0) {
-                                                                                        let html = '';
-                                                                                        data.data.forEach(notification => {
-                                                                                            html += `
+            fetch('/notifications?limit=5')
+                .then(response => response.json())
+                .then(data => {
+                    const listElement = document.getElementById('notification-list');
+                    if (data.data && data.data.length > 0) {
+                        let html = '';
+                        data.data.forEach(notification => {
+                            html += `
             <div class="p-4 border-b hover:bg-gray-50 cursor-pointer" onclick="markAsRead(${notification.id})">
                 <div class="flex items-start space-x-3">
                     <div class="flex-shrink-0">
@@ -169,17 +169,17 @@
                 </div>
             </div>
         `;
-                                                                                        });
-                                                                                        listElement.innerHTML = html;
-                                                                                    } else {
-                                                                                        listElement.innerHTML = '<div class="p-4 text-center text-gray-500">Aucune notification</div>';
-                                                                                    }
-                                                                                })
-                                                                                .catch(error => {
-                                                                                    console.error('Erreur lors du chargement des notifications:', error);
-                                                                                    document.getElementById('notification-list').innerHTML =
-                                                                                        `<div class="p-4 text-center text-gray-500">Erreur de chargement</div>`;
-                                                                                }); */
+                        });
+                        listElement.innerHTML = html;
+                    } else {
+                        listElement.innerHTML = '<div class="p-4 text-center text-gray-500">Aucune notification</div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur lors du chargement des notifications:', error);
+                    document.getElementById('notification-list').innerHTML =
+                        `<div class="p-4 text-center text-gray-500">Erreur de chargement</div>`;
+                });
         }
 
         // Marquer une notification comme lue depuis le dropdown

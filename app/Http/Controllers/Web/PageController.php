@@ -61,7 +61,7 @@ class PageController extends Controller
         $perPage = 10;
         $globalSearch = request()->get('search');
 
-        // Si c'est un conducteur, afficher son historique
+        // Si c'est un Agent, afficher son historique
         if ($user->role === 'driver' && $user->driver) {
             $query = \App\Models\Booking::query()
                 ->where('driver_id', $user->driver->id)

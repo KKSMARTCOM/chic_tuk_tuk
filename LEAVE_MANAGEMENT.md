@@ -1,10 +1,10 @@
-# Gestion des Congés - Guide Complet
+# Gestion des Pauses - Guide Complet
 
 ## Vue d'ensemble
 
-Le système de gestion des congés a été complètement refondu pour implémenter un flux de demande/validation :
+Le système de gestion des Pauses a été complètement refondu pour implémenter un flux de demande/validation :
 
-1. **Les conducteurs** soumettent des demandes de congé
+1. **Les Agents** soumettent des demandes de Pause
 2. **L'admin** examine et approuve/rejette les demandes
 3. **Les jours approuvés** sont enregistrés comme jours utilisés
 
@@ -47,16 +47,16 @@ Le système de gestion des congés a été complètement refondu pour implément
 
 ## Flux utilisateur
 
-### Côté Conducteur
+### Côté Agent
 
-#### 1. Voir l'état des congés (`/driver/leaves`)
+#### 1. Voir l'état des Pauses (`/driver/leaves`)
 
 - Affiche jours restants, utilisés, total
 - Liste demandes en attente
-- Liste congés approuvés
+- Liste Pauses approuvés
 - Liste rejets avec motifs
 
-#### 2. Demander un congé (`/driver/leaves/request`)
+#### 2. Demander un Pause (`/driver/leaves/request`)
 
 - Sélectionne dates (mois courant uniquement)
 - Validation:
@@ -70,7 +70,7 @@ Le système de gestion des congés a été complètement refondu pour implément
 
 #### 1. Vue d'ensemble (`/admin/leaves`)
 
-Tableau de tous les conducteurs avec:
+Tableau de tous les Agents avec:
 
 - Durée du contrat (mois)
 - Jours par mois : 2
@@ -84,19 +84,19 @@ Tableau de tous les conducteurs avec:
 
 Liste de toutes les demandes `pending`:
 
-- Nom conducteur
+- Nom Agent
 - Jours restants / demandés
 - Dates demandées
 - Boutons: Approuver / Rejeter
 
-#### 3. Détails conducteur (`/admin/leaves/{driver}`)
+#### 3. Détails Agent (`/admin/leaves/{driver}`)
 
 - Info contrat (dates, durée)
-- Résumé congés
+- Résumé Pauses
 - **Demandes en attente** (section jaune)
     - Boutons Approuver/Rejeter
-- **Congés approuvés ce mois** (section verte)
-- **Tous les congés pris** (section rouge)
+- **Pauses approuvés ce mois** (section verte)
+- **Tous les Pauses pris** (section rouge)
     - Bouton Révoquer par date
 
 ### Processus d'approbation
@@ -112,7 +112,7 @@ Liste de toutes les demandes `pending`:
     - Status → `approved`
     - Dates ajoutées à `driver.leave_dates`
     - `driver.leave_days_used` incrémenté
-4. Conducteur voit dans "Approuvés"
+4. Agent voit dans "Approuvés"
 
 #### Rejeter une demande
 
@@ -121,9 +121,9 @@ Liste de toutes les demandes `pending`:
 3. Enregistre:
     - Status → `rejected`
     - Motif sauvegardé
-4. Conducteur voit dans "Rejetés"
+4. Agent voit dans "Rejetés"
 
-#### Révoquer un congé
+#### Révoquer un Pause
 
 1. Admin clique "Révoquer" sur date spécifique
 2. Confirmation
@@ -163,7 +163,7 @@ Exemple:
 ### Admin
 
 ```
-GET    /admin/leaves                                    → index (conducteurs)
+GET    /admin/leaves                                    → index (Agents)
 GET    /admin/leaves/{driver}                          → show (détails)
 GET    /admin/leave-requests                           → requests (en attente)
 POST   /admin/leave-requests/{leaveRequest}/approve    → approveRequest
@@ -183,23 +183,23 @@ POST   /driver/leaves                                  → store (enregistrer)
 
 ### Scénario 1: Approbation simple
 
-1. Conducteur demande 2 jours en mai
+1. Agent demande 2 jours en mai
 2. Admin voit demande, jours suffisants ✓
 3. Admin clique "Approuver"
 4. Jours ajoutés, restants diminuent
-5. Conducteur voit dans "Approuvés"
+5. Agent voit dans "Approuvés"
 
 ### Scénario 2: Refus avec motif
 
-1. Conducteur demande 3 jours
+1. Agent demande 3 jours
 2. Admin clique "Rejeter"
 3. Saisit motif: "Période de forte activité"
-4. Conducteur voit rejet avec motif
+4. Agent voit rejet avec motif
 5. Peut refaire une demande
 
 ### Scénario 3: Revocation
 
-1. Admin approuve congé le 15/05
+1. Admin approuve Pause le 15/05
 2. Plus tard, doit révoquer
 3. Admin clique "Révoquer" sur date
 4. Jour libéré, jours utilisés décrémentent
@@ -207,7 +207,7 @@ POST   /driver/leaves                                  → store (enregistrer)
 ## Limitations actuelles
 
 - La `contract_end_date` est calculée (affichée mais non stockée)
-- Pas de notification automatique aux conducteurs
+- Pas de notification automatique aux Agents
 - Pas de restrictions sur jours spécifiques (dimanche, jours fériés)
 - Pas d'exportation/rapport
 
@@ -224,6 +224,6 @@ Toutes les vérifications sont effectuées côté serveur:
 - [ ] Notifications email
 - [ ] Jours fériés/weekends
 - [ ] Rapports d'absence
-- [ ] Soldes de congés annuels
+- [ ] Soldes de Pauses annuels
 - [ ] Approbation en cascade
 - [ ] Historique complet des modifications

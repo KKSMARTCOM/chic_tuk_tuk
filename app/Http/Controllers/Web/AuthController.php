@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
-    protected $authService;
+    protected AuthService $authService;
 
     public function __construct(AuthService $authService)
     {
@@ -45,7 +45,17 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        Auth::logout();
+        if (Auth::guard('admin')->check()) {
+            Auth::guard('admin')->logout();
+        }
+
+        if (Auth::guard('driver')->check()) {
+            Auth::guard('driver')->logout();
+        }
+
+        if (Auth::guard('client')->check()) {
+            Auth::guard('client')->logout();
+        }
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

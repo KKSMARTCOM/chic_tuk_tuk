@@ -1,13 +1,13 @@
-# Gestion des Congés - Guide d'utilisation
+# Gestion des Pauses - Guide d'utilisation
 
-## Pour les Conducteurs
+## Pour les Agents
 
 ### Accéder au système
 
 - URL: `/driver/leaves`
 - Nécessite authentification avec rôle `driver`
 
-### 1️⃣ Voir mes congés
+### 1️⃣ Voir mes Pauses
 
 ```
 /driver/leaves
@@ -20,11 +20,11 @@ Affiche:
 
 + Historique:
   - En attente (demandes soumises)
-  - Approuvés (congés acceptés)
+  - Approuvés (Pauses acceptés)
   - Rejetés (avec motifs)
 ```
 
-### 2️⃣ Demander un congé
+### 2️⃣ Demander un Pause
 
 ```
 /driver/leaves/request
@@ -50,8 +50,8 @@ Chaque demande a un statut:
 | Statut     | Couleur  | Signification                | Action possible |
 | ---------- | -------- | ---------------------------- | --------------- |
 | En attente | 🟡 Jaune | Admin n'a pas encore examiné | Attendre        |
-| Approuvé   | 🟢 Vert  | Congé accepté et enregistré  | Aucune          |
-| Rejeté     | 🔴 Rouge | Congé refusé avec motif      | Refaire demande |
+| Approuvé   | 🟢 Vert  | Pause accepté et enregistré  | Aucune          |
+| Rejeté     | 🔴 Rouge | Pause refusé avec motif      | Refaire demande |
 
 ---
 
@@ -67,7 +67,7 @@ Chaque demande a un statut:
 ```
 /admin/leaves
 
-Tableau avec tous les conducteurs:
+Tableau avec tous les Agents:
 - Nom
 - Durée contrat (mois)
 - Jours par mois (2)
@@ -87,7 +87,7 @@ Tableau avec tous les conducteurs:
 /admin/leave-requests
 
 Liste toutes les demandes pending:
-- Conducteur
+- Agent
 - Jours restants / jours demandés
 - Statut (✓ Suffisant / ✗ Insuffisant)
 - Dates demandées avec jours de semaine
@@ -96,7 +96,7 @@ Liste toutes les demandes pending:
 Approuver:
   → Validation auto
   → Jours ajoutés
-  → Email conducteur (futur)
+  → Email Agent (futur)
 
 Rejeter:
   → Modal avec champ motif
@@ -104,7 +104,7 @@ Rejeter:
   → Enregistré
 ```
 
-### 3️⃣ Détails conducteur
+### 3️⃣ Détails Agent
 
 ```
 /admin/leaves/{driver}
@@ -116,7 +116,7 @@ Sections:
   - Durée (mois)
   - Date fin (calculée)
 
-📊 RÉSUMÉ CONGÉS
+📊 RÉSUMÉ PauseS
   - 2 jours/mois
   - Total disponible
   - Jours utilisés
@@ -128,12 +128,12 @@ Sections:
   - Dates demandées (pastilles jaunes)
   - [Approuver] [Rejeter]
 
-✅ CONGÉS APPROUVÉS CE MOIS
+✅ PauseS APPROUVÉS CE MOIS
   (fond vert)
   - Liste des dates approuvées
   - Jour de la semaine
 
-📋 TOUS LES JOURS DE CONGÉ
+📋 TOUS LES JOURS DE Pause
   (fond rouge)
   - Toutes les dates approuvées (historique)
   - [Révoquer] pour chaque date
@@ -154,7 +154,7 @@ Sections:
    - Dates ajoutées
    - Jours utilisés +N
 4. Message: "Approuvée avec succès"
-5. Conducteur voit congés dans "Approuvés"
+5. Agent voit Pauses dans "Approuvés"
 ```
 
 #### Rejeter une demande
@@ -165,10 +165,10 @@ Sections:
 3. Cliquer "Rejeter"
 4. Status → "rejected"
 5. Motif enregistré
-6. Conducteur voit dans "Rejetés"
+6. Agent voit dans "Rejetés"
 ```
 
-#### Révoquer un congé
+#### Révoquer un Pause
 
 ```
 1. Voir date approuvée
@@ -177,8 +177,8 @@ Sections:
 4. Si OK:
    - Date supprimée
    - Jours utilisés -1
-   - Conducteur récupère 1 jour
-5. Message: "Congé révoqué"
+   - Agent récupère 1 jour
+5. Message: "Pause révoqué"
 ```
 
 ---
@@ -187,7 +187,7 @@ Sections:
 
 ### Exemple 1: Demande et approbation simple
 
-**Jour 1 - Conducteur:**
+**Jour 1 - Agent:**
 
 1. Va à `/driver/leaves/request`
 2. Voit: 12 jours restants
@@ -198,22 +198,22 @@ Sections:
 **Jour 1 - Admin:**
 
 1. Va à `/admin/leave-requests`
-2. Voit demande du conducteur
+2. Voit demande du Agent
 3. Voit: "12 jours restants" et "2 jours demandés" ✓
 4. Clique "Approuver"
 5. Demande disparaît
 
-**Jour 1 - Conducteur (après):**
+**Jour 1 - Agent (après):**
 
 1. Va à `/driver/leaves`
 2. Voit maintenant:
     - Jours restants: 10 (au lieu de 12)
     - Jours utilisés: 2 (augmenté de 2)
-    - Congés approuvés: 10/05 et 11/05
+    - Pauses approuvés: 10/05 et 11/05
 
 ### Exemple 2: Demande rejetée
 
-**Conducteur:**
+**Agent:**
 
 1. Demande 5 jours
 2. Voit: "Demande en attente"
@@ -226,7 +226,7 @@ Sections:
 4. Entre motif: "Pas assez de jours disponibles"
 5. Clique "Rejeter"
 
-**Conducteur:**
+**Agent:**
 
 1. Voit demande: "Rejetés"
 2. Lit motif: "Pas assez de jours disponibles"
@@ -236,15 +236,15 @@ Sections:
 
 **Admin:**
 
-1. Conducteur avait congé approuvé 15/05
-2. Urgence: besoin conducteur 15/05
-3. Va à `/admin/leaves/{conducteur}`
-4. Voit 15/05 dans "Tous les congés"
+1. Agent avait Pause approuvé 15/05
+2. Urgence: besoin Agent 15/05
+3. Va à `/admin/leaves/{Agent}`
+4. Voit 15/05 dans "Tous les Pauses"
 5. Clique "Révoquer"
 6. Confirme
 7. 15/05 disparu, jours utilisés: -1
 
-**Conducteur:**
+**Agent:**
 
 1. Voir disparaît de la liste
 2. Jours restants augmente de 1
@@ -254,7 +254,7 @@ Sections:
 
 ## Validations et sécurité
 
-### Côté Conducteur
+### Côté Agent
 
 ✅ **Validations implémentées:**
 

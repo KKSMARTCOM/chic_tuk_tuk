@@ -68,7 +68,7 @@
                 <div class="p-6 h-52">
                     <h3 class="text-xl font-bold text-gray-800 mb-2">Sécurité garantie</h3>
                     <p class="text-gray-600 text-sm">
-                        Tous nos conducteurs sont formés et vérifiés pour votre sécurité.
+                        Tous nos Agents sont formés et vérifiés pour votre sécurité.
                     </p>
                 </div>
             </div>

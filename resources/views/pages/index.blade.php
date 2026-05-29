@@ -29,7 +29,7 @@
                             </div>
                             <div class="text-center">
                                 <div class="text-4xl font-bold">50+</div>
-                                <div class="text-purple-200">Conducteurs</div>
+                                <div class="text-purple-200">Agents</div>
                             </div>
                         </div>
                     </div>

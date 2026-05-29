@@ -8,7 +8,36 @@ class AuthService
 {
     public function login($credentials, $request)
     {
-        if (Auth::attempt($credentials)) {
+        // Trouver l'utilisateur
+        $user = \App\Models\User::where('email', $credentials['email'])->first();
+
+        if (!$user) {
+            return false;
+        }
+
+        $guard = match ($user->role) {
+            'admin' => 'admin',
+            'driver' => 'driver',
+            default => 'client',
+        };
+
+        if (Auth::guard($guard)->attempt($credentials)) {
+
+            $request->session()->regenerate();
+
+            if ($guard === 'admin') {
+                return redirect()->route('admin.dashboard')->with('success', 'Connexion réussie en tant qu\'administrateur.');
+            }
+
+            if ($guard === 'driver') {
+                return redirect()->route('driver.dashboard')->with('success', 'Connexion réussie en tant que chauffeur.');
+            }
+
+            return redirect()->route('client.dashboard')->with('success', 'Connexion réussie.');
+        }
+
+        /* if (Auth::attempt($credentials)) {
+
             $request->session()->regenerate();
 
             // Redirect based on role: admins -> admin dashboard, others -> client dashboard
@@ -24,7 +53,7 @@ class AuthService
 
             // Default: client dashboard (includes clients and drivers per requirements)
             return redirect()->intended(route('client.dashboard'))->with('success', 'Connexion réussie.');
-        }
+        } */
 
         return false;
     }

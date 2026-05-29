@@ -196,7 +196,7 @@ class BookingController extends Controller
             $this->bookingService->cancel(
                 $booking->id,
                 $driver->id,
-                $request->input('cancellation_reason') ?? 'Annulée par le conducteur'
+                $request->input('cancellation_reason') ?? 'Annulée par le Agent'
             );
 
             return back()->with(

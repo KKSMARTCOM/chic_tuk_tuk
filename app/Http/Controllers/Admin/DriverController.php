@@ -85,7 +85,7 @@ class DriverController extends Controller
         try {
             $this->driverService->createDriver($validated);
 
-            return redirect()->route('admin.drivers.index')->with('success', 'Conducteur créé avec succès');
+            return redirect()->route('admin.drivers.index')->with('success', 'Agent créé avec succès');
         } catch (\Exception $e) {
             return redirect()->back()->withInput()->with('error', $e->getMessage());
         }
@@ -148,7 +148,7 @@ class DriverController extends Controller
         $this->driverService->updateDriver($driver->id, $validated);
 
         return redirect()->route('admin.drivers.show', $driver)
-            ->with('success', 'Conducteur mis à jour avec succès');
+            ->with('success', 'Agent mis à jour avec succès');
     }
 
     public function destroy(User $driver)
@@ -157,7 +157,7 @@ class DriverController extends Controller
             $this->driverService->deleteDriver($driver->id);
 
             return redirect()->route('admin.drivers.index')
-                ->with('success', 'Conducteur supprimé avec succès');
+                ->with('success', 'Agent supprimé avec succès');
         } catch (\Exception $e) {
             return redirect()->back()
                 ->with('error', $e->getMessage());
@@ -192,11 +192,12 @@ class DriverController extends Controller
         ]);
     }
 
+    /*
     public function export(Request $request)
     {
         try {
             $filters = $request->only(['search', 'is_active', 'is_available']);
-            $fileName = 'conducteurs_' . now()->format('Y_m_d_His') . '.xlsx';
+            $fileName = 'Agents_' . now()->format('Y_m_d_His') . '.xlsx';
 
             return Excel::download(new DriversExport($filters), $fileName);
         } catch (\Exception $e) {
@@ -221,13 +222,13 @@ class DriverController extends Controller
 
         try {
             $import = new DriversImport();
-            Excel::import($import, $request->file('file'));
+            //Excel::import($import, $request->file('file'));
 
             $successCount = $import->getSuccessCount();
             $errors = $import->getErrors();
 
             if ($errors) {
-                $errorMessage = "Import terminé avec " . $successCount . " conducteur(s) importé(s) avec succès. ";
+                $errorMessage = "Import terminé avec " . $successCount . " Agent(s) importé(s) avec succès. ";
                 $errorMessage .= count($errors) . " ligne(s) ont échoué.";
 
                 return redirect()->route('admin.drivers.index')
@@ -236,7 +237,7 @@ class DriverController extends Controller
             }
 
             return redirect()->route('admin.drivers.index')
-                ->with('success', $successCount . ' conducteur(s) importé(s) avec succès');
+                ->with('success', $successCount . ' Agent(s) importé(s) avec succès');
         } catch (\Exception $e) {
             return redirect()->back()
                 ->with('error', 'Erreur lors de l\'import: ' . $e->getMessage())
@@ -247,7 +248,7 @@ class DriverController extends Controller
     public function downloadTemplate()
     {
         try {
-            $fileName = 'template_conducteurs_' . now()->format('Y_m_d_His') . '.xlsx';
+            $fileName = 'template_Agents_' . now()->format('Y_m_d_His') . '.xlsx';
 
             // Créer un fichier template
             $headers = [
@@ -306,4 +307,5 @@ class DriverController extends Controller
             return redirect()->back()->with('error', 'Erreur lors du téléchargement du template: ' . $e->getMessage());
         }
     }
+     */
 }

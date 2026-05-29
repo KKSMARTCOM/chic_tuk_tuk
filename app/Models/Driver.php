@@ -36,6 +36,10 @@ class Driver extends Model
         'leave_dates' => 'array',
     ];
 
+    protected $appends = [
+        'available_leave_days',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -49,6 +53,11 @@ class Driver extends Model
     public function commissions()
     {
         return $this->hasMany(Commission::class, 'driver_id', 'id');
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class, 'driver_id', 'id');
     }
 
     public function leaveRequests()
@@ -93,6 +102,16 @@ class Driver extends Model
         return (int) ($this->contract_type ?? 24); // default 24 months
     }
 
+    public function getLeaveRequestsByStatus(string $status): int
+    {
+        return $this->leaveRequests()
+            ->where('status', $status)
+            ->get()
+            ->sum(function ($leave) {
+                return count($leave->dates ?? []);
+            });
+    }
+
     public function getTotalLeaveDays(): int
     {
         return $this->getLeaveDaysPerMonth() * $this->getContractMonths();
@@ -100,7 +119,44 @@ class Driver extends Model
 
     public function getRemainingLeaveDays(): int
     {
-        return $this->getTotalLeaveDays() - $this->leave_days_used;
+        return $this->getTotalLeaveDays() - ($this->leave_days_used ?? 0);
+    }
+
+    public function getContractMonthsElapsed(): int
+    {
+        if (!$this->start_date) {
+            return 0;
+        }
+
+        $start = Carbon::parse($this->start_date)->startOfDay();
+        $now = now()->startOfDay();
+
+        if ($now->lt($start)) {
+            return 0;
+        }
+
+        $monthsElapsed = $start->diffInMonths($now) + 1;
+        return min($monthsElapsed, $this->getContractMonths());
+    }
+
+    public function getAccruedLeaveDays(): int
+    {
+        return $this->getLeaveDaysPerMonth() * $this->getContractMonthsElapsed();
+    }
+
+    public function getAvailableLeaveDays(): int
+    {
+        $available = $this->getAccruedLeaveDays() - ($this->getLeaveRequestsByStatus('approved') ?? 0) - ($this->getLeaveRequestsByStatus('pending') ?? 0);
+        return max(0, min($available, $this->getRemainingLeaveDays()));
+    }
+
+    public function getAvailableLeaveDaysAttribute(): int
+    {
+        $available = $this->getAccruedLeaveDays()
+            - ($this->getLeaveRequestsByStatus('approved') ?? 0)
+            - ($this->getLeaveRequestsByStatus('pending') ?? 0);
+
+        return max(0, min($available, $this->getRemainingLeaveDays()));
     }
 
     public function canRequestLeave(int $days = 1): bool
@@ -108,11 +164,16 @@ class Driver extends Model
         return $this->getRemainingLeaveDays() >= $days;
     }
 
+    public function canRequestLeaveNow(int $days = 1): bool
+    {
+        return $this->getAvailableLeaveDays() >= $days;
+    }
+
     public function addLeaveDates(array $dates): void
     {
         $existing = $this->leave_dates ?? [];
         $this->leave_dates = array_unique(array_merge($existing, $dates));
-        $this->leave_days_used += count($dates);
+        $this->leave_days_used = ($this->leave_days_used ?? 0) + count($dates);
         $this->save();
     }
 

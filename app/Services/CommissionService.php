@@ -16,7 +16,6 @@ class CommissionService
             'booking_id'      => $data['booking_id'],
             'amount'          => $data['amount'],
             'date'            => $data['date'],
-            'is_paid'         => $data['is_paid'] ?? false,
         ]);
 
         return $commission;
@@ -30,10 +29,6 @@ class CommissionService
 
         if (isset($filters['driver_id']) && !empty($filters['driver_id'])) {
             $query->where('driver_id', $filters['driver_id']);
-        }
-
-        if (isset($filters['is_paid'])) {
-            $query->where('is_paid', $filters['is_paid']);
         }
 
         if (isset($filters['search']) && !empty($filters['search'])) {
@@ -51,17 +46,11 @@ class CommissionService
     public function getCommissionStats()
     {
         $totalRevenue = Commission::sum('amount');
-        $paidCommissions = Commission::where('is_paid', true)->sum('amount');
-        $unpaidCommissions = Commission::where('is_paid', false)->sum('amount');
         $totalCommissionsCount = Commission::count();
 
         return [
             'total_revenue' => $totalRevenue,
-            'paid_commissions' => $paidCommissions,
-            'unpaid_commissions' => $unpaidCommissions,
             'total_count' => $totalCommissionsCount,
-            'paid_count' => Commission::where('is_paid', true)->count(),
-            'unpaid_count' => Commission::where('is_paid', false)->count(),
         ];
     }
 
@@ -73,31 +62,12 @@ class CommissionService
             ->where('status', 'completed')
             ->sum('driver_earning');
 
-        $totalRevenue = $driver->commissions()->sum('amount');
-        $paidRevenue = $driver->commissions()->where('is_paid', true)->sum('amount');
-        $unpaidRevenue = $driver->commissions()->where('is_paid', false)->sum('amount');
-
         return [
             'driver' => $driver,
-            'total_revenue' => $totalRevenue,
-            'paid_revenue' => $paidRevenue,
-            'unpaid_revenue' => $unpaidRevenue,
             'driver_earning' => $driverEarning,
             'commissions_count' => $driver->commissions()->count(),
+            'paid_revenue' => $driver->payments()->sum('amount'),
+            'unpaid_revenue' => $driver->commissions()->sum('amount') - $driver->payments()->sum('amount'),
         ];
-    }
-
-    public function markAsPaid($commissionId)
-    {
-        $commission = Commission::findOrFail($commissionId);
-        $commission->update(['is_paid' => true]);
-        return $commission;
-    }
-
-    public function markAsUnpaid($commissionId)
-    {
-        $commission = Commission::findOrFail($commissionId);
-        $commission->update(['is_paid' => false]);
-        return $commission;
     }
 }
