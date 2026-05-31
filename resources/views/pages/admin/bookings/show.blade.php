@@ -44,10 +44,10 @@
                             </div>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Conducteur</label>
+                            <label class="block text-sm font-medium text-gray-700">Agent</label>
                             @if ($booking->driver)
                                 <div class="mt-1 flex items-center">
-                                    <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($booking->driver->user->name ?? 'Conducteur') }}"
+                                    <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($booking->driver->user->name ?? 'Agent') }}"
                                         class="w-10 h-10 rounded-full mr-3">
                                     <div>
                                         <p class="text-sm font-medium text-gray-900">
@@ -56,7 +56,7 @@
                                     </div>
                                 </div>
                             @else
-                                <p class="mt-1 text-sm text-gray-500">Aucun conducteur assigné</p>
+                                <p class="mt-1 text-sm text-gray-500">Aucun Agent assigné</p>
                             @endif
                         </div>
                         <div class="md:col-span-2">
@@ -161,12 +161,12 @@
                     @if (!$booking->driver)
                         <button onclick="assignDriver('{{ $booking->id }}')"
                             class="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
-                            <i class="fas fa-user-plus mr-2"></i> Assigner un conducteur
+                            <i class="fas fa-user-plus mr-2"></i> Assigner un Agent
                         </button>
                     @elseif(!in_array($booking->status, ['completed', 'cancelled', 'expired']))
                         <button onclick="confirmRemoveDriver('{{ $booking->id }}')"
                             class="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">
-                            <i class="fas fa-user-times mr-2"></i> Retirer le conducteur
+                            <i class="fas fa-user-times mr-2"></i> Retirer le Agent
                         </button>
                     @else
                         <button onclick="openDeleteModal('{{ $booking->id }}')"
@@ -217,16 +217,16 @@
         </div>
     </div>
 
-    <!-- Modal pour assigner un conducteur -->
+    <!-- Modal pour assigner un Agent -->
     <div id="assignDriverModal"
         class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden items-center justify-center z-10">
         <div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div class="mt-3">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Assigner un Conducteur</h3>
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Assigner un Agent</h3>
                 <input type="hidden" id="currentBookingId" value="">
                 <div class="mb-4">
                     <label for="driverSelect" class="block text-sm font-medium text-gray-700 mb-2">
-                        Sélectionnez un conducteur disponible
+                        Sélectionnez un Agent disponible
                     </label>
                     <select id="driverSelect"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -250,8 +250,8 @@
     <!-- Modal de retrait -->
     <div id="removeDriverModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-10">
         <div class="bg-white rounded-lg p-8 max-w-md w-full">
-            <h3 class="text-2xl font-bold text-gray-800 mb-4">Retirer le conducteur</h3>
-            <p class="text-gray-600 mb-4">Êtes-vous sûr de vouloir retirer le conducteur de cette course ? Cette action est
+            <h3 class="text-2xl font-bold text-gray-800 mb-4">Retirer le Agent</h3>
+            <p class="text-gray-600 mb-4">Êtes-vous sûr de vouloir retirer le Agent de cette course ? Cette action est
                 irréversible.</p>
             <input type="hidden" id="removeBookingId" value="">
             <div class="flex justify-end space-x-3">
@@ -339,22 +339,22 @@
                     },
                     dataType: 'json',
                     success: function(data) {
-                        $select.html('<option value="">Sélectionnez un conducteur</option>');
+                        $select.html('<option value="">Sélectionnez un Agent</option>');
                         if (data && data.data && data.data.length > 0) {
                             data.data.forEach(function(user) {
                                 const driverId = user.driver ? user.driver.id : user.id;
-                                const driverName = user.name ?? 'Conducteur';
+                                const driverName = user.name ?? 'Agent';
                                 $select.append($('<option>', {
                                     value: driverId,
                                     text: driverName
                                 }));
                             });
                         } else {
-                            $select.html('<option value="">Aucun conducteur disponible</option>');
+                            $select.html('<option value="">Aucun Agent disponible</option>');
                         }
                     },
                     error: function(xhr) {
-                        console.error('Erreur chargement conducteurs:', xhr.status, xhr.responseText);
+                        console.error('Erreur chargement Agents:', xhr.status, xhr.responseText);
                         $select.html('<option value="">Erreur de chargement</option>');
                     }
                 });
@@ -371,7 +371,7 @@
                 const driverId = $('#driverSelect').val();
 
                 if (!driverId) {
-                    showAlert('error', 'Veuillez sélectionner un conducteur');
+                    showAlert('error', 'Veuillez sélectionner un Agent');
                     return;
                 }
 

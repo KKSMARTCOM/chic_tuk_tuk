@@ -6,13 +6,14 @@ use App\Http\Controllers\Admin\BookingController;
 use App\Http\Controllers\Admin\CommissionController;
 use App\Http\Controllers\Admin\DriverController;
 use App\Http\Controllers\Admin\LeaveController;
+use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\PricingController;
 use App\Http\Controllers\Admin\PromoCodeController;
 use App\Http\Controllers\Admin\TouristCircuitController;
 use App\Http\Controllers\Web\DashboardController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth:admin', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'admin'])->name('dashboard');
 
     // Drivers
@@ -49,6 +50,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Leaves
     Route::get('leaves', [LeaveController::class, 'index'])->name('leaves.index');
     Route::get('leaves/{driver}', [LeaveController::class, 'show'])->name('leaves.show');
+    Route::post('leaves/{driver}/add-instant', [LeaveController::class, 'addInstantLeave'])->name('leaves.add-instant');
     Route::get('leave/requests', [LeaveController::class, 'requests'])->name('leave.requests.index');
     Route::post('leave/requests/{leaveRequest}/approve', [LeaveController::class, 'approveRequest'])->name('leave.requests.approve');
     Route::post('leave/requests/{leaveRequest}/reject', [LeaveController::class, 'rejectRequest'])->name('leave.requests.reject');
@@ -57,6 +59,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Commissions
     Route::get('commissions', [CommissionController::class, 'index'])->name('commissions.index');
     Route::get('commissions/{commission}', [CommissionController::class, 'show'])->name('commissions.show');
-    Route::patch('commissions/{commission}/mark-paid', [CommissionController::class, 'markAsPaid'])->name('commissions.mark-paid');
-    Route::patch('commissions/{commission}/mark-unpaid', [CommissionController::class, 'markAsUnpaid'])->name('commissions.mark-unpaid');
+
+    // Payments
+    Route::resource('payments', PaymentController::class);
+    Route::get('payments/driver/{driverId}/details', [PaymentController::class, 'driverPaymentDetails'])->name('payments.driver-details');
 });

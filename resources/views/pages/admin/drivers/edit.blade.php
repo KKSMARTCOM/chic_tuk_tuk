@@ -5,7 +5,7 @@
     <div class="bg-white rounded-lg shadow-md mb-8">
         <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-800">Modifier le Conducteur</h1>
+                <h1 class="text-2xl font-bold text-gray-800">Modifier le Agent</h1>
                 <p class="text-gray-600">{{ $driver->name }}</p>
             </div>
             <div class="flex space-x-3">
@@ -23,7 +23,7 @@
         @method('PUT')
 
         <div class="px-6 py-4 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-800">Informations du Conducteur</h3>
+            <h3 class="text-lg font-semibold text-gray-800">Informations du Agent</h3>
         </div>
 
         <div class="px-6 py-6 space-y-6">

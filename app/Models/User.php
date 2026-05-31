@@ -27,7 +27,8 @@ class User extends Authenticatable
         'role',
         'profile_photo',
         'is_active',
-        'adresse'
+        'adresse',
+        'notification_preferences'
     ];
 
     /**
@@ -51,6 +52,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'notification_preferences' => 'array',
         ];
     }
 

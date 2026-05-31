@@ -1,21 +1,21 @@
-# Fonctionnalité d'Export et Import de Conducteurs
+# Fonctionnalité d'Export et Import de Agents
 
 ## 📋 Résumé
 
-La fonctionnalité d'export et import permet de gérer les conducteurs en masse via des fichiers Excel ou CSV.
+La fonctionnalité d'export et import permet de gérer les Agents en masse via des fichiers Excel ou CSV.
 
 ## 🚀 Fonctionnalités
 
 ### 1. **Export en Excel**
 
-- Exporte la liste des conducteurs filtrée
+- Exporte la liste des Agents filtrée
 - Formats supportés : XLSX
 - Inclut tous les champs pertinents
 - Mise en forme automatique (en-têtes colorés)
 
 ### 2. **Import en masse**
 
-- Importe les conducteurs depuis un fichier Excel ou CSV
+- Importe les Agents depuis un fichier Excel ou CSV
 - Validation automatique des données
 - Gestion des erreurs avec rapport détaillé
 - Crée automatiquement les comptes utilisateur et profils driver
@@ -50,10 +50,10 @@ routes/
 
 | Colonne         | Type  | Obligatoire | Notes                       |
 | --------------- | ----- | ----------- | --------------------------- |
-| nom             | texte | ✓           | Nom du conducteur           |
+| nom             | texte | ✓           | Nom du Agent                |
 | email           | email | ✗           | Email valide                |
 | telephone       | texte | ✓           | Doit être unique            |
-| adresse         | texte | ✗           | Adresse du conducteur       |
+| adresse         | texte | ✗           | Adresse du Agent            |
 | numero_permis   | texte | ✓           | Doit être unique            |
 | numero_vehicule | texte | ✓           | Immatriculation du véhicule |
 | type_vehicule   | texte | ✓           | moto, tricycle ou car       |
@@ -73,16 +73,16 @@ GET    /admin/drivers/template/download     # Télécharger le template
 
 ### Export
 
-1. Allez sur la page de gestion des conducteurs
+1. Allez sur la page de gestion des Agents
 2. Cliquez sur le menu déroulant "Importer/Exporter"
 3. Cliquez sur "Exporter en Excel"
 4. Le fichier sera téléchargé automatiquement
 
 ### Import
 
-1. Allez sur la page de gestion des conducteurs
+1. Allez sur la page de gestion des Agents
 2. Cliquez sur le menu déroulant "Importer/Exporter"
-3. Cliquez sur "Importer des Conducteurs"
+3. Cliquez sur "Importer des Agents"
 4. Téléchargez le template ou utilisez votre fichier
 5. Remplissez les données
 6. Sélectionnez le fichier et cliquez "Importer"

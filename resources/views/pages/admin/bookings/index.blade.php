@@ -46,8 +46,8 @@
             </form>
         </div>
 
-        <div class="overflow-x-auto">
-            <table class="w-full">
+        <div class="overflow-x-auto p-4">
+            <table class="min-w-full divide-y divide-gray-200 display" id="datatable1">
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -55,7 +55,7 @@
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                             Client</th>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Conducteur</th>
+                            Agent</th>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                             Trajet</th>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -89,7 +89,7 @@
                             <td class="px-6 py-4 whitespace-nowrap">
                                 @if ($booking->driver)
                                     <div class="flex items-center">
-                                        <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($booking->driver->user->name ?? 'Conducteur') }}"
+                                        <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($booking->driver->user->name ?? 'Agent') }}"
                                             class="w-8 h-8 rounded-full mr-3">
                                         <div class="text-sm text-gray-900">{{ $booking->driver->user->name ?? 'N/A' }}
                                         </div>
@@ -149,22 +149,16 @@
         </div>
     </div>
 
-    @if ($bookings->hasPages())
-        <div class="mt-8">
-            {{ $bookings->links('pagination::tailwind') }}
-        </div>
-    @endif
-
-    <!-- Modal pour assigner un conducteur -->
+    <!-- Modal pour assigner un Agent -->
     <div id="assignDriverModal"
         class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden items-center justify-center z-10">
         <div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div class="mt-3">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Assigner un Conducteur</h3>
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Assigner un Agent</h3>
                 <input type="hidden" id="currentBookingId" value="">
                 <div class="mb-4">
                     <label for="driverSelect" class="block text-sm font-medium text-gray-700 mb-2">
-                        Sélectionnez un conducteur disponible
+                        Sélectionnez un Agent disponible
                     </label>
                     <select id="driverSelect"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -188,8 +182,8 @@
     <!-- Modal de retrait -->
     <div id="removeDriverModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-10">
         <div class="bg-white rounded-lg p-8 max-w-md w-full">
-            <h3 class="text-2xl font-bold text-gray-800 mb-4">Retirer le conducteur</h3>
-            <p class="text-gray-600 mb-4">Êtes-vous sûr de vouloir retirer le conducteur de cette course ? Cette action est
+            <h3 class="text-2xl font-bold text-gray-800 mb-4">Retirer le Agent</h3>
+            <p class="text-gray-600 mb-4">Êtes-vous sûr de vouloir retirer le Agent de cette course ? Cette action est
                 irréversible.</p>
 
             <input type="hidden" id="removeBookingId" value="">
@@ -225,7 +219,7 @@
                 const $select = $('#driverSelect');
                 $select.html('<option value="">Chargement...</option>');
 
-                // Charger la liste des conducteurs disponibles
+                // Charger la liste des Agents disponibles
                 $.ajax({
                     url: '/admin/drivers',
                     method: 'GET',
@@ -234,12 +228,12 @@
                     },
                     dataType: 'json',
                     success: function(data) {
-                        $select.html('<option value="">Sélectionnez un conducteur</option>');
+                        $select.html('<option value="">Sélectionnez un Agent</option>');
 
                         if (data && data.data && data.data.length > 0) {
                             data.data.forEach(function(user) {
                                 const driverId = user.driver ? user.driver.id : user.id;
-                                const driverName = user.name ?? 'Conducteur';
+                                const driverName = user.name ?? 'Agent';
 
                                 $select.append(
                                     $('<option>', {
@@ -249,11 +243,11 @@
                                 );
                             });
                         } else {
-                            $select.html('<option value="">Aucun conducteur disponible</option>');
+                            $select.html('<option value="">Aucun Agent disponible</option>');
                         }
                     },
                     error: function(xhr) {
-                        console.error('Erreur chargement conducteurs:', xhr.status, xhr.responseText);
+                        console.error('Erreur chargement Agents:', xhr.status, xhr.responseText);
                         $select.html('<option value="">Erreur de chargement</option>');
                     }
                 });
@@ -275,7 +269,7 @@
                 const driverId = $('#driverSelect').val();
 
                 if (!driverId) {
-                    showAlert('error', 'Veuillez sélectionner un conducteur');
+                    showAlert('error', 'Veuillez sélectionner un Agent');
                     return;
                 }
 

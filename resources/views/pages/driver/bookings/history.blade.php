@@ -36,7 +36,7 @@
 
                                     @if (auth()->user() && auth()->user()->role === 'admin')
                                         <div class="text-sm text-gray-600 mt-1">
-                                            <strong>Conducteur :</strong>
+                                            <strong>Agent :</strong>
                                             @if ($booking->driver && $booking->driver->user)
                                                 {{ $booking->driver->user->name }}
                                             @else

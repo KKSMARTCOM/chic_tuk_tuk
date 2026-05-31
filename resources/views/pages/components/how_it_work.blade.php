@@ -24,7 +24,7 @@
                 </div>
 
                 <h3 class="text-2xl font-bold text-gray-800 mb-4">Confirmation instantanée</h3>
-                <p class="text-gray-600">Un conducteur accepte votre réservation et vous recevez une confirmation
+                <p class="text-gray-600">Un Agent accepte votre réservation et vous recevez une confirmation
                     immédiate par whatsapp ou par appel téléphonique.</p>
             </div>
 
@@ -35,7 +35,7 @@
                 </div>
 
                 <h3 class="text-2xl font-bold text-gray-800 mb-4">Profitez de votre trajet</h3>
-                <p class="text-gray-600">Votre conducteur vous attend à l'heure et au lieu convenus. Bon voyage !
+                <p class="text-gray-600">Votre Agent vous attend à l'heure et au lieu convenus. Bon voyage !
                 </p>
             </div>
         </div>

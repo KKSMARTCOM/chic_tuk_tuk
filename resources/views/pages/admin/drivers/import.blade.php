@@ -6,8 +6,8 @@
         <div class="px-6 py-4 border-b border-gray-200">
             <div class="flex items-center justify-between space-x-4">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-800">Importer des Conducteurs</h1>
-                    <p class="text-gray-600">Importez plusieurs conducteurs depuis un fichier Excel ou CSV</p>
+                    <h1 class="text-2xl font-bold text-gray-800">Importer des Agents</h1>
+                    <p class="text-gray-600">Importez plusieurs Agents depuis un fichier Excel ou CSV</p>
                 </div>
 
                 <div class="flex space-x-3">
@@ -36,7 +36,7 @@
                     <li class="flex items-start space-x-3">
                         <span
                             class="inline-block w-6 h-6 bg-blue-100 text-blue-600 rounded-full text-center text-sm font-bold flex-shrink-0">2</span>
-                        <span><strong>Remplissez le fichier</strong> avec les données de vos conducteurs</span>
+                        <span><strong>Remplissez le fichier</strong> avec les données de vos Agents</span>
                     </li>
                     <li class="flex items-start space-x-3">
                         <span
@@ -144,7 +144,7 @@
                 </h3>
                 <div class="space-y-3">
                     <div class="flex items-center justify-between">
-                        <span class="text-gray-600">Total Conducteurs</span>
+                        <span class="text-gray-600">Total Agents</span>
                         <span class="text-2xl font-bold text-gray-800">{{ $stats['total'] ?? 0 }}</span>
                     </div>
                     <div class="flex items-center justify-between pb-3 border-t">

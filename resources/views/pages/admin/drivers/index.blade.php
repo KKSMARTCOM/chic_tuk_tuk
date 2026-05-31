@@ -5,8 +5,8 @@
     <div class="bg-white rounded-lg shadow-md mb-8">
         <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-800">Gestion des Conducteurs</h1>
-                <p class="text-gray-600">Gérez vos conducteurs et leurs véhicules</p>
+                <h1 class="text-2xl font-bold text-gray-800">Gestion des Agents</h1>
+                <p class="text-gray-600">Gérez vos Agents et leurs véhicules</p>
             </div>
             <div class="flex items-center space-x-3">
                 <div class="relative group">
@@ -22,7 +22,7 @@
                         </a>
                         <a href="{{ route('admin.drivers.import.form') }}"
                             class="block px-4 py-2 text-gray-700 hover:bg-blue-50 border-b transition">
-                            <i class="fas fa-file-import mr-2 text-blue-600"></i> Importer des Conducteurs
+                            <i class="fas fa-file-import mr-2 text-blue-600"></i> Importer des Agents
                         </a>
                         <a href="{{ route('admin.drivers.template.download') }}"
                             class="block px-4 py-2 text-gray-700 hover:bg-blue-50 transition">
@@ -32,7 +32,7 @@
                 </div>
                 <a href="{{ route('admin.drivers.create') }}"
                     class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
-                    <i class="fas fa-plus mr-2"></i> Nouveau Conducteur
+                    <i class="fas fa-plus mr-2"></i> Nouveau Agent
                 </a>
             </div>
         </div>
@@ -46,7 +46,7 @@
                     <i class="fas fa-users text-2xl"></i>
                 </div>
                 <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-600">Total Conducteurs</p>
+                    <p class="text-sm font-medium text-gray-600">Total Agents</p>
                     <p class="text-2xl font-bold text-gray-900">{{ $stats['total'] }}</p>
                 </div>
             </div>
@@ -139,14 +139,14 @@
     <!-- Drivers List -->
     <div class="bg-white rounded-lg shadow-md">
         <div class="px-6 py-4 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-800">Liste des Conducteurs</h3>
+            <h3 class="text-lg font-semibold text-gray-800">Liste des Agents</h3>
         </div>
-        <div class="overflow-x-auto">
-            <table class="w-full">
+        <div class="overflow-x-auto p-4">
+            <table class="min-w-full divide-y divide-gray-200 display" id="datatable1">
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Conducteur</th>
+                            Agent</th>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                             Contact</th>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -219,7 +219,7 @@
                     @empty
                         <tr>
                             <td colspan="6" class="px-6 py-4 text-center text-gray-500">
-                                Aucun conducteur trouvé.
+                                Aucun Agent trouvé.
                             </td>
                         </tr>
                     @endforelse
@@ -228,19 +228,12 @@
         </div>
     </div>
 
-    <!-- Pagination -->
-    @if ($drivers->hasPages())
-        <div class="mt-8">
-            {{ $drivers->links('pagination::tailwind') }}
-        </div>
-    @endif
-
     <!-- Delete Confirmation Modal -->
     <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-20">
         <div class="bg-white rounded-lg p-8 max-w-md w-full">
-            <h3 class="text-2xl font-bold text-gray-800 mb-4">Supprimer le conducteur</h3>
+            <h3 class="text-2xl font-bold text-gray-800 mb-4">Supprimer le Agent</h3>
             <p class="text-gray-600 mb-4" id="deleteMessage">
-                Êtes-vous sûr de vouloir supprimer ce conducteur ? Cette action est irréversible.
+                Êtes-vous sûr de vouloir supprimer ce Agent ? Cette action est irréversible.
             </p>
             <form id="deleteForm" method="POST">
                 @csrf

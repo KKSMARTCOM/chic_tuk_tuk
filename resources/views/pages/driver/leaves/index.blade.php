@@ -4,17 +4,17 @@
     <div class="container mx-auto px-4 py-8">
         <div class="bg-white rounded-lg shadow-md mb-8">
             <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                <h1 class="text-3xl font-bold text-gray-800">Mes Congés</h1>
+                <h1 class="text-3xl font-bold text-gray-800">Mes Pauses</h1>
 
                 <a href="{{ route('driver.leaves.create') }}"
                     class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-medium">
-                    + Demander un congé
+                    + Demander une Pause
                 </a>
             </div>
         </div>
 
         <!-- Summary Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
             <div class="bg-blue-50 rounded-lg shadow p-6 border-l-4 border-blue-500">
                 <p class="text-sm text-blue-600 font-semibold uppercase">Jours par mois</p>
                 <p class="text-3xl font-bold text-blue-900 mt-2">{{ $leaveInfo['leave_days_per_month'] }}</p>
@@ -26,6 +26,10 @@
             <div class="bg-orange-50 rounded-lg shadow p-6 border-l-4 border-orange-500">
                 <p class="text-sm text-orange-600 font-semibold uppercase">Jours utilisés</p>
                 <p class="text-3xl font-bold text-orange-900 mt-2">{{ $leaveInfo['leave_days_used'] }}</p>
+            </div>
+            <div class="bg-indigo-50 rounded-lg shadow p-6 border-l-4 border-indigo-500">
+                <p class="text-sm text-indigo-600 font-semibold uppercase">Disponibles à date</p>
+                <p class="text-3xl font-bold text-indigo-900 mt-2">{{ $leaveInfo['available_leave_days'] }}</p>
             </div>
             <div class="bg-green-50 rounded-lg shadow p-6 border-l-4 border-green-500">
                 <p class="text-sm text-green-600 font-semibold uppercase">Jours restants</p>
@@ -140,9 +144,10 @@
         <!-- Empty State -->
         @if ($pendingRequests->isEmpty() && $approvedRequests->isEmpty() && $rejectedRequests->isEmpty())
             <div class="bg-blue-50 border-2 border-blue-200 rounded-lg p-12 text-center">
-                <p class="text-blue-800 text-lg font-semibold mb-2">Aucune demande de congé</p>
+                <p class="text-blue-800 text-lg font-semibold mb-2">Aucune demande de Pause</p>
                 <p class="text-blue-600 text-sm mb-4">
-                    Vous n'avez aucune demande de congé en cours. Vous pouvez en créer une si vous avez des jours restants.
+                    Vous n'avez aucune demande de Pause en cours. Vous pouvez en créer une si vous avez des jours
+                    disponibles.
                 </p>
                 @if ($leaveInfo['remaining_leave_days'] > 0)
                     <a href="{{ route('driver.leaves.create') }}"
@@ -151,7 +156,7 @@
                     </a>
                 @else
                     <p class="text-red-600 font-semibold text-sm">
-                        Vous n'avez plus de jours de congé disponibles.
+                        Vous n'avez plus de jours de Pause disponibles.
                     </p>
                 @endif
             </div>

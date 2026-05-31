@@ -5,8 +5,8 @@
     <div class="bg-white rounded-lg shadow-md mb-8">
         <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-800">Ajouter un Conducteur</h1>
-                <p class="text-gray-600">Créez un nouveau compte conducteur</p>
+                <h1 class="text-2xl font-bold text-gray-800">Ajouter un Agent</h1>
+                <p class="text-gray-600">Créez un nouveau compte Agent</p>
             </div>
             <div class="flex space-x-3">
                 <a href="{{ route('admin.drivers.index') }}"
@@ -22,7 +22,7 @@
         @csrf
 
         <div class="px-6 py-4 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-800">Informations du Conducteur</h3>
+            <h3 class="text-lg font-semibold text-gray-800">Informations du Agent</h3>
         </div>
 
         <div class="px-6 py-6 space-y-6">
@@ -203,7 +203,7 @@
 
             <p class="text-sm text-blue-800">
                 <i class="fas fa-info-circle mr-2"></i>
-                <strong>Note :</strong> Ce conducteur sera créé avec le statut <strong>Actif</strong> et la
+                <strong>Note :</strong> Ce Agent sera créé avec le statut <strong>Actif</strong> et la
                 disponibilité <strong>Disponible</strong> par défaut. Vous pourrez modifier ces paramètres après la
                 création.
             </p>
@@ -216,7 +216,7 @@
                 <i class="fas fa-times mr-2"></i>Annuler
             </a>
             <button type="submit" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
-                <i class="fas fa-check mr-2"></i> Créer le Conducteur
+                <i class="fas fa-check mr-2"></i> Créer le Agent
             </button>
         </div>
     </form>

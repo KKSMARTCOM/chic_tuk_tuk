@@ -15,14 +15,12 @@ class Commission extends Model
         'driver_id',
         'booking_id',
         'amount',
-        'is_paid',
         'date',
     ];
 
     protected $casts = [
         'date' => 'date',
         'amount' => 'decimal:2',
-        'is_paid' => 'boolean',
     ];
 
     public function driver()

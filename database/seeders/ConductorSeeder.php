@@ -15,7 +15,7 @@ class ConductorSeeder extends Seeder
      */
     public function run(): void
     {
-        // Conducteurs
+        // Agents
         for ($i = 1; $i <= 10; $i++) {
             $user = User::create([
                 'name' => "Agent $i",

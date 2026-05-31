@@ -5,6 +5,9 @@
 
 <body class="bg-gray-100">
     <div class="h-screen">
+        {{-- PWA Components --}}
+        {{-- @include('inc.backend.pwa-components') --}}
+
         {{-- Global alerts (success / error / validation) --}}
         @include('inc.global.alerts')
 

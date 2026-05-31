@@ -4,7 +4,7 @@
     <div class="container mx-auto px-4 py-8">
         <div class="bg-white rounded-lg shadow-md mb-8">
             <div class="px-6 py-4 border-b border-gray-200 block md:flex items-center justify-between">
-                <h1 class="text-2xl font-bold text-gray-800">Demande de congés</h1>
+                <h1 class="text-2xl font-bold text-gray-800">Demande de Pauses</h1>
 
                 <div class="mt-4 md:mt-0">
                     <a href="{{ route('driver.leaves.index') }}"
@@ -19,21 +19,26 @@
             <!-- Main Form -->
             <div class="lg:col-span-2">
                 <div class="bg-white rounded-lg shadow-md p-6">
-                    <h1 class="text-2xl font-bold text-gray-800 mb-6">Demander un Congé</h1>
+                    <h1 class="text-2xl font-bold text-gray-800 mb-6">Demander une Pause</h1>
 
                     <!-- Leave Summary -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 p-4 bg-blue-50 rounded-lg">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 p-4 bg-blue-50 rounded-lg">
                         <div>
-                            <p class="text-sm text-blue-600 font-semibold uppercase">Jours restants</p>
-                            <p class="text-3xl font-bold text-blue-900">{{ $leaveInfo['remaining_leave_days'] }}</p>
+                            <p class="text-sm text-blue-600 font-semibold uppercase">Disponibles à date</p>
+                            <p class="text-2xl font-bold text-blue-900">{{ $leaveInfo['available_leave_days'] }} jours</p>
                         </div>
                         <div>
-                            <p class="text-sm text-blue-600 font-semibold uppercase">Total disponible</p>
-                            <p class="text-2xl font-semibold text-blue-900">{{ $leaveInfo['total_leave_days'] }} jours</p>
+                            <p class="text-sm text-blue-600 font-semibold uppercase">Restants</p>
+                            <p class="text-2xl font-semibold text-blue-900">{{ $leaveInfo['remaining_leave_days'] }} jours
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-blue-600 font-semibold uppercase">Utilisés</p>
+                            <p class="text-2xl font-semibold text-blue-900">{{ $leaveInfo['leave_days_used'] }} jours</p>
                         </div>
                     </div>
 
-                    @if ($leaveInfo['remaining_leave_days'] > 0)
+                    @if ($leaveInfo['available_leave_days'] > 0)
                         <form method="POST" action="{{ route('driver.leaves.store') }}" id="leaveForm">
                             @csrf
                             <div class="mb-6">
@@ -43,8 +48,9 @@
                                 <div class="mb-4">
                                     <input type="date" id="leaveDate"
                                         class="border border-gray-300 rounded-lg px-4 py-2 w-full"
-                                        min="{{ now()->toDateString() }}" max="{{ now()->endOfMonth()->toDateString() }}"
-                                        title="Les dates doivent être dans le mois courant">
+                                        min="{{ now()->addDay()->toDateString() }}"
+                                        max="{{ now()->endOfMonth()->toDateString() }}"
+                                        title="Les dates doivent être dans le mois courant et au moins 24h à l'avance">
                                     <button type="button" onclick="addDate()"
                                         class="mt-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 w-full font-medium">
                                         + Ajouter une date
@@ -85,16 +91,27 @@
                             </div>
 
                             <p class="text-xs text-gray-500 mt-4">
-                                ℹ️ Vous pouvez demander jusqu'à <strong>{{ $leaveInfo['remaining_leave_days'] }}</strong>
-                                jour(s) de congé.
-                                Votre demande sera examinée par un administrateur.
+                                <span class="text-red-500">
+                                    ℹ️ Si vous avez besoin d'une pause en urgence, veuillez contacter le support.
+                                </span> <br>
+                                <span>
+                                    ℹ️ Vous pouvez demander jusqu'à
+                                    <strong>{{ $leaveInfo['available_leave_days'] }}</strong> jour(s) disponible(s) à date.
+                                </span> <br>
+                                <span>
+                                    ℹ️ Les jours doivent être consécutifs et demandés au moins 24 heures à l'avance.
+                                </span> <br>
+                                <span>
+                                    ℹ️ Votre demande sera examinée par un administrateur.
+                                </span>
                             </p>
                         </form>
                     @else
                         <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
-                            <p class="text-yellow-800 font-semibold">Aucun jour de congé restant</p>
+                            <p class="text-yellow-800 font-semibold">Aucun jour de Pause disponible à date</p>
                             <p class="text-yellow-600 text-sm mt-2">
-                                Vous avez utilisé tous vos jours de congé pour cette période.
+                                Vous aurez {{ $leaveInfo['remaining_leave_days'] }} jour(s) disponible(s) au total à la fin
+                                de votre contrat.
                             </p>
                         </div>
                     @endif
@@ -173,7 +190,7 @@
 
     <script>
         let selectedDates = [];
-        const maxDays = {{ $leaveInfo['remaining_leave_days'] }};
+        const maxDays = {{ $leaveInfo['available_leave_days'] }};
 
         function setError(message) {
             const error = document.getElementById('dateError');

@@ -45,7 +45,7 @@ class BookingController extends Controller
             });
         }
 
-        $bookings = $query->latest()->paginate(10);
+        $bookings = $query->latest()->get();
 
         return view('pages.admin.bookings.index', compact('bookings'));
     }
@@ -70,7 +70,7 @@ class BookingController extends Controller
                     'driver_id' => 'required|exists:drivers,id',
                 ],
                 [
-                    'driver_id.exists' => 'Le conducteur sélectionné n\'existe pas.',
+                    'driver_id.exists' => 'Le Agent sélectionné n\'existe pas.',
                 ]
             );
 
@@ -80,22 +80,22 @@ class BookingController extends Controller
 
             if ($user->role !== 'driver' || !$user->is_active) {
                 if ($request->wantsJson()) {
-                    return response()->json(['success' => false, 'message' => 'Ce conducteur n\'est pas disponible'], 400);
+                    return response()->json(['success' => false, 'message' => 'Ce Agent n\'est pas disponible'], 400);
                 }
 
-                return back()->with('error', 'Ce conducteur n\'est pas disponible.');
+                return back()->with('error', 'Ce Agent n\'est pas disponible.');
             }
 
             $this->bookingService->take($booking->id, $driver->id);
 
             if ($request->wantsJson()) {
-                return response()->json(['success' => true, 'message' => 'Conducteur assigné avec succès']);
+                return response()->json(['success' => true, 'message' => 'Agent assigné avec succès']);
             }
 
-            return back()->with('success', 'Conducteur assigné avec succès');
+            return back()->with('success', 'Agent assigné avec succès');
         } catch (\Exception $e) {
             if ($request->wantsJson()) {
-                return response()->json(['success' => false, 'message' => 'Erreur lors de l\'assignation du conducteur: ' . $e->getMessage()], 400);
+                return response()->json(['success' => false, 'message' => 'Erreur lors de l\'assignation du Agent: ' . $e->getMessage()], 400);
             }
 
             return back()->with('error', 'Une erreur est survenue: ' . $e->getMessage());
@@ -107,18 +107,18 @@ class BookingController extends Controller
         try {
             if (!$booking->driver_id) {
                 if (request()->wantsJson()) {
-                    return response()->json(['success' => false, 'message' => 'Aucun conducteur assigné à cette réservation'], 400);
+                    return response()->json(['success' => false, 'message' => 'Aucun Agent assigné à cette réservation'])->setStatusCode(400);
                 }
 
-                return back()->with('error', 'Aucun conducteur assigné à cette réservation');
+                return back()->with('error', 'Aucun Agent assigné à cette réservation');
             }
 
             if ($booking->status !== 'confirmed' && $booking->status !== 'in_progress') {
                 if (request()->wantsJson()) {
-                    return response()->json(['success' => false, 'message' => 'Impossible de retirer le conducteur pour ce statut de réservation'], 400);
+                    return response()->json(['success' => false, 'message' => 'Impossible de retirer le Agent pour ce statut de réservation'], 400);
                 }
 
-                return back()->with('error', 'Impossible de retirer le conducteur pour ce statut de réservation');
+                return back()->with('error', 'Impossible de retirer le Agent pour ce statut de réservation');
             }
 
             $data = [
@@ -129,13 +129,13 @@ class BookingController extends Controller
             $this->bookingService->update($booking, $data);
 
             if (request()->wantsJson()) {
-                return response()->json(['success' => true, 'message' => 'Conducteur retiré avec succès']);
+                return response()->json(['success' => true, 'message' => 'Agent retiré avec succès']);
             }
 
-            return back()->with('success', 'Conducteur retiré avec succès');
+            return back()->with('success', 'Agent retiré avec succès');
         } catch (\Exception $e) {
             if (request()->wantsJson()) {
-                return response()->json(['success' => false, 'message' => 'Erreur lors du retrait du conducteur: ' . $e->getMessage()], 400);
+                return response()->json(['success' => false, 'message' => 'Erreur lors du retrait du Agent: ' . $e->getMessage()], 400);
             }
 
             return back()->with('error', 'Une erreur est survenue: ' . $e->getMessage());
