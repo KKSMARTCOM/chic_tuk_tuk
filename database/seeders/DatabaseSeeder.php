@@ -17,10 +17,6 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             UserSeeder::class,
-            ConductorSeeder::class,
-            ZoneSeeder::class,
-            TarificationSeeder::class,
-            NotificationSeeder::class
         ]);
     }
 }
