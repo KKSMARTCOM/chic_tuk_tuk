@@ -32,9 +32,9 @@ class AuthController extends Controller
                     'required',
                     'string',
                     'min:8',
-                    'regex:/[A-Z]/',      // Au moins 1 majuscule
-                    'regex:/[0-9]/',      // Au moins 1 chiffre
-                    'regex:/[@$!%*#?&]/', // Au moins 1 caractère spécial
+                    'regex:/[A-Z]/',
+                    'regex:/[0-9]/',
+                    'regex:/[@$!%*#?&]/',
                 ],
             ], [
                 'email.required'    => 'L\'adresse email est obligatoire.',
@@ -44,23 +44,19 @@ class AuthController extends Controller
                 'password.regex'    => 'Le mot de passe doit contenir au moins une majuscule, un chiffre et un caractère spécial (@$!%*#?&).',
             ]);
 
-            $loginResponse = $this->authService->login($credentials, $request);
+            $response = $this->authService->login($credentials, $request);
 
-            if ($loginResponse === false) {
-                // Délai artificiel pour contrer le brute force
-                sleep(1);
-
-                return back()->withErrors([
-                    'email' => 'Les informations d\'identification fournies ne correspondent pas à nos enregistrements.',
-                ])->onlyInput('email');
+            if ($response === false) {
+                sleep(1); // Anti brute-force
+                return back()->withErrors(['email' => 'Les informations d\'identification fournies ne correspondent pas à nos enregistrements.',])->onlyInput('email');
             }
 
-            return $loginResponse;
+            return $response;
         } catch (ValidationException $e) {
             return back()->withErrors($e->errors())->withInput($request->only('email'));
         } catch (\Exception $e) {
             Log::error('Erreur de connexion : ' . $e->getMessage());
-            return back()->with('error', 'Une erreur est survenue lors de la connexion. Veuillez réessayer.');
+            return back()->with('error', 'Une erreur est survenue lors de la connexion. Veuillez réessayer.' . ' ' . $e->getMessage())->withInput($request->only('email'));
         }
     }
 

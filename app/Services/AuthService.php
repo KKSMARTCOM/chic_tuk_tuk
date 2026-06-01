@@ -6,21 +6,25 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthService
 {
     public function login($credentials, $request)
     {
+
         // 1. Vérifier le rate limiting (max 5 tentatives / minute par IP)
         $this->checkRateLimit($request);
 
         // 2. Trouver l'utilisateur
         $user = User::where('email', $credentials['email'])->first();
 
-        if (!$user) {
-            $this->incrementLoginAttempts($request);
+        if (!$user || !Hash::check($credentials['password'], $user->password)) {
+            $this->incrementLoginAttempts($request, $user ?? null);
             return false;
         }
 
@@ -35,38 +39,42 @@ class AuthService
             throw new \Exception("Compte temporairement verrouillé. Réessayez dans {$remainingSeconds} secondes.");
         }
 
-        // 5. Déterminer le guard selon le rôle
-        $guard = match ($user->role) {
-            'admin'  => 'admin',
-            'driver' => 'driver',
-            default  => 'client',
+        // 5. Révoquer l'ancien token du même profil s'il existe
+        $user->tokens()->where('name', $user->profil)->delete();
+
+        // 6. Créer un nouveau token Sanctum pour ce profil
+        $token = $user->createToken($user->profil, [$user->profil])->plainTextToken;
+
+        // 6b. Connecter en session
+        Auth::login($user);
+
+        // 7. Réinitialiser les tentatives et logger
+        $this->resetLoginAttempts($request, $user);
+        $this->logSuccessfulLogin($user, $request);
+
+        // 8. Créer le cookie httpOnly pour ce profil
+        $cookie = Cookie::make(
+            name: 'ctt_' . $user->profil . '_token',
+            value: $token,
+            minutes: 60 * 24 * 30, // 30 jours
+            path: '/',
+            secure: config('app.env') === 'production',
+            httpOnly: true,
+            sameSite: 'Lax',
+        );
+
+        // 9. Rediriger selon le profil
+        return match ($user->profil) {
+            'admin'  => redirect()->route('admin.dashboard')
+                ->with('success', 'Connexion réussie en tant qu\'administrateur.')
+                ->cookie($cookie),
+            'driver' => redirect()->route('driver.dashboard')
+                ->with('success', 'Connexion réussie en tant que conducteur.')
+                ->cookie($cookie),
+            default  => redirect()->route('client.dashboard')
+                ->with('success', 'Connexion réussie.')
+                ->cookie($cookie),
         };
-
-        // 6. Tenter l'authentification
-        if (Auth::guard($guard)->attempt($credentials)) {
-
-            // Succès : réinitialiser les tentatives
-            $this->resetLoginAttempts($request, $user);
-
-            $request->session()->regenerate();
-
-            // Enregistrer la connexion (IP, date, user agent)
-            $this->logSuccessfulLogin($user, $request);
-
-            return match ($guard) {
-                'admin'  => redirect()->route('admin.dashboard')
-                    ->with('success', 'Connexion réussie en tant qu\'administrateur.'),
-                'driver' => redirect()->route('driver.dashboard')
-                    ->with('success', 'Connexion réussie en tant que conducteur.'),
-                default  => redirect()->route('client.dashboard')
-                    ->with('success', 'Connexion réussie.'),
-            };
-        }
-
-        // Échec : incrémenter les tentatives
-        $this->incrementLoginAttempts($request, $user);
-
-        return false;
     }
 
     private function checkRateLimit(Request $request): void
@@ -131,7 +139,7 @@ class AuthService
         Log::info('Connexion réussie', [
             'user_id'    => $user->id,
             'email'      => $user->email,
-            'role'       => $user->role,
+            'profil'     => $user->profil,
             'ip'         => $request->ip(),
             'user_agent' => $request->userAgent(),
             'at'         => now()->toDateTimeString(),
@@ -143,48 +151,42 @@ class AuthService
 
     public function logout(Request $request)
     {
-        // 1. Identifier le guard actif et l'utilisateur connecté
-        $guard = $this->getActiveGuard();
-        $user  = $guard ? Auth::guard($guard)->user() : null;
+        // Cherche le rôle actif parmi les cookies présents
+        foreach (['admin', 'driver', 'client'] as $profil) {
+            $cookieName = 'ctt_' . $profil . '_token';
+            $rawToken   = $request->cookie($cookieName);
 
-        // 2. Logger la déconnexion avant de perdre la session
-        if ($user) {
-            $this->logLogout($user, $request);
+            if (!$rawToken) continue;
+
+            $pat = PersonalAccessToken::findToken($rawToken);
+
+            if ($pat) {
+                $this->logLogout($pat->tokenable, $request);
+                $pat->delete();
+            }
+
+            Cookie::queue(Cookie::forget($cookieName));
+
+            return redirect('/login')->with('success', 'Déconnecté avec succès.');
         }
 
-        // 3. Déconnecter tous les guards actifs
-        $this->logoutAllGuards();
-
-        // 4. Détruire complètement la session
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return redirect('/login')->with('success', 'Vous avez été déconnecté avec succès.');
+        return redirect('/login');
     }
 
-    /**
-     * Retourne le guard actuellement actif.
-     */
-    private function getActiveGuard(): ?string
+    public function logoutAll(Request $request): \Illuminate\Http\RedirectResponse
     {
-        foreach (['admin', 'driver', 'client'] as $guard) {
-            if (Auth::guard($guard)->check()) {
-                return $guard;
-            }
-        }
-        return null;
-    }
+        foreach (['admin', 'driver', 'client'] as $profil) {
+            $rawToken = $request->cookie('ctt_' . $profil . '_token');
 
-    /**
-     * Déconnecte tous les guards actifs.
-     */
-    private function logoutAllGuards(): void
-    {
-        foreach (['admin', 'driver', 'client'] as $guard) {
-            if (Auth::guard($guard)->check()) {
-                Auth::guard($guard)->logout();
-            }
+            if (!$rawToken) continue;
+
+            $pat = PersonalAccessToken::findToken($rawToken);
+            $pat?->delete();
+
+            Cookie::queue(Cookie::forget('ctt_' . $profil . '_token'));
         }
+
+        return redirect('/login')->with('success', 'Tous les profils ont été déconnectés.');
     }
 
     /**
@@ -195,7 +197,7 @@ class AuthService
         Log::info('Déconnexion', [
             'user_id'    => $user->id,
             'email'      => $user->email,
-            'role'       => $user->role,
+            'profil'     => $user->profil,
             'ip'         => $request->ip(),
             'user_agent' => $request->userAgent(),
             'at'         => now()->toDateTimeString(),

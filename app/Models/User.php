@@ -8,11 +8,16 @@ use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasUuid;
+    use HasFactory, Notifiable, HasUuid, HasRoles, HasApiTokens;
+
+    public $incrementing = false;
+    protected $keyType = 'string';
 
     /**
      * The attributes that are mass assignable.
@@ -24,7 +29,7 @@ class User extends Authenticatable
         'email',
         'phone',
         'password',
-        'role',
+        'profil',
         'profile_photo',
         'is_active',
         'adresse',
@@ -78,16 +83,16 @@ class User extends Authenticatable
 
     public function isAdmin()
     {
-        return $this->role === 'admin';
+        return $this->profil === 'admin';
     }
 
     public function isDriver()
     {
-        return $this->role === 'driver';
+        return $this->profil === 'driver';
     }
 
     public function isClient()
     {
-        return $this->role === 'client';
+        return $this->profil === 'client';
     }
 }

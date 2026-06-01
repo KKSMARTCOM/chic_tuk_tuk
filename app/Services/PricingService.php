@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Consts\Price;
 use App\Models\Pricing;
 use Illuminate\Support\Facades\Http;
 
@@ -45,10 +46,12 @@ class PricingService
 
     public function getPrice(float $distance): int
     {
-        $price_km = 150;
+        if ($distance <= 1) {
+            return Price::BASE_PRICE;
+        }
 
-        $price = $distance * $price_km;
+        $price = $distance * Price::PRICE_PER_KM;
 
-        return $price;
+        return (int) max($price, Price::MINIMUM_PRICE);
     }
 }

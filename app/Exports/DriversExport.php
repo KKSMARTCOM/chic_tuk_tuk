@@ -19,7 +19,7 @@ class DriversExport implements FromCollection, WithHeadings, WithStyles
 
     public function collection()
     {
-        $query = User::where('role', 'driver')->with('driver');
+        $query = User::where('profil', 'driver')->with('driver');
 
         // Appliquer les filtres
         if (isset($this->filters['search']) && !empty($this->filters['search'])) {

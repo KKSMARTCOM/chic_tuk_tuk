@@ -39,7 +39,7 @@ class DriversImport implements ToModel, WithHeadingRow, WithValidation
                 'phone' => $phone,
                 'adresse' => $row['adresse'] ?? $row['address'] ?? null,
                 'password' => Hash::make($phone), // Utiliser le téléphone comme mot de passe par défaut
-                'role' => 'driver',
+                'profil' => 'driver',
                 'is_active' => in_array(strtolower($row['actif'] ?? $row['active'] ?? 'oui'), ['oui', 'yes', '1']) ? 1 : 0,
             ]);
 

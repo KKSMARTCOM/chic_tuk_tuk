@@ -23,7 +23,7 @@ class TouristCircuitController extends Controller
             $query->where('is_active', $request->get('is_active'));
         }
 
-        $circuits = $query->latest()->paginate(15);
+        $circuits = $query->latest()->get();
         $stats = [
             'total' => TouristCircuit::count(),
             'active' => TouristCircuit::where('is_active', true)->count(),

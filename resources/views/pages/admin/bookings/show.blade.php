@@ -158,7 +158,7 @@
                     <h3 class="text-lg font-semibold text-gray-800">Actions</h3>
                 </div>
                 <div class="px-6 py-4 space-y-3">
-                    @if (!$booking->driver)
+                    @if (!$booking->driver && in_array($booking->status, ['pending']))
                         <button onclick="assignDriver('{{ $booking->id }}')"
                             class="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
                             <i class="fas fa-user-plus mr-2"></i> Assigner un Agent
@@ -168,7 +168,9 @@
                             class="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">
                             <i class="fas fa-user-times mr-2"></i> Retirer le Agent
                         </button>
-                    @else
+                    @endif
+
+                    @if (in_array($booking->status, ['cancelled', 'expired']))
                         <button onclick="openDeleteModal('{{ $booking->id }}')"
                             class="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">
                             <i class="fas fa-user-times mr-2"></i> Supprimer la réservation
@@ -300,6 +302,7 @@
                 irréversible.</p>
             <form id="deleteForm" method="POST" action="">
                 @csrf
+                @method('DELETE')
                 <input type="hidden" name="status" value="">
                 <div class="flex space-x-4">
                     <button type="button" onclick="closeDeleteModal()"
@@ -493,7 +496,7 @@
             });
 
             function openDeleteModal(bookingId) {
-                $('#deleteForm').attr('action', `/admin/bookings/${bookingId}/update-status`);
+                $('#deleteForm').attr('action', `/admin/bookings/${bookingId}`);
                 $('#deleteModal').removeClass('hidden').addClass('flex');
             }
 

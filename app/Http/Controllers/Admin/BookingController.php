@@ -54,7 +54,7 @@ class BookingController extends Controller
     {
         $booking->load(['user', 'driver', 'touristCircuit', 'promoCode']);
 
-        $availableDrivers = User::where('role', 'driver')
+        $availableDrivers = User::where('profil', 'driver')
             ->where('is_active', true)
             ->with('driver')
             ->get();
@@ -78,7 +78,7 @@ class BookingController extends Controller
 
             $user = $driver->user;
 
-            if ($user->role !== 'driver' || !$user->is_active) {
+            if ($user->profil !== 'driver' || !$user->is_active) {
                 if ($request->wantsJson()) {
                     return response()->json(['success' => false, 'message' => 'Ce Agent n\'est pas disponible'], 400);
                 }
@@ -253,6 +253,16 @@ class BookingController extends Controller
             return redirect()->route('admin.bookings.show', $booking)->with('success', 'Réservation mise à jour avec succès');
         } catch (\Exception $e) {
             return redirect()->back()->withErrors(['error' => 'Une erreur est survenue: ' . $e->getMessage()])->withInput();
+        }
+    }
+
+    public function destroy(string $bookingId)
+    {
+        try {
+            $this->bookingService->delete($bookingId);
+            return redirect()->route('admin.bookings.index')->with('success', 'La course a été supprimée avec succès.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
         }
     }
 }

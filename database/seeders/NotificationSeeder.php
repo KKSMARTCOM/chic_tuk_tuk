@@ -25,7 +25,7 @@ class NotificationSeeder extends Seeder
                 'is_read' => false,
             ]);
 
-            if ($user->role === 'driver') {
+            if ($user->profil === 'driver') {
                 Notification::create([
                     'user_id' => $user->id,
                     'title' => 'Nouveau trajet disponible',

@@ -12,7 +12,7 @@ class DriverService
     public function getAllDrivers($filters = [])
     {
         $query = User::query()
-            ->where('role', 'driver')
+            ->where('profil', 'driver')
             ->with('driver');
 
         if (isset($filters['search']) && !empty($filters['search'])) {
@@ -43,8 +43,8 @@ class DriverService
 
     public function getDriverStats()
     {
-        $totalDrivers = User::where('role', 'driver')->count();
-        $activeDrivers = User::where('role', 'driver')->where('is_active', true)->count();
+        $totalDrivers = User::where('profil', 'driver')->count();
+        $activeDrivers = User::where('profil', 'driver')->where('is_active', true)->count();
         $inactiveDrivers = $totalDrivers - $activeDrivers;
         $availableDrivers = Driver::where('is_available', true)->count();
 
@@ -58,7 +58,7 @@ class DriverService
 
     public function getDriverById($driverId)
     {
-        return User::where('role', 'driver')
+        return User::where('profil', 'driver')
             ->with(['driver', 'driver.bookings' => function ($query) {
                 $query->with(['fromZone', 'toZone'])
                     ->orderByRaw("CONCAT(pickup_date, ' ', pickup_time) DESC");
@@ -107,10 +107,12 @@ class DriverService
             'email' => $data['email'],
             'phone' => $data['phone'],
             'password' => Hash::make($data['password']),
-            'role' => 'driver',
+            'profil' => 'driver',
             'is_active' => $data['is_active'] ?? true,
             'adresse' => $data['adresse'] ?? null,
         ]);
+
+        $user->assignRole('driver');
 
         $driver = Driver::create([
             'user_id' => $user->id,
@@ -231,7 +233,7 @@ class DriverService
 
     public function getAllDriversForExport($filters = [])
     {
-        $query = User::where('role', 'driver')->with('driver');
+        $query = User::where('profil', 'driver')->with('driver');
 
         if (isset($filters['search']) && !empty($filters['search'])) {
             $search = $filters['search'];

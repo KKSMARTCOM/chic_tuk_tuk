@@ -66,66 +66,75 @@
         <div class="px-6 py-4 border-b border-gray-200">
             <h3 class="text-lg font-semibold text-gray-800">Liste des Commissions</h3>
         </div>
-        <div class="overflow-x-auto p-4">
-            <table class="min-w-full divide-y divide-gray-200 display" id="datatable1">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Numéro
-                            Course</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Agent</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Montant</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse($commissions as $commission)
-                        <tr class="hover:bg-gray-50 transition">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <a href="{{ route('admin.bookings.show', $commission->booking) }}"
-                                    class="text-blue-600 hover:text-blue-800 font-medium">
-                                    {{ $commission->booking->booking_number ?? 'N/A' }}
-                                </a>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($commission->driver->user->name) }}"
-                                        class="w-10 h-10 rounded-full mr-3">
-                                    <div>
-                                        <div class="text-sm font-medium text-gray-900">
-                                            {{ $commission->driver->user->name }}</div>
-                                        <div class="text-sm text-gray-500">{{ $commission->driver->user->phone }}</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="text-lg font-semibold text-green-600">
-                                    {{ number_format($commission->amount, 0, ',', ' ') }} FCFA
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                {{ formatDateFr($commission->date) ?? formatDateFr($commission->created_at) }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                <a href="{{ route('admin.commissions.show', $commission) }}"
-                                    class="text-blue-600 hover:text-blue-800">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                            </td>
-                        </tr>
-                    @empty
+        @if ($commissions && $commissions->count() > 0)
+            <div class="overflow-x-auto p-4">
+                <table class="min-w-full divide-y divide-gray-200 display" id="datatable1">
+                    <thead class="bg-gray-50">
                         <tr>
-                            <td colspan="5" class="px-6 py-4 text-center text-gray-500">
-                                Aucune commission trouvée.
-                            </td>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Numéro
+                                Course</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Agent</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Montant</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Date
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Actions</th>
                         </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @forelse($commissions as $commission)
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <a href="{{ route('admin.bookings.show', $commission->booking) }}"
+                                        class="text-blue-600 hover:text-blue-800 font-medium">
+                                        {{ $commission->booking->booking_number ?? 'N/A' }}
+                                    </a>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($commission->driver->user->name) }}"
+                                            class="w-10 h-10 rounded-full mr-3">
+                                        <div>
+                                            <div class="text-sm font-medium text-gray-900">
+                                                {{ $commission->driver->user->name }}</div>
+                                            <div class="text-sm text-gray-500">{{ $commission->driver->user->phone }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="text-lg font-semibold text-green-600">
+                                        {{ number_format($commission->amount, 0, ',', ' ') }} FCFA
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                    {{ formatDateFr($commission->date) ?? formatDateFr($commission->created_at) }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <a href="{{ route('admin.commissions.show', $commission) }}"
+                                        class="text-blue-600 hover:text-blue-800">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                                    Aucune commission trouvée.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        @else
+            <div class="px-6 py-12 text-center">
+                <p class="px-6 py-4 text-center text-gray-500">Aucune commission</p>
+                <i class="fas fa-inbox text-4xl text-gray-400 mb-4"></i>
+            </div>
+        @endif
     </div>
 @endsection

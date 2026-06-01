@@ -16,8 +16,7 @@ class LeaveController extends Controller
      */
     public function index(Request $request)
     {
-        $query = User::where('role', 'driver')
-            ->with('driver');
+        $query = User::where('profil', 'driver')->with('driver');
 
         // Filter by search (name)
         if ($request->filled('search')) {

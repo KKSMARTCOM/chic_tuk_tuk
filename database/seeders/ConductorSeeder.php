@@ -20,10 +20,12 @@ class ConductorSeeder extends Seeder
             $user = User::create([
                 'name' => "Agent $i",
                 'email' => "agent$i@chictuktuk.bj",
-                'phone' => "+22990000" . str_pad($i, 3, '0', STR_PAD_LEFT),
-                'password' => Hash::make('password'),
-                'role' => 'driver',
+                'phone' => "+22990000" . str_pad($i, 1, '0', STR_PAD_LEFT),
+                'password' => Hash::make('Password@2026'),
+                'profil' => 'driver',
             ]);
+
+            $user->assignRole('driver');
 
             Driver::create([
                 'user_id' => $user->id,

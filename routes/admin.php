@@ -9,11 +9,14 @@ use App\Http\Controllers\Admin\LeaveController;
 use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\PricingController;
 use App\Http\Controllers\Admin\PromoCodeController;
+use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\UserRoleController;
 use App\Http\Controllers\Admin\TouristCircuitController;
 use App\Http\Controllers\Web\DashboardController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth:admin', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'admin'])->name('dashboard');
 
     // Drivers
@@ -31,6 +34,7 @@ Route::middleware(['auth:admin', 'role:admin'])->prefix('admin')->name('admin.')
     Route::get('bookings/{booking}/edit', [BookingController::class, 'edit'])->name('bookings.edit');
 
     Route::put('bookings/{booking}', [BookingController::class, 'update'])->name('bookings.update');
+    Route::delete('bookings/{booking}', [BookingController::class, 'destroy'])->name('bookings.destroy');
 
     Route::post('bookings/{booking}/assign-driver', [BookingController::class, 'assignDriver'])->name('bookings.assign-driver');
     Route::post('bookings/{booking}/remove-driver', [BookingController::class, 'removeDriver'])->name('bookings.remove-driver');
@@ -63,4 +67,15 @@ Route::middleware(['auth:admin', 'role:admin'])->prefix('admin')->name('admin.')
     // Payments
     Route::resource('payments', PaymentController::class);
     Route::get('payments/driver/{driverId}/details', [PaymentController::class, 'driverPaymentDetails'])->name('payments.driver-details');
+
+    // Roles & Permissions Management - API routes first (more specific)
+    Route::get('roles/{role}/data', [RoleController::class, 'getData'])->name('roles.data');
+    Route::post('roles/{role}/assign-users', [RoleController::class, 'assignUsers'])->name('roles.assign-users');
+    Route::post('roles/{role}/remove-users', [RoleController::class, 'removeUsers'])->name('roles.remove-users');
+    Route::resource('roles', RoleController::class);
+
+    Route::get('permissions/{permission}/data', [PermissionController::class, 'getData'])->name('permissions.data');
+    Route::post('permissions/{permission}/assign-roles', [PermissionController::class, 'assignRoles'])->name('permissions.assign-roles');
+    Route::get('permissions/by-role/{role}', [PermissionController::class, 'getByRole'])->name('permissions.by-role');
+    Route::resource('permissions', PermissionController::class);
 });
