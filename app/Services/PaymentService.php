@@ -59,7 +59,7 @@ class PaymentService
             $query->whereDate('payment_date', '<=', $filters['date_to']);
         }
 
-        return $query->paginate(15);
+        return $query->latest()->get();
     }
 
     /**

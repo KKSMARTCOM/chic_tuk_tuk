@@ -72,102 +72,109 @@
             <h3 class="text-xl font-bold text-gray-800">Réservations récentes</h3>
 
         </div>
-        <div class="overflow-x-auto p-4">
-            <table class="min-w-full divide-y divide-gray-200 display" id="datatable1">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            N° Réservation</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Client</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Agent</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Trajet</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Date</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse($recentBookings as $booking)
-                        <tr class="hover:bg-gray-50 transition">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                {{ $booking->booking_number }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($booking->user->name ?? 'Client') }}"
-                                        class="w-8 h-8 rounded-full mr-3">
-                                    <div>
-                                        {{-- <div class="text-sm font-medium text-gray-900">
-                                            {{ $booking->user->name ?? 'N/A' }}</div> --}}
-                                        <div class="text-sm text-gray-500">{{ $booking->phone }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                @if ($booking->driver)
+        @if ($recentBookings && $recentBookings->count() > 0)
+            <div class="overflow-x-auto p-4">
+                <table class="min-w-full divide-y divide-gray-200 display" id="datatable1">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                N° Réservation</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Client</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Agent</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Trajet</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @forelse($recentBookings as $booking)
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    {{ $booking->booking_number }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
-                                        <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($booking->driver->user->name ?? 'Agent') }}"
+                                        <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($booking->user->name ?? 'Client') }}"
                                             class="w-8 h-8 rounded-full mr-3">
-                                        <div class="text-sm text-gray-900">{{ $booking->driver->user->name ?? 'N/A' }}
+                                        <div>
+                                            {{-- <div class="text-sm font-medium text-gray-900">
+                                            {{ $booking->user->name ?? 'N/A' }}</div> --}}
+                                            <div class="text-sm text-gray-500">{{ $booking->phone }}
+                                            </div>
                                         </div>
                                     </div>
-                                    @if ($booking->status !== 'completed')
-                                        <button onclick="confirmRemoveDriver('{{ $booking->id }}')"
-                                            class="text-red-600 hover:text-red-800 text-sm font-semibold">
-                                            <i class="fas fa-user-times"></i> Retirer
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    @if ($booking->driver)
+                                        <div class="flex items-center">
+                                            <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($booking->driver->user->name ?? 'Agent') }}"
+                                                class="w-8 h-8 rounded-full mr-3">
+                                            <div class="text-sm text-gray-900">{{ $booking->driver->user->name ?? 'N/A' }}
+                                            </div>
+                                        </div>
+                                        @if ($booking->status !== 'completed')
+                                            <button onclick="confirmRemoveDriver('{{ $booking->id }}')"
+                                                class="text-red-600 hover:text-red-800 text-sm font-semibold">
+                                                <i class="fas fa-user-times"></i> Retirer
+                                            </button>
+                                        @endif
+                                    @else
+                                        <button onclick="assignDriver('{{ $booking->id }}')"
+                                            class="text-purple-600 hover:text-purple-800 text-sm font-semibold">
+                                            <i class="fas fa-plus-circle"></i> Assigner
                                         </button>
                                     @endif
-                                @else
-                                    <button onclick="assignDriver('{{ $booking->id }}')"
-                                        class="text-purple-600 hover:text-purple-800 text-sm font-semibold">
-                                        <i class="fas fa-plus-circle"></i> Assigner
-                                    </button>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="text-sm text-gray-900">
-                                    {{ Str::limit($booking->from_location, 25, '...') ?? 'N/A' }}</div>
-                                <div class="text-sm text-gray-500"><i class="fas fa-arrow-right"></i>
-                                    {{ Str::limit($booking->to_location, 25, '...') ?? 'N/A' }}</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ formatDateTimeFr($booking->pickup_date_time) }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-sm text-gray-900">
+                                        {{ Str::limit($booking->from_location, 25, '...') ?? 'N/A' }}</div>
+                                    <div class="text-sm text-gray-500"><i class="fas fa-arrow-right"></i>
+                                        {{ Str::limit($booking->to_location, 25, '...') ?? 'N/A' }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {{ formatDateTimeFr($booking->pickup_date_time) }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
 
-                                <span
-                                    class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ bookingStatusBadge($booking->status) }}">
-                                    {{ bookingStatusLabel($booking->status) }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                <button onclick="viewBooking('{{ $booking->id }}')"
-                                    class="text-blue-600 hover:text-blue-800 mr-3">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <button onclick="editBooking('{{ $booking->id }}')"
-                                    class="text-green-600 hover:text-green-800 mr-3">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="8" class="px-6 py-4 text-center text-gray-500">
-                                Aucune réservation récente trouvée.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+                                    <span
+                                        class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ bookingStatusBadge($booking->status) }}">
+                                        {{ bookingStatusLabel($booking->status) }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <button onclick="viewBooking('{{ $booking->id }}')"
+                                        class="text-blue-600 hover:text-blue-800 mr-3">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button onclick="editBooking('{{ $booking->id }}')"
+                                        class="text-green-600 hover:text-green-800 mr-3">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="8" class="px-6 py-4 text-center text-gray-500">
+                                    Aucune réservation récente trouvée.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        @else
+            <div class="px-6 py-12 text-center">
+                <p class="px-6 py-4 text-center text-gray-500">Aucune réservation</p>
+                <i class="fas fa-inbox text-4xl text-gray-400 mb-4"></i>
+            </div>
+        @endif
     </div>
 
     <!-- Quick Actions -->
@@ -177,68 +184,82 @@
             <div class="px-6 py-4 border-b border-gray-200">
                 <h3 class="text-lg font-semibold text-gray-800">Top 5 Agents par Revenus</h3>
             </div>
-            <div class="overflow-x-auto p-4">
-                <table class="min-w-full divide-y divide-gray-200 display" id="datatable2">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Agent</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Revenus
-                                Total</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Commissions</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Débits</th>
-                            <th class="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        @forelse($stats['driver_revenues'] as $index => $driver)
-                            <tr class="hover:bg-gray-50 transition">
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($driver->user->name) }}"
-                                            class="w-10 h-10 rounded-full mr-3">
-                                        <div>
-                                            <div class="text-sm font-medium text-gray-900">{{ $driver->user->name }}</div>
-                                            <div class="text-sm text-gray-500">{{ $driver->user->phone }}</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="text-lg font-semibold text-green-600">
-                                        {{ number_format($driver->bookings_sum_driver_earning ?? 0, 0, ',', ' ') }} FCFA
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="text-lg font-semibold text-green-600">
-                                        {{ number_format($driver->commissions_sum_amount ?? 0, 0, ',', ' ') }} FCFA
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="text-lg font-semibold text-green-600">
-                                        {{ number_format($driver->commission_due ?? 0, 0, ',', ' ') }} FCFA
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right">
-                                    <a href="{{ route('admin.drivers.show', $driver->user) }}"
-                                        class="text-blue-600 hover:text-blue-800">
-                                        <i class="fas fa-eye mr-2"></i> Voir
-                                    </a>
-                                </td>
-                            </tr>
-                        @empty
+            @if ($stats['driver_revenues'] && $stats['driver_revenues']->count() > 0)
+                <div class="overflow-x-auto p-4">
+                    <table class="min-w-full divide-y divide-gray-200 display" id="datatable2">
+                        <thead class="bg-gray-50">
                             <tr>
-                                <td colspan="4" class="px-6 py-4 text-center text-gray-500">
-                                    Aucune donnée de revenu disponible
-                                </td>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    Agent</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    Revenus
+                                    Total</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    Commissions</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    Débits</th>
+                                <th
+                                    class="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    Actions</th>
                             </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @forelse($stats['driver_revenues'] as $index => $driver)
+                                <tr class="hover:bg-gray-50 transition">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($driver->user->name) }}"
+                                                class="w-10 h-10 rounded-full mr-3">
+                                            <div>
+                                                <div class="text-sm font-medium text-gray-900">{{ $driver->user->name }}
+                                                </div>
+                                                <div class="text-sm text-gray-500">{{ $driver->user->phone }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="text-lg font-semibold text-green-600">
+                                            {{ number_format($driver->bookings_sum_driver_earning ?? 0, 0, ',', ' ') }}
+                                            FCFA
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="text-lg font-semibold text-green-600">
+                                            {{ number_format($driver->commissions_sum_amount ?? 0, 0, ',', ' ') }} FCFA
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="text-lg font-semibold text-green-600">
+                                            {{ number_format($driver->commission_due ?? 0, 0, ',', ' ') }} FCFA
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right">
+                                        <a href="{{ route('admin.drivers.show', $driver->user) }}"
+                                            class="text-blue-600 hover:text-blue-800">
+                                            <i class="fas fa-eye mr-2"></i> Voir
+                                        </a>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="4" class="px-6 py-4 text-center text-gray-500">
+                                        Aucune donnée de revenu disponible
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            @else
+                <div class="px-6 py-12 text-center">
+                    <p class="px-6 py-4 text-center text-gray-500">Aucun agent trouvé.</p>
+                    <i class="fas fa-inbox text-4xl text-gray-400 mb-4"></i>
+                </div>
+            @endif
         </div>
 
         <div class="space-y-6">

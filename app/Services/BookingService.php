@@ -38,7 +38,7 @@ class BookingService
         // Calcul de la distance
         $distance = $this->pricingService->getDistance($data['from_lng'], $data['from_lat'], $data['to_lng'], $data['to_lat']);
 
-        if (!$distance) {
+        if ($distance === null) {
             throw new \Exception('Erreur lors du calcul de l\'itinéraire.');
         }
 
@@ -377,6 +377,15 @@ class BookingService
     public function delete(string $bookingId)
     {
         $booking = Booking::findOrFail($bookingId);
+
+        if (!$booking) {
+            throw new \Exception('La course demandée est introuvable.');
+        }
+
+        if (!in_array($booking->status, ['completed', 'cancelled'])) {
+            throw new \Exception('Cette course ne peut pas être supprimée car elle est en cours ou en attente.');
+        }
+
         $booking->delete();
     }
 

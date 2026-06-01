@@ -12,7 +12,7 @@
         </a>
     </div>
     <nav class="mt-6">
-        @if (auth()->user()->role === 'admin')
+        @if (auth()->user()->profil === 'admin')
             <a href="{{ route('admin.dashboard') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition 
             {{ request()->routeIs('admin.dashboard') ? 'bg-green-600 border-l-4 border-white' : '' }}">
@@ -48,6 +48,11 @@
             {{ request()->routeIs('admin.pricing*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
                 <i class="fas fa-dollar-sign mr-3"></i> Tarification
             </a>
+            <a href="{{ route('admin.roles.index') }}"
+                class="flex items-center px-6 py-3 hover:bg-green-600 transition
+            {{ request()->routeIs('admin.roles*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
+                <i class="fas fa-user-shield mr-3"></i> Rôles
+            </a>
             {{-- <a href="{{ route('admin.circuits.index') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition
             {{ request()->routeIs('admin.circuits*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
@@ -60,7 +65,7 @@
             </a> --}}
         @endif
 
-        @if (auth()->user()->role === 'driver')
+        @if (auth()->user()->profil === 'driver')
             {{-- if conductor --}}
             <a href="{{ route('driver.dashboard') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition 

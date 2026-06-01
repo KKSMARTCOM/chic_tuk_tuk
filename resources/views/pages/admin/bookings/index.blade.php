@@ -11,142 +11,153 @@
         </div>
 
         <!-- Formulaire de recherche et filtre -->
-        <div class="py-4 border-b border-gray-200 bg-gray-50">
-            <form method="GET" action="{{ route('admin.bookings.index') }}" class="flex flex-col md:flex-row gap-4">
-                <div class="flex-1">
-                    <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Rechercher</label>
-                    <input type="text" name="search" id="search" value="{{ request('search') }}"
-                        placeholder="N° réservation, téléphone, ville de départ ou d'arrivée..."
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-                </div>
-                <div class="md:w-48">
-                    <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Statut</label>
-                    <select name="status" id="status"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-                        <option value="">Tous les statuts</option>
-                        <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>En attente</option>
-                        <option value="confirmed" {{ request('status') == 'confirmed' ? 'selected' : '' }}>Confirmé</option>
-                        <option value="in_progress" {{ request('status') == 'in_progress' ? 'selected' : '' }}>En cours
-                        </option>
-                        <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Terminé</option>
-                        <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Annulé</option>
-                        <option value="expired" {{ request('status') == 'expired' ? 'selected' : '' }}>Expirée</option>
-                    </select>
-                </div>
-                <div class="flex items-end space-x-2">
-                    <button type="submit"
-                        class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
-                        <i class="fas fa-search mr-2"></i> Rechercher
-                    </button>
-                    <a href="{{ route('admin.bookings.index') }}"
-                        class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition">
-                        <i class="fas fa-times mr-2"></i> Effacer
-                    </a>
-                </div>
-            </form>
-        </div>
+        @if ($bookings && $bookings->count() > 0)
+            <div class="py-4 border-b border-gray-200 bg-gray-50">
+                <form method="GET" action="{{ route('admin.bookings.index') }}" class="flex flex-col md:flex-row gap-4">
+                    <div class="flex-1">
+                        <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Rechercher</label>
+                        <input type="text" name="search" id="search" value="{{ request('search') }}"
+                            placeholder="N° réservation, téléphone, ville de départ ou d'arrivée..."
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div class="md:w-48">
+                        <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Statut</label>
+                        <select name="status" id="status"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            <option value="">Tous les statuts</option>
+                            <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>En attente
+                            </option>
+                            <option value="confirmed" {{ request('status') == 'confirmed' ? 'selected' : '' }}>Confirmé
+                            </option>
+                            <option value="in_progress" {{ request('status') == 'in_progress' ? 'selected' : '' }}>En cours
+                            </option>
+                            <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Terminé
+                            </option>
+                            <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Annulé
+                            </option>
+                            <option value="expired" {{ request('status') == 'expired' ? 'selected' : '' }}>Expirée</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end space-x-2">
+                        <button type="submit"
+                            class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
+                            <i class="fas fa-search mr-2"></i> Rechercher
+                        </button>
+                        <a href="{{ route('admin.bookings.index') }}"
+                            class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition">
+                            <i class="fas fa-times mr-2"></i> Effacer
+                        </a>
+                    </div>
+                </form>
+            </div>
 
-        <div class="overflow-x-auto p-4">
-            <table class="min-w-full divide-y divide-gray-200 display" id="datatable1">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            N° Réservation</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Client</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Agent</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Trajet</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Date</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Prix</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse($bookings as $booking)
-                        <tr class="hover:bg-gray-50 transition">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                {{ $booking->booking_number }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($booking->user->name ?? 'Client') }}"
-                                        class="w-8 h-8 rounded-full mr-3">
-                                    <div>
-                                        {{-- <div class="text-sm font-medium text-gray-900">
-                                            {{ $booking->user->name ?? 'N/A' }}</div> --}}
-                                        <div class="text-sm text-gray-500">{{ $booking->phone }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                @if ($booking->driver)
+            <div class="overflow-x-auto p-4">
+                <table class="min-w-full divide-y divide-gray-200 display" id="datatable1">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                N° Réservation</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Client</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Agent</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Trajet</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Prix</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @forelse($bookings as $booking)
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    {{ $booking->booking_number }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
-                                        <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($booking->driver->user->name ?? 'Agent') }}"
+                                        <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($booking->user->name ?? 'Client') }}"
                                             class="w-8 h-8 rounded-full mr-3">
-                                        <div class="text-sm text-gray-900">{{ $booking->driver->user->name ?? 'N/A' }}
+                                        <div>
+                                            {{-- <div class="text-sm font-medium text-gray-900">
+                                            {{ $booking->user->name ?? 'N/A' }}</div> --}}
+                                            <div class="text-sm text-gray-500">{{ $booking->phone }}
+                                            </div>
                                         </div>
                                     </div>
-                                    @if (!in_array($booking->status, ['completed', 'cancelled', 'expired']))
-                                        <button onclick="confirmRemoveDriver('{{ $booking->id }}')"
-                                            class="text-red-600 hover:text-red-800 text-sm font-semibold">
-                                            <i class="fas fa-user-times"></i> Retirer
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    @if ($booking->driver)
+                                        <div class="flex items-center">
+                                            <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($booking->driver->user->name ?? 'Agent') }}"
+                                                class="w-8 h-8 rounded-full mr-3">
+                                            <div class="text-sm text-gray-900">{{ $booking->driver->user->name ?? 'N/A' }}
+                                            </div>
+                                        </div>
+                                        @if (!in_array($booking->status, ['completed', 'cancelled', 'expired']))
+                                            <button onclick="confirmRemoveDriver('{{ $booking->id }}')"
+                                                class="text-red-600 hover:text-red-800 text-sm font-semibold">
+                                                <i class="fas fa-user-times"></i> Retirer
+                                            </button>
+                                        @endif
+                                    @else
+                                        <button onclick="assignDriver('{{ $booking->id }}')"
+                                            class="text-purple-600 hover:text-purple-800 text-sm font-semibold">
+                                            <i class="fas fa-plus-circle"></i> Assigner
                                         </button>
                                     @endif
-                                @else
-                                    <button onclick="assignDriver('{{ $booking->id }}')"
-                                        class="text-purple-600 hover:text-purple-800 text-sm font-semibold">
-                                        <i class="fas fa-plus-circle"></i> Assigner
-                                    </button>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="text-sm text-gray-900">
-                                    {{ Str::limit($booking->from_location, 25, '...') ?? 'N/A' }}</div>
-                                <div class="text-sm text-gray-500"><i class="fas fa-arrow-right"></i>
-                                    {{ Str::limit($booking->to_location, 25, '...') ?? 'N/A' }}</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ formatDateTimeFr($booking->pickup_date_time) }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                                {{ number_format($booking->total_price, 0, ',', ' ') }} FCFA
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-sm text-gray-900">
+                                        {{ Str::limit($booking->from_location, 25, '...') ?? 'N/A' }}</div>
+                                    <div class="text-sm text-gray-500"><i class="fas fa-arrow-right"></i>
+                                        {{ Str::limit($booking->to_location, 25, '...') ?? 'N/A' }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {{ formatDateTimeFr($booking->pickup_date_time) }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                                    {{ number_format($booking->total_price, 0, ',', ' ') }} FCFA
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
 
-                                <span
-                                    class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ bookingStatusBadge($booking->status) }}">
-                                    {{ bookingStatusLabel($booking->status) }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                <a href="{{ route('admin.bookings.show', $booking->id) }}"
-                                    class="text-blue-600 hover:text-blue-800 mr-3">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <a href="{{ route('admin.bookings.edit', $booking->id) }}"
-                                    class="text-green-600 hover:text-green-800 mr-3">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="8" class="px-6 py-4 text-center text-gray-500">
-                                Aucune réservation trouvée.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+                                    <span
+                                        class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ bookingStatusBadge($booking->status) }}">
+                                        {{ bookingStatusLabel($booking->status) }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <a href="{{ route('admin.bookings.show', $booking->id) }}"
+                                        class="text-blue-600 hover:text-blue-800 mr-3">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ route('admin.bookings.edit', $booking->id) }}"
+                                        class="text-green-600 hover:text-green-800 mr-3">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="8" class="px-6 py-4 text-center text-gray-500">
+                                    Aucune réservation trouvée.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        @else
+            <div class="px-6 py-12 text-center">
+                <p class="px-6 py-4 text-center text-gray-500">Aucune réservation</p>
+                <i class="fas fa-inbox text-4xl text-gray-400 mb-4"></i>
+            </div>
+        @endif
     </div>
 
     <!-- Modal pour assigner un Agent -->

@@ -40,7 +40,7 @@ class CommissionService
             });
         }
 
-        return $query->paginate(15);
+        return $query->latest()->get();
     }
 
     public function getCommissionStats()

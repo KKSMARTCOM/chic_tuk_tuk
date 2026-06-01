@@ -19,41 +19,6 @@ class BookingController extends Controller
         $this->bookingService = $bookingService;
     }
 
-    /* public function calculatePrice(Request $request)
-    {
-        $request->validate([
-            'pickup_location' => 'required',
-            'dropoff_location' => 'nullable',
-            'tourist_circuit_id' => 'nullable|exists:tourist_circuits,id',
-            'promo_code' => 'nullable|string',
-        ]);
-
-        if ($request->tourist_circuit_id) {
-            $circuit = TouristCircuit::findOrFail($request->tourist_circuit_id);
-            $basePrice = $circuit->price;
-        } else {
-            $pricing = Pricing::where('from_location', $request->pickup_location)
-                ->where('to_location', $request->dropoff_location)
-                ->first();
-
-            $basePrice = $pricing ? $pricing->base_price : 5000;
-        }
-
-        $discount = 0;
-        if ($request->promo_code) {
-            $promo = PromoCode::where('code', $request->promo_code)->first();
-            if ($promo && $promo->isValid()) {
-                $discount = $promo->applyDiscount($basePrice);
-            }
-        }
-
-        return response()->json([
-            'base_price' => $basePrice,
-            'discount' => $discount,
-            'total_price' => $basePrice - $discount,
-        ]);
-    } */
-
     public function calculatePrice(Request $request, string $fromZoneId, string $toZoneId)
     {
         try {

@@ -90,143 +90,154 @@
     </div>
 
     <!-- Filters and Search -->
-    <div class="bg-white rounded-lg shadow-md mb-6">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-800">Filtres et Recherche</h3>
+    @if ($drivers && $drivers->count() > 0)
+        <div class="bg-white rounded-lg shadow-md mb-6">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">Filtres et Recherche</h3>
+            </div>
+            <div class="px-6 py-4">
+                <form method="GET" action="{{ route('admin.drivers.index') }}" class="flex flex-col md:flex-row gap-4">
+                    <div class="flex-1">
+                        <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Rechercher</label>
+                        <input type="text" name="search" id="search" value="{{ request('search') }}"
+                            placeholder="Nom, email, téléphone, numéro de permis ou véhicule..."
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div class="md:w-48">
+                        <label for="is_active" class="block text-sm font-medium text-gray-700 mb-1">Statut du compte</label>
+                        <select name="is_active" id="is_active"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            <option value="">Tous les statuts</option>
+                            <option value="1" {{ request('is_active') == '1' ? 'selected' : '' }}>Actif</option>
+                            <option value="0" {{ request('is_active') == '0' ? 'selected' : '' }}>Inactif</option>
+                        </select>
+                    </div>
+                    <div class="md:w-48">
+                        <label for="is_available" class="block text-sm font-medium text-gray-700 mb-1">Disponibilité</label>
+                        <select name="is_available" id="is_available"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            <option value="">Toutes les disponibilités</option>
+                            <option value="1" {{ request('is_available') == '1' ? 'selected' : '' }}>Disponible
+                            </option>
+                            <option value="0" {{ request('is_available') == '0' ? 'selected' : '' }}>Indisponible
+                            </option>
+                        </select>
+                    </div>
+                    <div class="flex items-end space-x-2">
+                        <button type="submit"
+                            class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
+                            <i class="fas fa-search mr-2"></i> Rechercher
+                        </button>
+                        <a href="{{ route('admin.drivers.index') }}"
+                            class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition">
+                            <i class="fas fa-times mr-2"></i> Effacer
+                        </a>
+                    </div>
+                </form>
+            </div>
         </div>
-        <div class="px-6 py-4">
-            <form method="GET" action="{{ route('admin.drivers.index') }}" class="flex flex-col md:flex-row gap-4">
-                <div class="flex-1">
-                    <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Rechercher</label>
-                    <input type="text" name="search" id="search" value="{{ request('search') }}"
-                        placeholder="Nom, email, téléphone, numéro de permis ou véhicule..."
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-                </div>
-                <div class="md:w-48">
-                    <label for="is_active" class="block text-sm font-medium text-gray-700 mb-1">Statut du compte</label>
-                    <select name="is_active" id="is_active"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-                        <option value="">Tous les statuts</option>
-                        <option value="1" {{ request('is_active') == '1' ? 'selected' : '' }}>Actif</option>
-                        <option value="0" {{ request('is_active') == '0' ? 'selected' : '' }}>Inactif</option>
-                    </select>
-                </div>
-                <div class="md:w-48">
-                    <label for="is_available" class="block text-sm font-medium text-gray-700 mb-1">Disponibilité</label>
-                    <select name="is_available" id="is_available"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-                        <option value="">Toutes les disponibilités</option>
-                        <option value="1" {{ request('is_available') == '1' ? 'selected' : '' }}>Disponible
-                        </option>
-                        <option value="0" {{ request('is_available') == '0' ? 'selected' : '' }}>Indisponible
-                        </option>
-                    </select>
-                </div>
-                <div class="flex items-end space-x-2">
-                    <button type="submit"
-                        class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
-                        <i class="fas fa-search mr-2"></i> Rechercher
-                    </button>
-                    <a href="{{ route('admin.drivers.index') }}"
-                        class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition">
-                        <i class="fas fa-times mr-2"></i> Effacer
-                    </a>
-                </div>
-            </form>
-        </div>
-    </div>
+    @endif
+
 
     <!-- Drivers List -->
     <div class="bg-white rounded-lg shadow-md">
         <div class="px-6 py-4 border-b border-gray-200">
             <h3 class="text-lg font-semibold text-gray-800">Liste des Agents</h3>
         </div>
-        <div class="overflow-x-auto p-4">
-            <table class="min-w-full divide-y divide-gray-200 display" id="datatable1">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Agent</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Contact</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Véhicule</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Statut</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Courses</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse($drivers as $driver)
-                        <tr class="hover:bg-gray-50 transition">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($driver->name) }}"
-                                        class="w-10 h-10 rounded-full mr-3">
-                                    <div>
-                                        <div class="text-sm font-medium text-gray-900">{{ $driver->name }}</div>
-                                        <div class="text-sm text-gray-500">
-                                            {{ $driver->driver->license_number ?? 'N/A' }}</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">{{ $driver->email ?? 'N/A' }}</div>
-                                <div class="text-sm text-gray-500">{{ $driver->phone ?? 'N/A' }}</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">{{ $driver->driver->vehicle_number ?? 'N/A' }}
-                                </div>
-                                <div class="text-sm text-gray-500">
-                                    {{ vehiculeType($driver->driver->vehicle_type) ?? 'N/A' }}</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex flex-col space-y-1">
-                                    <span
-                                        class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $driver->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                        {{ $driver->is_active ? 'Actif' : 'Inactif' }}
-                                    </span>
-                                    <span
-                                        class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $driver->driver->is_available ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' }}">
-                                        {{ $driver->driver->is_available ? 'Disponible' : 'Indisponible' }}
-                                    </span>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                <div class="text-center">
-                                    <div class="text-lg font-semibold">{{ $driver->driver->total_trips ?? 0 }}</div>
-                                    <div class="text-xs text-gray-500">courses</div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                <a href="{{ route('admin.drivers.show', $driver) }}"
-                                    class="text-blue-600 hover:text-blue-800 mr-3">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <a href="{{ route('admin.drivers.edit', $driver) }}"
-                                    class="text-green-600 hover:text-green-800 mr-3">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <button onclick="confirmDelete('{{ $driver->id }}', '{{ $driver->name }}')"
-                                    class="text-red-600 hover:text-red-800">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    @empty
+        @if ($drivers && $drivers->count() > 0)
+            <div class="overflow-x-auto p-4">
+                <table class="min-w-full divide-y divide-gray-200 display" id="datatable1">
+                    <thead class="bg-gray-50">
                         <tr>
-                            <td colspan="6" class="px-6 py-4 text-center text-gray-500">
-                                Aucun Agent trouvé.
-                            </td>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Agent</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Contact</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Véhicule</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Statut</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Courses</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Actions</th>
                         </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @forelse($drivers as $driver)
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($driver->name) }}"
+                                            class="w-10 h-10 rounded-full mr-3">
+                                        <div>
+                                            <div class="text-sm font-medium text-gray-900">{{ $driver->name }}</div>
+                                            <div class="text-sm text-gray-500">
+                                                {{ $driver->driver->license_number ?? 'N/A' }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">{{ $driver->email ?? 'N/A' }}</div>
+                                    <div class="text-sm text-gray-500">{{ $driver->phone ?? 'N/A' }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">{{ $driver->driver->vehicle_number ?? 'N/A' }}
+                                    </div>
+                                    <div class="text-sm text-gray-500">
+                                        {{ vehiculeType($driver->driver->vehicle_type) ?? 'N/A' }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex flex-col space-y-1">
+                                        <span
+                                            class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $driver->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                            {{ $driver->is_active ? 'Actif' : 'Inactif' }}
+                                        </span>
+                                        <span
+                                            class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $driver->driver->is_available ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' }}">
+                                            {{ $driver->driver->is_available ? 'Disponible' : 'Indisponible' }}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <div class="text-center">
+                                        <div class="text-lg font-semibold">{{ $driver->driver->total_trips ?? 0 }}</div>
+                                        <div class="text-xs text-gray-500">courses</div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <a href="{{ route('admin.drivers.show', $driver) }}"
+                                        class="text-blue-600 hover:text-blue-800 mr-3">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ route('admin.drivers.edit', $driver) }}"
+                                        class="text-green-600 hover:text-green-800 mr-3">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button onclick="confirmDelete('{{ $driver->id }}', '{{ $driver->name }}')"
+                                        class="text-red-600 hover:text-red-800">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                                    Aucun Agent trouvé.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        @else
+            <div class="px-6 py-12 text-center">
+                <p class="px-6 py-4 text-center text-gray-500">Aucun agent</p>
+                <i class="fas fa-inbox text-4xl text-gray-400 mb-4"></i>
+            </div>
+        @endif
     </div>
+
 
     <!-- Delete Confirmation Modal -->
     <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-20">

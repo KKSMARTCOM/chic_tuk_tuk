@@ -62,7 +62,7 @@ class PageController extends Controller
         $globalSearch = request()->get('search');
 
         // Si c'est un Agent, afficher son historique
-        if ($user->role === 'driver' && $user->driver) {
+        if ($user->profil === 'driver' && $user->driver) {
             $query = \App\Models\Booking::query()
                 ->where('driver_id', $user->driver->id)
                 ->whereIn('status', ['completed', 'cancelled']);
@@ -86,7 +86,7 @@ class PageController extends Controller
                 ->withQueryString();
         }
         // Si c'est un admin, afficher l'historique avec toutes les courses (incluant expired)
-        elseif ($user->role === 'admin') {
+        elseif ($user->profil === 'admin') {
             $query = \App\Models\Booking::query()->whereIn('status', ['completed', 'cancelled', 'expired']);
 
             if ($globalSearch) {

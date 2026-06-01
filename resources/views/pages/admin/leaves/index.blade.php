@@ -170,7 +170,7 @@
             </div>
         @else
             <div class="px-6 py-12 text-center">
-                <p class="px-6 py-4 text-center text-gray-500">Aucun agent trouvé.</p>
+                <p class="px-6 py-4 text-center text-gray-500">Aucune demande de pause.</p>
                 <i class="fas fa-inbox text-4xl text-gray-400 mb-4"></i>
             </div>
         @endif

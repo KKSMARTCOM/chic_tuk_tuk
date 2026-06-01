@@ -17,7 +17,7 @@ Route::post('/pricing/price', [PricingController::class, 'calculatePrice'])->nam
 Route::post('/login-store', [AuthController::class, 'loginStore'])->name('login.store');
 Route::post('/bookings', [BookingController::class, 'store'])->name('bookings.store');
 
-Route::middleware(['auth:admin,driver,client', 'role:admin,driver,client'])->group(function () {
+Route::middleware(['auth:sanctum', 'role:admin,driver,client'])->group(function () {
     Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/bookings/histories', [PageController::class, 'historiesBookings'])->name('bookings.histories');
 

@@ -10,7 +10,7 @@ class PromoCodeController extends Controller
 {
     public function index()
     {
-        $promoCodes = PromoCode::latest()->paginate(20);
+        $promoCodes = PromoCode::latest()->get();
         return view('admin.promo-codes.index', compact('promoCodes'));
     }
 
