@@ -15,8 +15,20 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
+            'permission' => \App\Http\Middleware\CheckPermission::class,
         ]);
+    })
+    ->withSchedule(function ($schedule) {
+        $schedule->command('app:expire-bookings')->dailyAt('00:00')->appendOutputTo(storage_path('logs/commands.log'));
+        $schedule->command('app:process-recurring-bookings')->dailyAt('01:00')->appendOutputTo(storage_path('logs/commands.log'));
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\HttpException $e, $request) {
+            $code = $e->getStatusCode();
+
+            if (view()->exists("errors.$code")) {
+                return response()->view("errors.$code", [], $code);
+            }
+        });
     })->create();

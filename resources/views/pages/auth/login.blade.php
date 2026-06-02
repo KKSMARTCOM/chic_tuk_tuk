@@ -8,7 +8,8 @@
 
         <div>
             <label for="email" class="block text-lg font-medium text-gray-700">E-mail</label>
-            <input id="email" type="email" name="email" value="{{ old('email') }}" required
+            <input id="email" type="email" name="email" value="{{ old('email') }}" placeholder="Votre adresse mail"
+                required
                 class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#286b41]">
             @error('email')
                 <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
@@ -17,17 +18,17 @@
 
         <div class="relative">
             <label for="password" class="block text-lg font-medium text-gray-700">Mot de passe</label>
-            <input id="password" type="password" name="password" required
+            <input id="password" type="password" name="password" placeholder="Votre mot de passe" required
                 class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#286b41] pr-12">
             <button type="button" data-target="#password"
                 class="toggle-password absolute inset-y-0 right-2 top-6 inline-flex items-center px-3 text-gray-500 hover:text-gray-700"
                 aria-label="Afficher le mot de passe">
                 <i class="fas fa-eye" aria-hidden="true"></i>
             </button>
-            @error('password')
-                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
-            @enderror
         </div>
+        @error('password')
+            <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+        @enderror
 
         {{-- <div class="flex items-center">
             <input id="terms" type="checkbox" name="terms" class="h-4 w-4 text-emerald-600 border-gray-300 rounded">

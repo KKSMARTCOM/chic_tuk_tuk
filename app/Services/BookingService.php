@@ -202,9 +202,7 @@ class BookingService
             }
 
             if (!$booking->canBeCancelled()) {
-                throw new \Exception(
-                    'Cette réservation ne peut plus être annulée.'
-                );
+                throw new \Exception('Cette réservation ne peut plus être annulée.');
             }
 
             $booking->update([
@@ -389,15 +387,18 @@ class BookingService
         $booking->delete();
     }
 
-    public function markExpiredBookings()
+    public function markExpiredBookings(): int
     {
         $expiredBookings = Booking::where('status', 'pending')
-            ->whereRaw("CONCAT(pickup_date, ' ', pickup_time) < ?", [now()])
-            ->where('expired_at', null)
+            ->whereRaw("CONCAT(pickup_date, ' ', pickup_time)::timestamp < ?", [now()])
+            ->whereNull('expired_at')
             ->get();
 
         foreach ($expiredBookings as $booking) {
-            $booking->update(['status' => 'expired']);
+            $booking->update([
+                'status' => 'expired',
+                //'expired_at' => now(),
+            ]);
         }
 
         return $expiredBookings->count();
@@ -415,7 +416,9 @@ class BookingService
 
         foreach ($recurringBookings as $booking) {
             // Créer la nouvelle course pour le jour suivant
-            $newPickupDate = Carbon::parse($booking->pickup_date . ' ' . $booking->pickup_time)->addDay();
+            $newPickupDate  = Carbon::parse($booking->pickup_date . ' ' . $booking->pickup_time)->addDay();
+            $nextRecurring  = $newPickupDate->copy()->addDay();
+            $newRemaining   = $booking->remaining_days - 1;
 
             Booking::create([
                 'from_location'       => $booking->from_location,
@@ -427,7 +430,7 @@ class BookingService
                 'distance'            => $booking->distance,
                 'phone'               => $booking->phone,
                 'days'                => $booking->days,
-                'remaining_days'      => $booking->remaining_days - 1,
+                'remaining_days'      => $newRemaining,
                 'pickup_date'         => $newPickupDate->toDateString(),
                 'pickup_time'         => $newPickupDate->format('H:i'),
                 'special_requests'    => $booking->special_requests,
@@ -441,13 +444,14 @@ class BookingService
                 'status'              => 'pending',
                 'is_recurring'        => true,
                 'parent_booking_id'   => $booking->parent_booking_id ?? $booking->id,
-                'next_recurring_date' => $newPickupDate->addDay(),
+                'next_recurring_date' => $newRemaining > 0 ? $nextRecurring : null,
             ]);
 
             // Mettre à jour la course actuelle avec le nombre de jours restants
             $booking->update([
-                'remaining_days' => $booking->remaining_days - 1,
-                'next_recurring_date' => $newPickupDate->addDay(),
+                'remaining_days'      => $newRemaining,
+                'next_recurring_date' => $newRemaining > 0 ? $nextRecurring : null,
+                'is_recurring'        => $newRemaining > 0, // désactive si dernier jour
             ]);
         }
 
