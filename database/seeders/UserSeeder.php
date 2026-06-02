@@ -16,7 +16,7 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        $admin = User::create([
+        $admin1 = User::create([
             'name' => 'Admin ChicTukTuk',
             'email' => 'kokamobilitysarl@gmail.com',
             'phone' => '+22990000000',
@@ -24,9 +24,9 @@ class UserSeeder extends Seeder
             'profil' => 'admin',
         ]);
 
-        User::create([
+        $admin2 = User::create([
             'name' => 'Admin ChicTukTuk',
-            'email' => 'arsogn991@gmail.com',
+            'email' => 'ritoshi991@gmail.com',
             'phone' => '+22990000001',
             'password' => Hash::make('Password@2026'),
             'profil' => 'admin',
@@ -34,6 +34,7 @@ class UserSeeder extends Seeder
 
         $adminRole = Role::where('name', 'admin')->first();
 
-        $admin->assignRole($adminRole);
+        $admin1->assignRole($adminRole);
+        $admin2->assignRole($adminRole);
     }
 }

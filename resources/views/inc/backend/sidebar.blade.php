@@ -43,11 +43,11 @@
             {{ request()->routeIs('admin.leaves*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
                 <i class="fas fa-calendar-alt mr-3"></i> Pauses
             </a>
-            <a href="{{ route('admin.pricing.index') }}"
+            {{-- <a href="{{ route('admin.pricing.index') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition
             {{ request()->routeIs('admin.pricing*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
                 <i class="fas fa-dollar-sign mr-3"></i> Tarification
-            </a>
+            </a> --}}
             <a href="{{ route('admin.roles.index') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition
             {{ request()->routeIs('admin.roles*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
