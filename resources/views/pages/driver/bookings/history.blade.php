@@ -9,6 +9,12 @@
 
         <!-- Content -->
         <div class="p-6">
+            <form method="GET" action="{{ route('bookings.histories') }}" class="mb-6 flex gap-2">
+                <input type="text" name="search" value="{{ request()->get('search') }}"
+                    placeholder="Rechercher numéro, téléphone, zone..." class="w-full px-3 py-2 border rounded-lg" />
+
+                <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg">Rechercher</button>
+            </form>
             @if ($bookings->count())
                 <div class="space-y-4">
                     @foreach ($bookings as $booking)
@@ -28,6 +34,22 @@
                                         </span>
                                     </div>
 
+                                    @if (auth()->user() && auth()->user()->role === 'admin')
+                                        <div class="text-sm text-gray-600 mt-1">
+                                            <strong>Agent :</strong>
+                                            @if ($booking->driver && $booking->driver->user)
+                                                {{ $booking->driver->user->name }}
+                                            @else
+                                                Non assigné
+                                            @endif
+
+                                            @if (isset($booking->remaining_days) && $booking->remaining_days > 1)
+                                                <span class="ml-3">• <strong>Jours restants :</strong>
+                                                    {{ $booking->remaining_days }}</span>
+                                            @endif
+                                        </div>
+                                    @endif
+
                                     <!-- Zones -->
                                     <div class="bg-gray-50 rounded-lg p-3 mb-3">
                                         <div class="flex items-start mb-2">
@@ -35,7 +57,7 @@
                                             <div>
                                                 <p class="text-sm font-semibold text-gray-800">Départ</p>
                                                 <p class="text-sm text-gray-600">
-                                                    {{ $booking->fromZone->name }}
+                                                    {{ $booking->from_location }}
                                                 </p>
                                             </div>
                                         </div>
@@ -45,7 +67,7 @@
                                             <div>
                                                 <p class="text-sm font-semibold text-gray-800">Destination</p>
                                                 <p class="text-sm text-gray-600">
-                                                    {{ $booking->toZone->name }}
+                                                    {{ $booking->to_location }}
                                                 </p>
                                             </div>
                                         </div>
@@ -55,7 +77,7 @@
                                     <div class="flex flex-wrap gap-4 text-sm text-gray-600">
                                         <span>
                                             <i class="far fa-calendar mr-1"></i>
-                                            {{ formatDateTimeFr($booking->pickup_datetime) }}
+                                            {{ formatDateTimeFr($booking->pickup_date_time) }}
                                         </span>
 
                                         {{-- <span>
@@ -63,10 +85,17 @@
                                             {{ $booking->passengers }} passager(s)
                                         </span> --}}
 
-                                        <span class="font-bold text-green-600">
-                                            <i class="fas fa-money-bill mr-1"></i>
-                                            {{ $booking->total_price ?? $booking->base_price }} FCFA
-                                        </span>
+                                        @if ($booking->status === 'completed')
+                                            <span class="font-bold text-green-600">
+                                                <i class="fas fa-money-bill mr-1"></i>
+                                                {{ $booking->driver_earning ?? $booking->total_price }} FCFA
+                                            </span>
+
+                                            <span class="font-bold text-yellow-600">
+                                                <i class="fas fa-percent mr-1"></i>
+                                                {{ $booking->commission ? $booking->commission . ' FCFA' : 'Aucune commission' }}
+                                            </span>
+                                        @endif
 
                                         @if ($booking->started_at && $booking->completed_at)
                                             <span class="font-semibold text-blue-600">
@@ -99,9 +128,9 @@
                 </div>
 
                 <!-- Pagination -->
-                {{-- <div class="mt-6">
-                    {{ $bookings->links() }}
-                </div> --}}
+                <div class="mt-6">
+                    {{ $bookings->links('pagination::tailwind') }}
+                </div>
             @else
                 <div class="text-center py-12">
                     <i class="fas fa-history text-6xl text-gray-300 mb-4"></i>

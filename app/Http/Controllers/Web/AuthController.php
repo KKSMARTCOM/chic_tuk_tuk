@@ -6,10 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Services\AuthService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    protected $authService;
+    protected AuthService $authService;
 
     public function __construct(AuthService $authService)
     {
@@ -25,31 +27,47 @@ class AuthController extends Controller
     {
         try {
             $credentials = $request->validate([
-                'email' => 'required|email',
-                'password' => 'required|string|min:6',
+                'email'    => ['required', 'email'],
+                'password' => [
+                    'required',
+                    'string',
+                    'min:8',
+                    'regex:/[A-Z]/',
+                    'regex:/[0-9]/',
+                    'regex:/[@$!%*#?&]/',
+                ],
+            ], [
+                'email.required'    => 'L\'adresse email est obligatoire.',
+                'email.email'       => 'L\'adresse email n\'est pas valide.',
+                'password.required' => 'Le mot de passe est obligatoire.',
+                'password.min'      => 'Le mot de passe doit contenir au moins 8 caractères.',
+                'password.regex'    => 'Le mot de passe doit contenir au moins une majuscule, un chiffre et un caractère spécial (@$!%*#?&).',
             ]);
 
-            $loginResponse = $this->authService->login($credentials, $request);
+            $response = $this->authService->login($credentials, $request);
 
-            if ($loginResponse === false) {
-                return back()->withErrors([
-                    'email' => 'Les informations d\'identification fournies ne correspondent pas à nos enregistrements.',
-                ])->onlyInput('email');
+            if ($response === false) {
+                sleep(1); // Anti brute-force
+                return back()->withErrors(['email' => 'Les informations d\'identification fournies ne correspondent pas à nos enregistrements.',])->onlyInput('email');
             }
 
-            return $loginResponse;
+            return $response;
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors())->withInput($request->only('email'));
         } catch (\Exception $e) {
-            return back()->with('error', 'Une erreur est survenue lors de la tentative de connexion. Veuillez réessayer.' . $e->getMessage());
+            Log::error('Erreur de connexion : ' . $e->getMessage());
+            return back()->with('error', 'Une erreur est survenue lors de la connexion. Veuillez réessayer.' . ' ' . $e->getMessage())->withInput($request->only('email'));
         }
     }
 
     public function logout(Request $request)
     {
-        Auth::logout();
-
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return redirect('/login');
+        try {
+            $logoutResponse = $this->authService->logout($request);
+            return $logoutResponse;
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la déconnexion : ' . $e->getMessage());
+            return redirect('/login')->with('error', 'Une erreur est survenue lors de la déconnexion.');
+        }
     }
 }

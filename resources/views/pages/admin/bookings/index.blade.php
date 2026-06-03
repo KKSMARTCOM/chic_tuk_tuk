@@ -11,159 +11,165 @@
         </div>
 
         <!-- Formulaire de recherche et filtre -->
-        <div class="py-4 border-b border-gray-200 bg-gray-50">
-            <form method="GET" action="{{ route('admin.bookings.index') }}" class="flex flex-col md:flex-row gap-4">
-                <div class="flex-1">
-                    <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Rechercher</label>
-                    <input type="text" name="search" id="search" value="{{ request('search') }}"
-                        placeholder="N° réservation, téléphone, ville de départ ou d'arrivée..."
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-                </div>
-                <div class="md:w-48">
-                    <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Statut</label>
-                    <select name="status" id="status"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-                        <option value="">Tous les statuts</option>
-                        <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>En attente</option>
-                        <option value="confirmed" {{ request('status') == 'confirmed' ? 'selected' : '' }}>Confirmé</option>
-                        <option value="in_progress" {{ request('status') == 'in_progress' ? 'selected' : '' }}>En cours
-                        </option>
-                        <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Terminé</option>
-                        <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Annulé</option>
-                    </select>
-                </div>
-                <div class="flex items-end space-x-2">
-                    <button type="submit"
-                        class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
-                        <i class="fas fa-search mr-2"></i> Rechercher
-                    </button>
-                    <a href="{{ route('admin.bookings.index') }}"
-                        class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition">
-                        <i class="fas fa-times mr-2"></i> Effacer
-                    </a>
-                </div>
-            </form>
-        </div>
+        @if ($bookings && $bookings->count() > 0)
+            <div class="py-4 border-b border-gray-200 bg-gray-50">
+                <form method="GET" action="{{ route('admin.bookings.index') }}" class="flex flex-col md:flex-row gap-4">
+                    <div class="flex-1">
+                        <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Rechercher</label>
+                        <input type="text" name="search" id="search" value="{{ request('search') }}"
+                            placeholder="N° réservation, téléphone, ville de départ ou d'arrivée..."
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div class="md:w-48">
+                        <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Statut</label>
+                        <select name="status" id="status"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            <option value="">Tous les statuts</option>
+                            <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>En attente
+                            </option>
+                            <option value="confirmed" {{ request('status') == 'confirmed' ? 'selected' : '' }}>Confirmé
+                            </option>
+                            <option value="in_progress" {{ request('status') == 'in_progress' ? 'selected' : '' }}>En cours
+                            </option>
+                            <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Terminé
+                            </option>
+                            <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Annulé
+                            </option>
+                            <option value="expired" {{ request('status') == 'expired' ? 'selected' : '' }}>Expirée</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end space-x-2">
+                        <button type="submit"
+                            class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
+                            <i class="fas fa-search mr-2"></i> Rechercher
+                        </button>
+                        <a href="{{ route('admin.bookings.index') }}"
+                            class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition">
+                            <i class="fas fa-times mr-2"></i> Effacer
+                        </a>
+                    </div>
+                </form>
+            </div>
 
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            N° Réservation</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Client</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Conducteur</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Trajet</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Date</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Prix</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse($bookings as $booking)
-                        <tr class="hover:bg-gray-50 transition">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                {{ $booking->booking_number }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($booking->user->name ?? 'Client') }}"
-                                        class="w-8 h-8 rounded-full mr-3">
-                                    <div>
-                                        {{-- <div class="text-sm font-medium text-gray-900">
-                                            {{ $booking->user->name ?? 'N/A' }}</div> --}}
-                                        <div class="text-sm text-gray-500">{{ $booking->phone }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                @if ($booking->driver)
+            <div class="overflow-x-auto p-4">
+                <table class="min-w-full divide-y divide-gray-200 display" id="datatable1">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                N° Réservation</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Client</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Agent</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Trajet</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Prix</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @forelse($bookings as $booking)
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    {{ $booking->booking_number }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
-                                        <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($booking->driver->user->name ?? 'Conducteur') }}"
+                                        <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($booking->user->name ?? 'Client') }}"
                                             class="w-8 h-8 rounded-full mr-3">
-                                        <div class="text-sm text-gray-900">{{ $booking->driver->user->name ?? 'N/A' }}
+                                        <div>
+                                            {{-- <div class="text-sm font-medium text-gray-900">
+                                            {{ $booking->user->name ?? 'N/A' }}</div> --}}
+                                            <div class="text-sm text-gray-500">{{ $booking->phone }}
+                                            </div>
                                         </div>
                                     </div>
-                                    @if ($booking->status !== 'completed')
-                                        <button onclick="confirmRemoveDriver('{{ $booking->id }}')"
-                                            class="text-red-600 hover:text-red-800 text-sm font-semibold">
-                                            <i class="fas fa-user-times"></i> Retirer
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    @if ($booking->driver)
+                                        <div class="flex items-center">
+                                            <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($booking->driver->user->name ?? 'Agent') }}"
+                                                class="w-8 h-8 rounded-full mr-3">
+                                            <div class="text-sm text-gray-900">{{ $booking->driver->user->name ?? 'N/A' }}
+                                            </div>
+                                        </div>
+                                        @if (!in_array($booking->status, ['completed', 'cancelled', 'expired']))
+                                            <button onclick="confirmRemoveDriver('{{ $booking->id }}')"
+                                                class="text-red-600 hover:text-red-800 text-sm font-semibold">
+                                                <i class="fas fa-user-times"></i> Retirer
+                                            </button>
+                                        @endif
+                                    @else
+                                        <button onclick="assignDriver('{{ $booking->id }}')"
+                                            class="text-purple-600 hover:text-purple-800 text-sm font-semibold">
+                                            <i class="fas fa-plus-circle"></i> Assigner
                                         </button>
                                     @endif
-                                @else
-                                    <button onclick="assignDriver('{{ $booking->id }}')"
-                                        class="text-purple-600 hover:text-purple-800 text-sm font-semibold">
-                                        <i class="fas fa-plus-circle"></i> Assigner
-                                    </button>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="text-sm text-gray-900">
-                                    {{ $booking->fromZone->name ?? 'N/A' }}</div>
-                                <div class="text-sm text-gray-500"><i class="fas fa-arrow-right"></i>
-                                    {{ $booking->toZone->name ?? 'N/A' }}</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ formatDateTimeFr($booking->pickup_datetime) }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                                {{ number_format($booking->total_price, 0, ',', ' ') }} FCFA
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-sm text-gray-900">
+                                        {{ Str::limit($booking->from_location, 25, '...') ?? 'N/A' }}</div>
+                                    <div class="text-sm text-gray-500"><i class="fas fa-arrow-right"></i>
+                                        {{ Str::limit($booking->to_location, 25, '...') ?? 'N/A' }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {{ formatDateTimeFr($booking->pickup_date_time) }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                                    {{ number_format($booking->total_price, 0, ',', ' ') }} FCFA
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
 
-                                <span
-                                    class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ bookingStatusBadge($booking->status) }}">
-                                    {{ bookingStatusLabel($booking->status) }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                <a href="{{ route('admin.bookings.show', $booking->id) }}"
-                                    class="text-blue-600 hover:text-blue-800 mr-3">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <a href="{{ route('admin.bookings.edit', $booking->id) }}"
-                                    class="text-green-600 hover:text-green-800 mr-3">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="8" class="px-6 py-4 text-center text-gray-500">
-                                Aucune réservation trouvée.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+                                    <span
+                                        class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ bookingStatusBadge($booking->status) }}">
+                                        {{ bookingStatusLabel($booking->status) }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <a href="{{ route('admin.bookings.show', $booking->id) }}"
+                                        class="text-blue-600 hover:text-blue-800 mr-3">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ route('admin.bookings.edit', $booking->id) }}"
+                                        class="text-green-600 hover:text-green-800 mr-3">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="8" class="px-6 py-4 text-center text-gray-500">
+                                    Aucune réservation trouvée.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        @else
+            <div class="px-6 py-12 text-center">
+                <p class="px-6 py-4 text-center text-gray-500">Aucune réservation</p>
+                <i class="fas fa-inbox text-4xl text-gray-400 mb-4"></i>
+            </div>
+        @endif
     </div>
 
-    @if ($bookings->hasPages())
-        <div class="mt-8">
-            {{ $bookings->links('pagination::tailwind') }}
-        </div>
-    @endif
-
-    <!-- Modal pour assigner un conducteur -->
+    <!-- Modal pour assigner un Agent -->
     <div id="assignDriverModal"
-        class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden items-center justify-center z-10">
+        class="fixed px-4 inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden items-center justify-center z-10">
         <div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div class="mt-3">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Assigner un Conducteur</h3>
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Assigner un Agent</h3>
                 <input type="hidden" id="currentBookingId" value="">
                 <div class="mb-4">
                     <label for="driverSelect" class="block text-sm font-medium text-gray-700 mb-2">
-                        Sélectionnez un conducteur disponible
+                        Sélectionnez un Agent disponible
                     </label>
                     <select id="driverSelect"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -185,10 +191,10 @@
     </div>
 
     <!-- Modal de retrait -->
-    <div id="removeDriverModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-10">
+    <div id="removeDriverModal" class="fixed px-4 inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-10">
         <div class="bg-white rounded-lg p-8 max-w-md w-full">
-            <h3 class="text-2xl font-bold text-gray-800 mb-4">Retirer le conducteur</h3>
-            <p class="text-gray-600 mb-4">Êtes-vous sûr de vouloir retirer le conducteur de cette course ? Cette action est
+            <h3 class="text-2xl font-bold text-gray-800 mb-4">Retirer le Agent</h3>
+            <p class="text-gray-600 mb-4">Êtes-vous sûr de vouloir retirer le Agent de cette course ? Cette action est
                 irréversible.</p>
 
             <input type="hidden" id="removeBookingId" value="">
@@ -224,7 +230,7 @@
                 const $select = $('#driverSelect');
                 $select.html('<option value="">Chargement...</option>');
 
-                // Charger la liste des conducteurs disponibles
+                // Charger la liste des Agents disponibles
                 $.ajax({
                     url: '/admin/drivers',
                     method: 'GET',
@@ -233,12 +239,12 @@
                     },
                     dataType: 'json',
                     success: function(data) {
-                        $select.html('<option value="">Sélectionnez un conducteur</option>');
+                        $select.html('<option value="">Sélectionnez un Agent</option>');
 
-                        if (data && data.data && data.data.length > 0) {
-                            data.data.forEach(function(user) {
+                        if (data && data && data.length > 0) {
+                            data.forEach(function(user) {
                                 const driverId = user.driver ? user.driver.id : user.id;
-                                const driverName = user.name ?? 'Conducteur';
+                                const driverName = user.name ?? 'Agent';
 
                                 $select.append(
                                     $('<option>', {
@@ -248,11 +254,11 @@
                                 );
                             });
                         } else {
-                            $select.html('<option value="">Aucun conducteur disponible</option>');
+                            $select.html('<option value="">Aucun Agent disponible</option>');
                         }
                     },
                     error: function(xhr) {
-                        console.error('Erreur chargement conducteurs:', xhr.status, xhr.responseText);
+                        console.error('Erreur chargement Agents:', xhr.status, xhr.responseText);
                         $select.html('<option value="">Erreur de chargement</option>');
                     }
                 });
@@ -274,7 +280,7 @@
                 const driverId = $('#driverSelect').val();
 
                 if (!driverId) {
-                    showAlert('error', 'Veuillez sélectionner un conducteur');
+                    showAlert('error', 'Veuillez sélectionner un Agent');
                     return;
                 }
 

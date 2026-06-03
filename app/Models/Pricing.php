@@ -14,8 +14,8 @@ class Pricing extends Model
     protected $table = 'pricing';
 
     protected $fillable = [
-        'from_zone_id',
-        'to_zone_id',
+        'from_zone',
+        'to_zone',
         'base_price',
         'price_per_km',
         'estimated_duration'

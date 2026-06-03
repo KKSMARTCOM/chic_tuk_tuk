@@ -28,4 +28,6 @@
 <!-- CUSTOM JS -->
 <script src="{{ asset('assets/js/landing.js') }}"></script>
 
+<script src="{{ asset('assets/js/custom2.js') }}"></script>
+
 @stack('scripts')

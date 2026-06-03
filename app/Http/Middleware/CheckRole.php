@@ -16,12 +16,15 @@ class CheckRole
      */
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
-        if (!Auth::check()) {
-            abort(403, 'Accès non autorisé.');
+        $user = auth()->user();
+
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'Vous devez être connecté.');
         }
 
-        if (!in_array(Auth::user()->role, $roles)) {
-            abort(403, 'Accès non autorisé.');
+        // Check if user has any of the required roles
+        if (!$user->hasAnyRole($roles)) {
+            abort(403, 'Accès non autorisé. Rôle insuffisant.');
         }
 
         return $next($request);

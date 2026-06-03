@@ -9,6 +9,7 @@ class Status
         'CONFIRMED' => 'confirmed',
         'IN_PROGRESS' => 'in_progress',
         'COMPLETED'  => 'completed',
-        'CANCELLED'  => 'cancelled'
+        'CANCELLED'  => 'cancelled',
+        'EXPIRED'    => 'expired'
     ];
 }

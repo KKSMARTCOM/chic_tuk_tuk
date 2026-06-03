@@ -12,7 +12,7 @@
         </a>
     </div>
     <nav class="mt-6">
-        @if (auth()->user()->role === 'admin')
+        @if (auth()->user()->profil === 'admin')
             <a href="{{ route('admin.dashboard') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition 
             {{ request()->routeIs('admin.dashboard') ? 'bg-green-600 border-l-4 border-white' : '' }}">
@@ -26,24 +26,46 @@
             <a href="{{ route('admin.drivers.index') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition
             {{ request()->routeIs('admin.drivers*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
-                <i class="fas fa-users mr-3"></i> Conducteurs
+                <i class="fas fa-users mr-3"></i> Agents
             </a>
-            <a href="{{ route('admin.pricing.index') }}"
+            <a href="{{ route('admin.commissions.index') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition
-            {{ request()->routeIs('admin.pricing.index') ? 'bg-green-600 border-l-4 border-white' : '' }}">
-                <i class="fas fa-dollar-sign mr-3"></i> Tarification
+                {{ request()->routeIs('admin.commissions*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
+                <i class="fas fa-percent mr-3"></i> Commissions
             </a>
-            <a href="" class="flex items-center px-6 py-3 hover:bg-green-600 transition">
+            <a href="{{ route('admin.payments.index') }}"
+                class="flex items-center px-6 py-3 hover:bg-green-600 transition
+                {{ request()->routeIs('admin.payments*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
+                <i class="fas fa-money-bill mr-3"></i> Paiements
+            </a>
+            <a href="{{ route('admin.leaves.index') }}"
+                class="flex items-center px-6 py-3 hover:bg-green-600 transition
+            {{ request()->routeIs('admin.leaves*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
+                <i class="fas fa-calendar-alt mr-3"></i> Pauses
+            </a>
+            {{-- <a href="{{ route('admin.pricing.index') }}"
+                class="flex items-center px-6 py-3 hover:bg-green-600 transition
+            {{ request()->routeIs('admin.pricing*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
+                <i class="fas fa-dollar-sign mr-3"></i> Tarification
+            </a> --}}
+            <a href="{{ route('admin.roles.index') }}"
+                class="flex items-center px-6 py-3 hover:bg-green-600 transition
+            {{ request()->routeIs('admin.roles*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
+                <i class="fas fa-user-shield mr-3"></i> Rôles
+            </a>
+            {{-- <a href="{{ route('admin.circuits.index') }}"
+                class="flex items-center px-6 py-3 hover:bg-green-600 transition
+            {{ request()->routeIs('admin.circuits*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
                 <i class="fas fa-map-marked-alt mr-3"></i> Circuits
             </a>
             <a href="{{ route('admin.promo-codes.index') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition 
             {{ request()->routeIs('admin.promo-codes.index') ? 'bg-green-600 border-l-4 border-white' : '' }}">
                 <i class="fas fa-tags mr-3"></i> Codes Promo
-            </a>
+            </a> --}}
         @endif
 
-        @if (auth()->user()->role === 'driver')
+        @if (auth()->user()->profil === 'driver')
             {{-- if conductor --}}
             <a href="{{ route('driver.dashboard') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition 
@@ -60,27 +82,51 @@
                 {{ request()->routeIs('driver.bookings.accepting') ? 'bg-green-600 border-l-4 border-white' : '' }}">
                 <i class="fas fa-calendar-check mr-3"></i> Mes Courses
             </a>
-            <a href="{{ route('driver.bookings.histories') }}"
+            <a href="{{ route('driver.leaves.index') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition
-                {{ request()->routeIs('driver.bookings.histories') ? 'bg-green-600 border-l-4 border-white' : '' }}">
-                <i class="fas fa-history mr-3"></i> Historique
+            {{ request()->routeIs('driver.leaves*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
+                <i class="fas fa-calendar-alt mr-3"></i> Pauses
             </a>
-            <a href="{{ route('notifications.index') }}"
-                class="flex items-center px-6 py-3 hover:bg-green-600 transition
+            {{-- <a href="{{ route('notifications.index') }}"
+            class="flex items-center px-6 py-3 hover:bg-green-600 transition
                 {{ request()->routeIs('notifications.index') ? 'bg-green-600 border-l-4 border-white' : '' }}">
                 <i class="fas fa-bell mr-3"></i> Notifications
-            </a>
+            </a> --}}
             {{-- <a href="" class="flex items-center px-6 py-3 hover:bg-green-600 transition">
                 <i class="fas fa-user mr-3"></i> Mon Profil
             </a> --}}
         @endif
 
-        <a href="#" class="flex items-center px-6 py-3 hover:bg-green-600 transition mt-auto">
+        <a href="{{ route('bookings.histories') }}"
+            class="flex items-center px-6 py-3 hover:bg-green-600 transition
+                {{ request()->routeIs('bookings.histories') ? 'bg-green-600 border-l-4 border-white' : '' }}">
+            <i class="fas fa-history mr-3"></i> Historique
+        </a>
+
+        <a href="{{ route('settings.settings') }}"
+            class="flex items-center px-6 py-3 hover:bg-green-600 transition
+                {{ request()->routeIs('settings.settings') || request()->routeIs('profile') ? 'bg-green-600 border-l-4 border-white' : '' }}">
             <i class="fas fa-cog mr-3"></i> Paramètres
         </a>
 
-        <a href="{{ route('logout') }}" class="flex items-center px-6 py-3 hover:bg-green-600 transition mt-auto">
+        <button onclick="showLogoutModal()"
+            class="flex items-center px-6 py-3 hover:bg-green-600 transition mt-auto w-full text-left">
             <i class="fas fa-sign-out-alt mr-3"></i> Déconnexion
-        </a>
+        </button>
     </nav>
 </aside>
+
+<!-- Logout Confirmation Modal -->
+@include('inc.global.logout')
+
+@push('scripts')
+    <script>
+        function showLogoutModal() {
+            document.getElementById('logoutModal').classList.remove('hidden');
+        }
+
+        function hideLogoutModal() {
+            document.getElementById('logoutModal').classList.add('hidden');
+        }
+    </script>
+@endpush

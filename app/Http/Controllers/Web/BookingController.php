@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
+use App\Models\PromoCode;
 use App\Services\BookingService;
-use App\Services\PricingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -14,46 +14,10 @@ class BookingController extends Controller
     protected $pricingService;
     protected $bookingService;
 
-    public function __construct(PricingService $pricingService, BookingService $bookingService)
+    public function __construct(BookingService $bookingService)
     {
-        $this->pricingService = $pricingService;
         $this->bookingService = $bookingService;
     }
-
-    /* public function calculatePrice(Request $request)
-    {
-        $request->validate([
-            'pickup_location' => 'required',
-            'dropoff_location' => 'nullable',
-            'tourist_circuit_id' => 'nullable|exists:tourist_circuits,id',
-            'promo_code' => 'nullable|string',
-        ]);
-
-        if ($request->tourist_circuit_id) {
-            $circuit = TouristCircuit::findOrFail($request->tourist_circuit_id);
-            $basePrice = $circuit->price;
-        } else {
-            $pricing = Pricing::where('from_location', $request->pickup_location)
-                ->where('to_location', $request->dropoff_location)
-                ->first();
-
-            $basePrice = $pricing ? $pricing->base_price : 5000;
-        }
-
-        $discount = 0;
-        if ($request->promo_code) {
-            $promo = PromoCode::where('code', $request->promo_code)->first();
-            if ($promo && $promo->isValid()) {
-                $discount = $promo->applyDiscount($basePrice);
-            }
-        }
-
-        return response()->json([
-            'base_price' => $basePrice,
-            'discount' => $discount,
-            'total_price' => $basePrice - $discount,
-        ]);
-    } */
 
     public function calculatePrice(Request $request, string $fromZoneId, string $toZoneId)
     {
@@ -63,16 +27,22 @@ class BookingController extends Controller
             return response()->json(['error' => $e->getMessage()], 404);
         }
 
-        $days = (int) $request->input('days');
+        $days = (int) $request->input('days', 1);
 
         if ($days < 1) {
             $days = 1;
         }
 
-        // Placeholder for future promo/discount logic
+        // Gestion promo
         $discount = 0;
+        if ($request->promo_code) {
+            $promo = PromoCode::where('code', $request->promo_code)->first();
+            if ($promo && $promo->isValid()) {
+                $discount = $promo->applyDiscount($basePrice);
+            }
+        }
 
-        $totalPrice = $basePrice /* * $days */ - $discount;
+        $totalPrice = $basePrice - $discount;
         if ($totalPrice < 0) {
             $totalPrice = 0;
         }
@@ -87,61 +57,60 @@ class BookingController extends Controller
 
     public function store(Request $request)
     {
-
-        $validated = $request->validate(
+        // Validation par étape
+        $request->validate(
             [
-                'from_zone_id' => 'required',
-                'to_zone_id' => 'required',
-                'pickup_datetime' => 'required|date|after:' . now()->addDay(),
-                //'passengers' => 'required|integer|min:1|max:3',
-                'special_requests' => 'nullable|string',
-                'tourist_circuit_id' => 'nullable|exists:tourist_circuits,id',
-                'promo_code' => 'nullable|string',
+                'from_location' => 'required',
+                'to_location' => 'required',
+                'from_lat' => 'required_with:from_location|numeric',
+                'from_lng' => 'required_with:from_location|numeric',
+                'to_lat' => 'required_with:to_location|numeric',
+                'to_lng' => 'required_with:to_location|numeric',
+
+                'pickup_date' => 'required|date|after:today' /* . now()->addDay()->toDateString() */,
+                'pickup_time' => 'required|date_format:H:i',
+                'days' => 'nullable|integer|min:1',
+
+                'phone' => 'required|string|regex:/^[0-9+\-\s()]+$/|min:10',
+                'special_requests' => 'nullable|string|max:500',
             ],
             [
-                'from_zone_id.required' => 'La zone de départ est obligatoire.',
-                'to_zone_id.required' => 'La zone de destination est obligatoire.',
-                'pickup_datetime.required' => 'La date et l’heure de prise en charge sont obligatoires.',
-                'pickup_datetime.date' => 'La date de prise en charge n’est pas valide.',
-                'pickup_datetime.after' => 'La réservation doit être effectuée au moins 24 heures à l’avance.',
-                'passengers.required' => 'Le nombre de passagers est obligatoire.',
-                'passengers.integer' => 'Le nombre de passagers doit être un nombre.',
-                //'passengers.min' => 'Au moins un passager est requis.',
-                //'passengers.max' => 'Le nombre maximum de passagers est de 3.',
-                'tourist_circuit_id.exists' => 'Le circuit touristique sélectionné est invalide.',
+                'from_location.required' => 'Veuillez sélectionner une ville de départ.',
+                'to_location.required' => 'Veuillez sélectionner une ville de destination.',
+                'from_lat.required_with' => 'Ville de départ manquantes.',
+                'to_lat.required_with' => 'Ville de destination manquantes.',
+
+                'pickup_date.required' => 'La date de prise en charge est obligatoire.',
+                'pickup_date.after' => 'La réservation doit être effectuée au moins 24 heures à l\'avance.',
+                'pickup_time.required' => 'L\'heure de prise en charge est obligatoire.',
+                'days.min' => 'Le nombre de jours est obligatoire pour les réservations multi-jours.',
+
+                'phone.required' => 'Le numéro de téléphone est obligatoire.',
             ]
         );
 
         try {
-            $priceData = $this->calculatePrice($request, $request->from_zone_id, $request->to_zone_id)->getData();
 
-            $data = [
-                'pickup_datetime' => $validated['pickup_datetime'],
-                //'passengers' => $validated['passengers'],
-                'special_requests' => $validated['special_requests'] ?? null,
-                'tourist_circuit_id' => $validated['tourist_circuit_id'] ?? null,
-                'base_price' => $priceData->base_price,
-                'total_price' => $priceData->total_price,
-                'from_zone_id' => $request->from_zone_id,
-                'to_zone_id' => $request->to_zone_id,
-                'days' => $priceData->days ?? 1,
+            $bookingData = [
+                'from_location' => $request->from_location,
+                'to_location' => $request->to_location,
+                'from_lng' => $request->from_lng,
+                'from_lat' => $request->from_lat,
+                'to_lng' => $request->to_lng,
+                'to_lat' => $request->to_lat,
                 'phone' => $request->phone,
+                'days' => $request->days ? $request->days : 1,
+                'pickup_date' => $request->pickup_date,
+                'pickup_time' => $request->pickup_time,
+                'special_requests' => $request->special_requests,
+                'promo_code' => $request->promo_code,
             ];
 
-            $this->bookingService->create($data);
-
-            /* $promoCodeId = null;
-            if ($request->promo_code) {
-                $promo = PromoCode::where('code', $request->promo_code)->first();
-                if ($promo && $promo->isValid()) {
-                    $promoCodeId = $promo->id;
-                    $promo->increment('used_count');
-                }
-            } */
+            $this->bookingService->create($bookingData);
 
             return redirect()->back()->with('success', 'Réservation créée avec succès!');
         } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['error' => $e->getMessage()])->withInput();
+            return redirect()->back()->withErrors(['error' => 'Une erreur est survenue. Veuillez réessayer ! ' . $e->getMessage()])->withInput();
         }
     }
 
@@ -192,7 +161,7 @@ class BookingController extends Controller
             $this->bookingService->cancel(
                 $booking->id,
                 $driver->id,
-                $request->input('cancellation_reason') ?? 'Annulée par le conducteur'
+                $request->input('cancellation_reason') ?? 'Annulée par le Agent'
             );
 
             return back()->with(

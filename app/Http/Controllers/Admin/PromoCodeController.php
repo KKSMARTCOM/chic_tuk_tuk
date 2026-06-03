@@ -10,7 +10,7 @@ class PromoCodeController extends Controller
 {
     public function index()
     {
-        $promoCodes = PromoCode::latest()->paginate(20);
+        $promoCodes = PromoCode::latest()->get();
         return view('admin.promo-codes.index', compact('promoCodes'));
     }
 
@@ -69,5 +69,13 @@ class PromoCodeController extends Controller
         $promoCode->delete();
         return redirect()->route('admin.promo-codes.index')
             ->with('success', 'Code promo supprimé avec succès');
+    }
+
+    public function toggleStatus(PromoCode $promoCode)
+    {
+        $promoCode->update(['is_active' => !$promoCode->is_active]);
+
+        return redirect()->route('admin.promo-codes.index')
+            ->with('success', 'Statut du code promo mis à jour avec succès');
     }
 }

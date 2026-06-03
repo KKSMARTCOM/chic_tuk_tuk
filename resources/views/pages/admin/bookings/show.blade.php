@@ -5,16 +5,16 @@
     <div class="bg-white rounded-lg shadow-md mb-8">
         <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-800">Détails de la Réservation</h1>
-                <p class="text-gray-600">N° {{ $booking->booking_number }}</p>
+                <h1 class="text-lg md:text-2xl font-bold text-gray-800">Détails de la Réservation</h1>
+                <p class="text-sm md:text-base text-gray-600">N° {{ $booking->booking_number }}</p>
             </div>
-            <div class="flex space-x-3">
+            <div class="block md:flex space-x-3">
                 <a href="{{ route('admin.bookings.edit', $booking) }}"
-                    class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
+                    class="bg-purple-600 text-white block px-4 py-2 rounded-lg hover:bg-purple-700 transition">
                     <i class="fas fa-edit mr-2"></i> Modifier
                 </a>
                 <a href="{{ route('admin.bookings.index') }}"
-                    class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition">
+                    class="bg-gray-600 text-white block mt-2 md:mt-0 px-4 py-2 rounded-lg hover:bg-gray-700 transition">
                     <i class="fas fa-arrow-left mr-2"></i> Retour
                 </a>
             </div>
@@ -44,10 +44,10 @@
                             </div>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Conducteur</label>
+                            <label class="block text-sm font-medium text-gray-700">Agent</label>
                             @if ($booking->driver)
                                 <div class="mt-1 flex items-center">
-                                    <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($booking->driver->user->name ?? 'Conducteur') }}"
+                                    <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($booking->driver->user->name ?? 'Agent') }}"
                                         class="w-10 h-10 rounded-full mr-3">
                                     <div>
                                         <p class="text-sm font-medium text-gray-900">
@@ -56,25 +56,41 @@
                                     </div>
                                 </div>
                             @else
-                                <p class="mt-1 text-sm text-gray-500">Aucun conducteur assigné</p>
+                                <p class="mt-1 text-sm text-gray-500">Aucun Agent assigné</p>
                             @endif
                         </div>
-                        <div>
+                        <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700">Trajet</label>
                             <div class="mt-1">
-                                <p class="text-sm text-gray-900">{{ $booking->fromZone->name ?? 'N/A' }}</p>
+                                <p class="text-sm text-gray-900">{{ $booking->from_location ?? 'N/A' }}</p>
                                 <p class="text-sm text-gray-500"><i class="fas fa-arrow-right"></i>
-                                    {{ $booking->toZone->name ?? 'N/A' }}</p>
+                                    {{ $booking->to_location ?? 'N/A' }}</p>
                             </div>
                         </div>
                         <div>
+                            <label class="block text-sm font-medium text-gray-700">Distance estimée</label>
+                            <p class="mt-1 text-sm text-gray-900">{{ $booking->distance ?? 'N/A' }} km</p>
+                        </div>
+                        <div>
                             <label class="block text-sm font-medium text-gray-700">Date et heure de départ</label>
-                            <p class="mt-1 text-sm text-gray-900">{{ formatDateTimeFr($booking->pickup_datetime) }}</p>
+                            <p class="mt-1 text-sm text-gray-900">
+                                {{ formatDateTimeFr($booking->pickup_date_time) }}</p>
+                            </p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Prix total</label>
                             <p class="mt-1 text-lg font-semibold text-purple-600">
                                 {{ number_format($booking->total_price, 0, ',', ' ') }} FCFA</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Commission</label>
+                            <p class="mt-1 text-lg font-semibold text-purple-600">
+                                {{ number_format($booking->commission, 0, ',', ' ') }} FCFA</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Revenue agent</label>
+                            <p class="mt-1 text-lg font-semibold text-purple-600">
+                                {{ number_format($booking->driver_earning, 0, ',', ' ') }} FCFA</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Statut</label>
@@ -110,6 +126,21 @@
                             <label class="block text-sm font-medium text-gray-700">Nombre de jours</label>
                             <p class="mt-1 text-sm text-gray-900">{{ $booking->days ?? 1 }}</p>
                         </div>
+                        @if ($booking->is_recurring)
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Prochaine date</label>
+                                <p class="mt-1 text-sm text-gray-900">{{ formatDateTimeFr($booking->next_recurring_date) }}
+                                </p>
+                            </div>
+                        @endif
+                        @if ($booking->remaining_days && $booking->remaining_days > 1)
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Nombre de jours restant</label>
+                                <p class="mt-1 text-sm text-gray-900">
+                                    {{ $booking->remaining_days > 1 ? $booking->remaining_days : 'Dernier jour' }}
+                                </p>
+                            </div>
+                        @endif
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700">Instructions spéciales</label>
                             <p class="mt-1 text-sm text-gray-900">{{ $booking->special_instructions ?? 'Aucune' }}</p>
@@ -127,21 +158,28 @@
                     <h3 class="text-lg font-semibold text-gray-800">Actions</h3>
                 </div>
                 <div class="px-6 py-4 space-y-3">
-                    @if (!$booking->driver)
+                    @if (!$booking->driver && in_array($booking->status, ['pending']))
                         <button onclick="assignDriver('{{ $booking->id }}')"
                             class="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
-                            <i class="fas fa-user-plus mr-2"></i> Assigner un conducteur
+                            <i class="fas fa-user-plus mr-2"></i> Assigner un Agent
                         </button>
-                    @else
+                    @elseif(!in_array($booking->status, ['completed', 'cancelled', 'expired']))
                         <button onclick="confirmRemoveDriver('{{ $booking->id }}')"
                             class="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">
-                            <i class="fas fa-user-times mr-2"></i> Retirer le conducteur
+                            <i class="fas fa-user-times mr-2"></i> Retirer le Agent
+                        </button>
+                    @endif
+
+                    @if (in_array($booking->status, ['cancelled', 'expired']))
+                        <button onclick="openDeleteModal('{{ $booking->id }}')"
+                            class="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">
+                            <i class="fas fa-user-times mr-2"></i> Supprimer la réservation
                         </button>
                     @endif
 
                     @if (in_array($booking->status, ['pending', 'confirmed']))
                         <button onclick="openCancelModal('{{ $booking->id }}')"
-                            class="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">
+                            class="w-full text-red-600 border border-red-600 px-4 py-2 rounded-lg hover:text-red-700 hover:border-red-700 transition">
                             <i class="fas fa-times mr-2"></i> Annuler la course
                         </button>
                     @endif
@@ -181,16 +219,16 @@
         </div>
     </div>
 
-    <!-- Modal pour assigner un conducteur -->
+    <!-- Modal pour assigner un Agent -->
     <div id="assignDriverModal"
-        class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden items-center justify-center z-10">
+        class="fixed px-4 inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden items-center justify-center z-10">
         <div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div class="mt-3">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Assigner un Conducteur</h3>
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Assigner un Agent</h3>
                 <input type="hidden" id="currentBookingId" value="">
                 <div class="mb-4">
                     <label for="driverSelect" class="block text-sm font-medium text-gray-700 mb-2">
-                        Sélectionnez un conducteur disponible
+                        Sélectionnez un Agent disponible
                     </label>
                     <select id="driverSelect"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -212,10 +250,10 @@
     </div>
 
     <!-- Modal de retrait -->
-    <div id="removeDriverModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-10">
+    <div id="removeDriverModal" class="fixed px-4 inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-10">
         <div class="bg-white rounded-lg p-8 max-w-md w-full">
-            <h3 class="text-2xl font-bold text-gray-800 mb-4">Retirer le conducteur</h3>
-            <p class="text-gray-600 mb-4">Êtes-vous sûr de vouloir retirer le conducteur de cette course ? Cette action est
+            <h3 class="text-2xl font-bold text-gray-800 mb-4">Retirer le Agent</h3>
+            <p class="text-gray-600 mb-4">Êtes-vous sûr de vouloir retirer le Agent de cette course ? Cette action est
                 irréversible.</p>
             <input type="hidden" id="removeBookingId" value="">
             <div class="flex justify-end space-x-3">
@@ -232,7 +270,7 @@
     </div>
 
     <!-- Modal d'annulation -->
-    <div id="cancelModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-10">
+    <div id="cancelModal" class="fixed px-4 inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-10">
         <div class="bg-white rounded-lg p-8 max-w-md w-full">
             <h3 class="text-2xl font-bold text-gray-800 mb-4">Annuler la course</h3>
             <p class="text-gray-600 mb-4">Êtes-vous sûr de vouloir annuler cette course ? Cette action est
@@ -250,6 +288,30 @@
                     <button type="submit"
                         class="flex-1 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
                         Confirmer l'annulation
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de suppression -->
+    <div id="deleteModal" class="fixed px-4 inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-10">
+        <div class="bg-white rounded-lg p-8 max-w-md w-full">
+            <h3 class="text-2xl font-bold text-gray-800 mb-4">Supprimer la course</h3>
+            <p class="text-gray-600 mb-4">Êtes-vous sûr de vouloir supprimer cette course ? Cette action est
+                irréversible.</p>
+            <form id="deleteForm" method="POST" action="">
+                @csrf
+                @method('DELETE')
+                <input type="hidden" name="status" value="">
+                <div class="flex space-x-4">
+                    <button type="button" onclick="closeDeleteModal()"
+                        class="flex-1 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition">
+                        Retour
+                    </button>
+                    <button type="submit"
+                        class="flex-1 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+                        Supprimer
                     </button>
                 </div>
             </form>
@@ -280,22 +342,22 @@
                     },
                     dataType: 'json',
                     success: function(data) {
-                        $select.html('<option value="">Sélectionnez un conducteur</option>');
-                        if (data && data.data && data.data.length > 0) {
-                            data.data.forEach(function(user) {
+                        $select.html('<option value="">Sélectionnez un Agent</option>');
+                        if (data && data.length > 0) {
+                            data.forEach(function(user) {
                                 const driverId = user.driver ? user.driver.id : user.id;
-                                const driverName = user.name ?? 'Conducteur';
+                                const driverName = user.name ?? 'Agent';
                                 $select.append($('<option>', {
                                     value: driverId,
                                     text: driverName
                                 }));
                             });
                         } else {
-                            $select.html('<option value="">Aucun conducteur disponible</option>');
+                            $select.html('<option value="">Aucun Agent disponible</option>');
                         }
                     },
                     error: function(xhr) {
-                        console.error('Erreur chargement conducteurs:', xhr.status, xhr.responseText);
+                        console.error('Erreur chargement Agents:', xhr.status, xhr.responseText);
                         $select.html('<option value="">Erreur de chargement</option>');
                     }
                 });
@@ -312,7 +374,7 @@
                 const driverId = $('#driverSelect').val();
 
                 if (!driverId) {
-                    showAlert('error', 'Veuillez sélectionner un conducteur');
+                    showAlert('error', 'Veuillez sélectionner un Agent');
                     return;
                 }
 
@@ -432,6 +494,16 @@
                     }
                 });
             });
+
+            function openDeleteModal(bookingId) {
+                $('#deleteForm').attr('action', `/admin/bookings/${bookingId}`);
+                $('#deleteModal').removeClass('hidden').addClass('flex');
+            }
+
+            function closeDeleteModal() {
+                $('#deleteModal').addClass('hidden').removeClass('flex');
+                $('#deleteForm')[0].reset();
+            }
         </script>
     @endpush
 @endsection

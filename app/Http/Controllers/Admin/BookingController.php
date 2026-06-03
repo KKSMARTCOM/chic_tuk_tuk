@@ -5,17 +5,22 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Driver;
+use App\Models\TouristCircuit;
 use App\Models\User;
+use App\Models\Zone;
 use App\Services\BookingService;
+use App\Services\PricingService;
 use Illuminate\Http\Request;
 
 class BookingController extends Controller
 {
     protected $bookingService;
+    protected $pricingService;
 
-    public function __construct(BookingService $bookingService)
+    public function __construct(BookingService $bookingService, PricingService $pricingService)
     {
         $this->bookingService = $bookingService;
+        $this->pricingService = $pricingService;
     }
 
     public function index(Request $request)
@@ -31,16 +36,12 @@ class BookingController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('booking_number', 'LIKE', "%{$search}%")
                     ->orWhere('phone', 'LIKE', "%{$search}%")
-                    ->orWhereHas('fromZone', function ($zoneQuery) use ($search) {
-                        $zoneQuery->where('name', 'LIKE', "%{$search}%");
-                    })
-                    ->orWhereHas('toZone', function ($zoneQuery) use ($search) {
-                        $zoneQuery->where('name', 'LIKE', "%{$search}%");
-                    });
+                    ->orWhere('from_location', 'LIKE', "%{$search}%")
+                    ->orWhere('to_location', 'LIKE', "%{$search}%");
             });
         }
 
-        $bookings = $query->latest()->paginate(10);
+        $bookings = $query->latest()->get();
 
         return view('pages.admin.bookings.index', compact('bookings'));
     }
@@ -49,7 +50,7 @@ class BookingController extends Controller
     {
         $booking->load(['user', 'driver', 'touristCircuit', 'promoCode']);
 
-        $availableDrivers = User::where('role', 'driver')
+        $availableDrivers = User::where('profil', 'driver')
             ->where('is_active', true)
             ->with('driver')
             ->get();
@@ -65,7 +66,7 @@ class BookingController extends Controller
                     'driver_id' => 'required|exists:drivers,id',
                 ],
                 [
-                    'driver_id.exists' => 'Le conducteur sélectionné n\'existe pas.',
+                    'driver_id.exists' => 'Le Agent sélectionné n\'existe pas.',
                 ]
             );
 
@@ -73,24 +74,24 @@ class BookingController extends Controller
 
             $user = $driver->user;
 
-            if ($user->role !== 'driver' || !$user->is_active) {
+            if ($user->profil !== 'driver' || !$user->is_active) {
                 if ($request->wantsJson()) {
-                    return response()->json(['success' => false, 'message' => 'Ce conducteur n\'est pas disponible'], 400);
+                    return response()->json(['success' => false, 'message' => 'Ce Agent n\'est pas disponible'], 400);
                 }
 
-                return back()->with('error', 'Ce conducteur n\'est pas disponible.');
+                return back()->with('error', 'Ce Agent n\'est pas disponible.');
             }
 
             $this->bookingService->take($booking->id, $driver->id);
 
             if ($request->wantsJson()) {
-                return response()->json(['success' => true, 'message' => 'Conducteur assigné avec succès']);
+                return response()->json(['success' => true, 'message' => 'Agent assigné avec succès']);
             }
 
-            return back()->with('success', 'Conducteur assigné avec succès');
+            return back()->with('success', 'Agent assigné avec succès');
         } catch (\Exception $e) {
             if ($request->wantsJson()) {
-                return response()->json(['success' => false, 'message' => 'Erreur lors de l\'assignation du conducteur: ' . $e->getMessage()], 400);
+                return response()->json(['success' => false, 'message' => 'Erreur lors de l\'assignation du Agent: ' . $e->getMessage()], 400);
             }
 
             return back()->with('error', 'Une erreur est survenue: ' . $e->getMessage());
@@ -102,18 +103,18 @@ class BookingController extends Controller
         try {
             if (!$booking->driver_id) {
                 if (request()->wantsJson()) {
-                    return response()->json(['success' => false, 'message' => 'Aucun conducteur assigné à cette réservation'], 400);
+                    return response()->json(['success' => false, 'message' => 'Aucun Agent assigné à cette réservation'])->setStatusCode(400);
                 }
 
-                return back()->with('error', 'Aucun conducteur assigné à cette réservation');
+                return back()->with('error', 'Aucun Agent assigné à cette réservation');
             }
 
             if ($booking->status !== 'confirmed' && $booking->status !== 'in_progress') {
                 if (request()->wantsJson()) {
-                    return response()->json(['success' => false, 'message' => 'Impossible de retirer le conducteur pour ce statut de réservation'], 400);
+                    return response()->json(['success' => false, 'message' => 'Impossible de retirer le Agent pour ce statut de réservation'], 400);
                 }
 
-                return back()->with('error', 'Impossible de retirer le conducteur pour ce statut de réservation');
+                return back()->with('error', 'Impossible de retirer le Agent pour ce statut de réservation');
             }
 
             $data = [
@@ -121,16 +122,16 @@ class BookingController extends Controller
                 'status' => 'pending',
             ];
 
-            $this->bookingService->update($booking->id, $data);
+            $this->bookingService->update($booking, $data);
 
             if (request()->wantsJson()) {
-                return response()->json(['success' => true, 'message' => 'Conducteur retiré avec succès']);
+                return response()->json(['success' => true, 'message' => 'Agent retiré avec succès']);
             }
 
-            return back()->with('success', 'Conducteur retiré avec succès');
+            return back()->with('success', 'Agent retiré avec succès');
         } catch (\Exception $e) {
             if (request()->wantsJson()) {
-                return response()->json(['success' => false, 'message' => 'Erreur lors du retrait du conducteur: ' . $e->getMessage()], 400);
+                return response()->json(['success' => false, 'message' => 'Erreur lors du retrait du Agent: ' . $e->getMessage()], 400);
             }
 
             return back()->with('error', 'Une erreur est survenue: ' . $e->getMessage());
@@ -163,7 +164,7 @@ class BookingController extends Controller
                 }
             }
 
-            $this->bookingService->update($booking->id, $updateData);
+            $this->bookingService->update($booking, $updateData);
 
             if ($request->wantsJson()) {
                 return response()->json(['success' => true, 'message' => 'Statut mis à jour avec succès']);
@@ -182,8 +183,8 @@ class BookingController extends Controller
     public function edit(Booking $booking)
     {
         $booking->load(['user', 'driver', 'touristCircuit', 'promoCode', 'fromZone', 'toZone']);
-        $zones = \App\Models\Zone::all();
-        $touristCircuits = \App\Models\TouristCircuit::all();
+        $zones = Zone::all();
+        $touristCircuits = TouristCircuit::all();
 
         return view('pages.admin.bookings.edit', compact('booking', 'zones', 'touristCircuits'));
     }
@@ -194,9 +195,16 @@ class BookingController extends Controller
             [
                 'user_id' => 'nullable|exists:users,id',
                 'phone' => 'required|string|max:20',
-                'from_zone_id' => 'required|exists:zones,id',
-                'to_zone_id' => 'required|exists:zones,id',
-                'pickup_datetime' => 'required|date',
+
+                'from_location' => 'required',
+                'to_location' => 'required',
+                'from_lat' => 'required_with:from_location|numeric',
+                'from_lng' => 'required_with:from_location|numeric',
+                'to_lat' => 'required_with:to_location|numeric',
+                'to_lng' => 'required_with:to_location|numeric',
+
+                'pickup_date' => 'required|date',
+                'pickup_time' => 'required|date_format:H:i',
                 'days' => 'nullable|integer|min:1',
                 'total_price' => 'required|numeric|min:0',
                 'status' => 'required|in:pending,confirmed,in_progress,completed,cancelled',
@@ -204,15 +212,53 @@ class BookingController extends Controller
                 'special_requests' => 'nullable|string|max:1000',
             ],
             [
+                'from_location.required' => 'Veuillez sélectionner une ville de départ.',
+                'to_location.required' => 'Veuillez sélectionner une ville de destination.',
+                'from_lat.required_with' => 'Ville de départ manquantes.',
+                'to_lat.required_with' => 'Ville de destination manquantes.',
+
                 'user_id.exists' => 'L\'utilisateur sélectionné n\'existe pas.',
-                'from_zone_id.exists' => 'La zone de départ sélectionnée n\'existe pas.',
-                'to_zone_id.exists' => 'La zone d\'arrivée sélectionnée n\'existe pas.',
                 'tourist_circuit_id.exists' => 'Le circuit touristique sélectionné n\'existe pas.',
             ]
         );
 
-        $this->bookingService->update($booking->id, $validated);
+        try {
+            $updateData = [
+                'user_id' => $request->user_id,
 
-        return redirect()->route('admin.bookings.show', $booking)->with('success', 'Réservation mise à jour avec succès');
+                'from_location' => $request->from_location,
+                'to_location' => $request->to_location,
+                'from_lng' => $request->from_lng,
+                'from_lat' => $request->from_lat,
+                'to_lng' => $request->to_lng,
+                'to_lat' => $request->to_lat,
+
+                'phone' => $request->phone,
+                'days' => $request->days,
+                'pickup_date' => $request->pickup_date,
+                'pickup_time' =>  $request->pickup_time,
+                'status' => $request->status,
+                'special_requests' => $request->special_requests,
+                'tourist_circuit_id' => $request->tourist_circuit_id,
+
+                'total_price' => $request->total_price,
+            ];
+
+            $this->bookingService->update($booking, $updateData);
+
+            return redirect()->route('admin.bookings.show', $booking)->with('success', 'Réservation mise à jour avec succès');
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['error' => 'Une erreur est survenue: ' . $e->getMessage()])->withInput();
+        }
+    }
+
+    public function destroy(string $bookingId)
+    {
+        try {
+            $this->bookingService->delete($bookingId);
+            return redirect()->route('admin.bookings.index')->with('success', 'La course a été supprimée avec succès.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
     }
 }

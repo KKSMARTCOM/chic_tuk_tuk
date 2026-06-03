@@ -1,19 +1,23 @@
 @extends('layouts.main')
 
+@php
+    $hideGlobalAlerts = true;
+@endphp
+
 @section('content')
     <!-- Hero Section avec Formulaire de Réservation -->
     <section id="reservation"
         style="background: url('{{ asset('assets/images/png/tricycle_bg.png') }}') no-repeat center center/cover"
         class="h-[750px] relative">
         <div class="w-full h-full absolute inset-0 bg-black/80"></div>
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 absolute inset-0 flex items-center">
-            <div>
-                <div class="grid md:grid-cols-2 gap-12 items-center">
+        <div class="w-full md:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 absolute inset-0 flex items-center">
+            <div class="w-full">
+                <div class="block md:grid grid-cols-1 md:grid-cols-2 gap-12 items-center w-full">
                     <!-- Texte Hero -->
-                    <div class="text-white">
+                    <div class="text-white hidden md:block">
                         <h2 class="text-5xl font-bold mb-6">Voyagez avec Style et Confort</h2>
                         <p class="text-xl mb-8 text-purple-100">Découvrez une nouvelle façon de vous déplacer avec nos
-                            tricycles chic. Rapide, confortable et écologique.</p>
+                            chic tuk tuk. Unique, modèle et confortable.</p>
                         <div class="flex space-x-6">
                             <div class="text-center">
                                 <div class="text-4xl font-bold">500+</div>
@@ -25,14 +29,30 @@
                             </div>
                             <div class="text-center">
                                 <div class="text-4xl font-bold">50+</div>
-                                <div class="text-purple-200">Conducteurs</div>
+                                <div class="text-purple-200">Agents</div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Formulaire de Réservation Multi-étapes -->
-                    <div class="bg-white rounded-2xl shadow-2xl p-8">
+                    <div class="bg-white rounded-2xl shadow-2xl p-8 max-h-[600px] overflow-y-auto custom-scrollbar">
                         <h3 class="text-2xl font-bold text-gray-800 mb-6">Réservez votre course</h3>
+
+                        @if (session('error'))
+                            <div class="bg-red-100 text-red-700 p-3 mb-3 rounded">
+                                {{ session('error') }}
+                            </div>
+                        @endif
+
+                        @if ($errors->any())
+                            <div class="bg-red-50 border-l-4 border-red-600 p-4 mb-4">
+                                <ul class="text-sm text-red-800">
+                                    @foreach ($errors->all() as $error)
+                                        <li>• {{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
 
                         <!-- Indicateur d'étapes -->
                         <div class="flex justify-between mb-8">
@@ -47,7 +67,7 @@
                             </div>
                             <div class="flex flex-col items-center flex-1">
                                 <div id="step2-indicator"
-                                    class="w-10 h-10 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center font-bold mb-2">
+                                    class="w-10 h-10 rounded-full bg-[#FFE7C1] text-gray-600 flex items-center justify-center font-bold mb-2">
                                     2</div>
                                 <span class="text-xs text-gray-600">Date & Heure</span>
                             </div>
@@ -56,7 +76,7 @@
                             </div>
                             <div class="flex flex-col items-center flex-1">
                                 <div id="step3-indicator"
-                                    class="w-10 h-10 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center font-bold mb-2">
+                                    class="w-10 h-10 rounded-full bg-[#FFE7C1] text-gray-600 flex items-center justify-center font-bold mb-2">
                                     3</div>
                                 <span class="text-xs text-gray-600">Détails</span>
                             </div>
@@ -67,69 +87,75 @@
 
                             <!-- Étape 1: Trajet -->
                             <div id="step1" class="step-content">
-                                {{-- <div class="mb-4">
-                                    <label class="block text-gray-700 font-semibold mb-2">Type de trajet</label>
-                                    <div class="grid grid-cols-2 gap-4">
-                                        <button type="button" onclick="selectTripType(event, 'normal')"
-                                            class="trip-type-btn border-2  border-emerald-600 text-emerald-600 rounded-lg p-4 hover:bg-purple-50 transition">
-                                            <i class="fas fa-route text-2xl mb-2"></i>
-                                            <div class="font-semibold">Trajet Simple</div>
-                                        </button>
-                                        <button type="button" onclick="selectTripType(event, 'circuit')"
-                                            class="trip-type-btn border-2 border-gray-300 text-gray-600 rounded-lg p-4 hover:bg-gray-50 transition">
-                                            <i class="fas fa-map-marked-alt text-2xl mb-2"></i>
-                                            <div class="font-semibold">Circuit Touristique</div>
-                                        </button>
-                                    </div>
-                                    <input type="hidden" name="trip_type" id="trip_type" value="normal">
-                                </div> --}}
+                                {{-- SELECT-TRIP-TYPE --}}
 
                                 <div id="normalTrip">
+
                                     <div class="mb-4">
-                                        @if ($zones && $zones->count())
-                                            <label class="block text-gray-700 font-semibold mb-2">Point de départ</label>
-                                            <select name="from_zone_id" id="from_zone_id"
-                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent"
-                                                required>
-                                                <option value="">Entrez votre adresse de départ</option>
-                                                @foreach ($zones as $item)
-                                                    <option value="{{ $item->id }}">{{ $item->name }}</option>
-                                                @endforeach
-                                            </select>
-                                        @endif
-                                    </div>
-                                    <div class="mb-4">
-                                        @if ($zones && $zones->count())
-                                            <label class="block text-gray-700 font-semibold mb-2">Destination</label>
-                                            <select name="to_zone_id" id="to_zone_id"
-                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent"
-                                                required>
-                                                <option value="">Où souhaitez-vous aller ?</option>
-                                                @foreach ($zones as $item)
-                                                    <option value="{{ $item->id }}">{{ $item->name }}</option>
-                                                @endforeach
-                                            </select>
-                                        @endif
+                                        <label class="block text-gray-700 font-semibold mb-2">Point de départ <span
+                                                class="text-red-500">*</span></label>
+                                        <div class="relative">
+                                            <input type="text" id="from_input" name="from_location"
+                                                class="w-full px-4 py-3 border rounded-lg outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent"
+                                                placeholder="Entrez votre ville de départ" required>
+
+                                            <!-- Bouton clear -->
+                                            <button type="button" id="from_clear"
+                                                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hidden">
+                                                ✕
+                                            </button>
+                                        </div>
+                                        <p class="text-red-500 text-sm mt-1 hidden error-message"></p>
+                                        @error('from_location')
+                                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                        @enderror
+
+                                        <div class="relative">
+                                            <div id="from_suggestions"
+                                                class="bg-white border rounded mt-1 hidden max-h-[200px] w-full overflow-y-scroll absolute top-0 left-0 z-50">
+                                            </div>
+                                        </div>
+
+                                        <input type="hidden" name="from_lat" id="from_lat">
+                                        <input type="hidden" name="from_lng" id="from_lng">
                                     </div>
 
-                                    <!-- Aperçu du prix (affiché dès que départ + arrivée sont sélectionnés) -->
-                                    <div id="pricePreview" class="my-4 text-sm text-gray-700 hidden">
-                                        Prix de base: <span id="preview-price">-- FCFA</span>
+                                    <div class="mb-4">
+                                        <label class="block text-gray-700 font-semibold mb-2">Destination <span
+                                                class="text-red-500">*</span></label>
+                                        <div class="relative">
+                                            <input type="text" id="to_input" name="to_location"
+                                                class="w-full px-4 py-3 border rounded-lg outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent"
+                                                placeholder="Où souhaitez-vous aller ?" required>
+
+                                            <!-- Bouton clear -->
+                                            <button type="button" id="to_clear"
+                                                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hidden">
+                                                ✕
+                                            </button>
+                                        </div>
+                                        <p class="text-red-500 text-sm mt-1 hidden error-message"></p>
+                                        @error('to_location')
+                                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                        @enderror
+
+                                        <div class="relative">
+                                            <div id="to_suggestions"
+                                                class="bg-white border rounded mt-1 hidden max-h-[200px] w-full overflow-y-scroll absolute top-0 left-0 z-50">
+                                            </div>
+                                        </div>
+
+                                        <input type="hidden" name="to_lat" id="to_lat">
+                                        <input type="hidden" name="to_lng" id="to_lng">
+                                    </div>
+
+                                    <div class="my-4 text-sm text-gray-700 hidden" id="pricePreview">
+                                        {{-- Distance : <span id="distance">-- km</span><br> --}}
+                                        Prix estimé : <span id="preview-price">-- FCFA</span>
                                     </div>
                                 </div>
 
-                                {{-- <div id="circuitTrip" class="hidden">
-                                    <div class="mb-4">
-                                        <label class="block text-gray-700 font-semibold mb-2">Choisir un circuit</label>
-                                        <select name="tourist_circuit_id"
-                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent">
-                                            <option value="">Sélectionnez un circuit</option>
-                                            <option value="1">Visite Ouidah - 10,000 FCFA</option>
-                                            <option value="2">Visite Comè - 20,000 FCFA</option>
-                                            <option value="3">Visite Grand-Popo - 25,000 FCFA</option>
-                                        </select>
-                                    </div>
-                                </div> --}}
+                                {{-- CIRCUIT-TRIP --}}
 
                                 <button type="button" onclick="nextStep(2)"
                                     class="w-full py-3 bg-[#286b41] text-white rounded-lg font-semibold hover:opacity-90 transition">
@@ -140,10 +166,29 @@
                             <!-- Étape 2: Date & Heure -->
                             <div id="step2" class="step-content hidden">
                                 <div class="mb-4">
-                                    <label class="block text-gray-700 font-semibold mb-2">Date et heure</label>
-                                    <input type="datetime-local" name="pickup_datetime"
-                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent"
-                                        required>
+                                    <!-- Carte -->
+
+                                    <label class="block text-gray-700 font-semibold mb-2">Date et heure <span
+                                            class="text-red-500">*</span></label>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <input type="date" name="pickup_date" value="{{ old('pickup_date') }}"
+                                            id="pickup_date"
+                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent"
+                                            min="{{ \Carbon\Carbon::now()->addDay()->toDateString() }}" required>
+                                        <p class="text-red-500 text-sm mt-1 hidden error-message"></p>
+                                        @error('pickup_date')
+                                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                        @enderror
+
+                                        <input type="time" name="pickup_time" value="{{ old('pickup_time') }}"
+                                            id="pickup_time"
+                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent"
+                                            required>
+                                        <p class="text-red-500 text-sm mt-1 hidden error-message"></p>
+                                        @error('pickup_time')
+                                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                        @enderror
+                                    </div>
                                 </div>
 
                                 <!-- Option multi-jours -->
@@ -158,23 +203,19 @@
 
                                     <!-- Visible input shown only when multi-day checked (no name attribute) -->
                                     <div id="daysWrapper" class="mt-3 hidden">
-                                        <label class="block text-gray-700 font-semibold mb-2">Nombre de jours</label>
-                                        <input type="number" id="days_input" min="2" value="2"
+                                        <label class="block text-gray-700 font-semibold mb-2">Nombre de jours <span
+                                                class="text-red-500">*</span></label>
+                                        <input type="text" id="days_input" inputmode="numeric" min="2"
+                                            value="2"
                                             class="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent"
                                             placeholder="Entrez le nombre de jours">
                                     </div>
+                                    @error('days')
+                                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                    @enderror
                                 </div>
 
-                                {{-- <div class="mb-6">
-                                    <label class="block text-gray-700 font-semibold mb-2">Nombre de passagers</label>
-                                    <select name="passengers"
-                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent"
-                                        required>
-                                        <option value="1">1 passager</option>
-                                        <option value="2">2 passagers</option>
-                                        <option value="3">3 passagers</option>
-                                    </select>
-                                </div> --}}
+                                {{-- PASSENGERS --}}
 
                                 <div class="flex space-x-4">
                                     <button type="button" onclick="prevStep(1)"
@@ -191,12 +232,17 @@
                             <!-- Étape 3: Détails et Confirmation -->
                             <div id="step3" class="step-content hidden">
                                 <div class="mb-4">
-                                    <label class="block text-gray-700 font-semibold mb-2">Numéro de téléphone</label>
-                                    <input type="tel" name="phone" id="phone" placeholder="01 90 12 34 56"
-                                        pattern="^\d{6,15}$"
-                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent"
-                                        required>
+                                    <label class="block text-gray-700 font-semibold mb-2">Numéro de téléphone <spani
+                                            class="text-red-500">*</spani< /label>
+                                            <input type="tel" name="phone" value="{{ old('phone') }}"
+                                                id="phone" placeholder="01 90 12 34 56" pattern="^\d{6,15}$"
+                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent"
+                                                required>
                                 </div>
+                                <p class="text-red-500 text-sm mt-1 hidden error-message"></p>
+                                @error('phone')
+                                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                @enderror
 
                                 <div class="mb-4">
                                     <label class="block text-gray-700 font-semibold mb-2">Demandes spéciales, veuillez
@@ -206,28 +252,10 @@
                                         class="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent"
                                         placeholder="Bagages volumineux, animaux, etc."></textarea>
                                 </div>
-                                {{-- <div class="mb-6">
-                                    <label class="block text-gray-700 font-semibold mb-2">Code promo (optionnel)</label>
-                                    <div class="flex space-x-2">
-                                        <input type="text" name="promo_code" id="promo_code"
-                                            class="flex-1 px-4 py-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent"
-                                            placeholder="Entrez votre code">
-                                        <button type="button" onclick="applyPromo()"
-                                            class="px-6 py-3 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition">Appliquer</button>
-                                    </div>
-                                    <div id="promo-message" class="mt-2 text-sm"></div>
-                                </div> --}}
+                                {{-- PROMO-CODE --}}
 
                                 <div class="bg-purple-50 rounded-lg p-4 mb-6">
-                                    {{-- <div class="flex justify-between mb-2">
-                                        <span class="text-gray-700">Prix de base:</span>
-                                        <span class="font-semibold" id="base-price">-- FCFA</span>
-                                    </div>
-                                    <div class="flex justify-between mb-2 text-green-600">
-                                        <span>Réduction:</span>
-                                        <span class="font-semibold" id="discount">0 FCFA</span>
-                                    </div>
-                                    <hr class="my-2"> --}}
+                                    {{-- REDUCTION --}}
                                     <div class="flex justify-between text-lg font-bold text-[#286b41]">
                                         <span>Total:</span>
                                         <span id="total-price">-- FCFA</span>
@@ -245,6 +273,44 @@
                                     </button>
                                 </div>
                             </div>
+
+                            <!-- Étape 4: Succès (invisible dans l’indicateur) -->
+                            <div id="step4" class="step-content hidden">
+                                <div
+                                    class="relative overflow-hidden rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-emerald-50 p-8">
+                                    <!-- Confettis CSS -->
+                                    <div class="confetti">
+                                        @for ($i = 1; $i <= 18; $i++)
+                                            <span class="confetti-piece"></span>
+                                        @endfor
+                                    </div>
+
+                                    <div class="text-center">
+                                        <div
+                                            class="mx-auto w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center shadow-lg success-pop">
+                                            <i class="fas fa-check text-4xl text-emerald-600"></i>
+                                        </div>
+
+                                        <h4 class="mt-6 text-3xl font-extrabold text-gray-900 success-pop"
+                                            style="animation-delay:.05s">
+                                            Réservation envoyée !
+                                        </h4>
+
+                                        <p class="mt-2 text-gray-600 text-base success-pop" style="animation-delay:.1s">
+                                            Merci 🙌 Votre demande a bien été enregistrée. Un chauffeur vous contactera très
+                                            bientôt.
+                                        </p>
+
+                                        <div class="mt-8">
+                                            <button type="button" onclick="newBooking()"
+                                                class="inline-flex items-center justify-center px-7 py-3 rounded-xl bg-[#286b41] text-white font-semibold shadow-lg hover:opacity-95 active:scale-[.99] transition success-pop"
+                                                style="animation-delay:.2s">
+                                                Nouvelle réservation <i class="fas fa-plus ml-2"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -253,232 +319,371 @@
     </section>
 
     <!-- Comment ça marche -->
-    <section id="comment-ca-marche" class="py-20 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl font-bold text-gray-800 mb-4">Comment ça marche ?</h2>
-                <p class="text-xl text-gray-600">Réservez votre tricycle en 3 étapes simples</p>
-            </div>
-
-            <div class="grid md:grid-cols-3 gap-12">
-                <div class="text-center">
-                    <div
-                        class="w-20 h-20 gradient-bg rounded-full flex items-center justify-center text-white text-3xl font-bold mx-auto mb-6">
-                        1</div>
-                    <i class="fas fa-mobile-alt text-5xl text-[#286b41] mb-4"></i>
-                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Réservez en ligne</h3>
-                    <p class="text-gray-600">Remplissez le formulaire avec vos informations de trajet. C'est simple et
-                        rapide !</p>
-                </div>
-
-                <div class="text-center">
-                    <div
-                        class="w-20 h-20 gradient-bg rounded-full flex items-center justify-center text-white text-3xl font-bold mx-auto mb-6">
-                        2</div>
-                    <i class="fas fa-user-check text-5xl text-[#286b41] mb-4"></i>
-                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Confirmation instantanée</h3>
-                    <p class="text-gray-600">Un conducteur accepte votre réservation et vous recevez une confirmation
-                        immédiate.</p>
-                </div>
-
-                <div class="text-center">
-                    <div
-                        class="w-20 h-20 gradient-bg rounded-full flex items-center justify-center text-white text-3xl font-bold mx-auto mb-6">
-                        3</div>
-                    <i class="fas fa-route text-5xl text-[#286b41] mb-4"></i>
-                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Profitez de votre trajet</h3>
-                    <p class="text-gray-600">Votre conducteur vous attend à l'heure et au lieu convenus. Bon voyage !
-                    </p>
-                </div>
-            </div>
-        </div>
-    </section>
+    @include('pages.components.how_it_work')
 
     <!-- Ce que nous offrons -->
-    <section id="avantages" class="py-20 bg-gray-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl font-bold text-gray-800 mb-4">Ce que nous offrons</h2>
-                <p class="text-xl text-gray-600">Des avantages qui font la différence</p>
-            </div>
+    @include('pages.components.advantages')
 
-            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-                <div class="bg-white rounded-xl shadow-lg p-8 hover:shadow-2xl transition transform hover:-translate-y-2">
-                    <div class="w-16 h-16 gradient-bg rounded-full flex items-center justify-center mb-6">
-                        <i class="fas fa-shield-alt text-3xl text-white"></i>
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-3">Sécurité garantie</h3>
-                    <p class="text-gray-600">Tous nos conducteurs sont formés et vérifiés pour votre sécurité.</p>
-                </div>
-
-                <div class="bg-white rounded-xl shadow-lg p-8 hover:shadow-2xl transition transform hover:-translate-y-2">
-                    <div class="w-16 h-16 gradient-bg rounded-full flex items-center justify-center mb-6">
-                        <i class="fas fa-clock text-3xl text-white"></i>
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-3">Ponctualité</h3>
-                    <p class="text-gray-600">Arrivée à l'heure garantie ou remboursement de votre trajet.</p>
-                </div>
-
-                <div class="bg-white rounded-xl shadow-lg p-8 hover:shadow-2xl transition transform hover:-translate-y-2">
-                    <div class="w-16 h-16 gradient-bg rounded-full flex items-center justify-center mb-6">
-                        <i class="fas fa-leaf text-3xl text-white"></i>
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-3">Écologique</h3>
-                    <p class="text-gray-600">Réduisez votre empreinte carbone avec nos véhicules écologiques.</p>
-                </div>
-
-                <div class="bg-white rounded-xl shadow-lg p-8 hover:shadow-2xl transition transform hover:-translate-y-2">
-                    <div class="w-16 h-16 gradient-bg rounded-full flex items-center justify-center mb-6">
-                        <i class="fas fa-dollar-sign text-3xl text-white"></i>
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-3">Prix compétitifs</h3>
-                    <p class="text-gray-600">Les meilleurs tarifs du marché sans compromis sur la qualité.</p>
-                </div>
-            </div>
-        </div>
-    </section>
+    <!-- Ils nous soutiennent -->
+    @include('pages.components.partners')
 
     <!-- Témoignages -->
-    <section id="temoignages" class="py-20 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl font-bold text-gray-800 mb-4">Ce que nos clients disent</h2>
-                <p class="text-xl text-gray-600">Des milliers de clients satisfaits</p>
-            </div>
-
-            <div class="grid md:grid-cols-3 gap-8">
-                <div class="bg-gray-50 rounded-xl p-8 shadow-md hover:shadow-xl transition">
-                    <div class="flex items-center mb-4">
-                        <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode('Salomon') }}" alt="User Name"
-                            class="w-16 h-16 rounded-full mr-4">
-                        <div>
-                            <h4 class="font-bold text-gray-800">John Doe</h4>
-                            <div class="flex text-yellow-400">
-                                @for ($i = 0; $i < 5; $i++)
-                                    <i class="fas fa-star"></i>
-                                @endfor
-                            </div>
-                        </div>
-                    </div>
-                    <p class="text-gray-600 italic">"Un bon service"</p>
-                </div>
-
-                <div class="bg-gray-50 rounded-xl p-8 shadow-md hover:shadow-xl transition">
-                    <div class="flex items-center mb-4">
-                        <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode('Salomon') }}" alt="User Name"
-                            class="w-16 h-16 rounded-full mr-4">
-                        <div>
-                            <h4 class="font-bold text-gray-800">John Doe</h4>
-                            <div class="flex text-yellow-400">
-                                @for ($i = 0; $i < 5; $i++)
-                                    <i class="fas fa-star"></i>
-                                @endfor
-                            </div>
-                        </div>
-                    </div>
-                    <p class="text-gray-600 italic">"Un bon service"</p>
-                </div>
-
-                <div class="bg-gray-50 rounded-xl p-8 shadow-md hover:shadow-xl transition">
-                    <div class="flex items-center mb-4">
-                        <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode('Salomon') }}" alt="User Name"
-                            class="w-16 h-16 rounded-full mr-4">
-                        <div>
-                            <h4 class="font-bold text-gray-800">John Doe</h4>
-                            <div class="flex text-yellow-400">
-                                @for ($i = 0; $i < 5; $i++)
-                                    <i class="fas fa-star"></i>
-                                @endfor
-                            </div>
-                        </div>
-                    </div>
-                    <p class="text-gray-600 italic">"Un bon service"</p>
-                </div>
-
-                <div class="bg-gray-50 rounded-xl p-8 shadow-md hover:shadow-xl transition">
-                    <div class="flex items-center mb-4">
-                        <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode('Salomon') }}" alt="User Name"
-                            class="w-16 h-16 rounded-full mr-4">
-                        <div>
-                            <h4 class="font-bold text-gray-800">John Doe</h4>
-                            <div class="flex text-yellow-400">
-                                @for ($i = 0; $i < 5; $i++)
-                                    <i class="fas fa-star"></i>
-                                @endfor
-                            </div>
-                        </div>
-                    </div>
-                    <p class="text-gray-600 italic">"Un bon service"</p>
-                </div>
-
-                <div class="bg-gray-50 rounded-xl p-8 shadow-md hover:shadow-xl transition">
-                    <div class="flex items-center mb-4">
-                        <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode('Salomon') }}" alt="User Name"
-                            class="w-16 h-16 rounded-full mr-4">
-                        <div>
-                            <h4 class="font-bold text-gray-800">John Doe</h4>
-                            <div class="flex text-yellow-400">
-                                @for ($i = 0; $i < 5; $i++)
-                                    <i class="fas fa-star"></i>
-                                @endfor
-                            </div>
-                        </div>
-                    </div>
-                    <p class="text-gray-600 italic">"Un bon service"</p>
-                </div>
-
-                <div class="bg-gray-50 rounded-xl p-8 shadow-md hover:shadow-xl transition">
-                    <div class="flex items-center mb-4">
-                        <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode('Salomon') }}" alt="User Name"
-                            class="w-16 h-16 rounded-full mr-4">
-                        <div>
-                            <h4 class="font-bold text-gray-800">John Doe</h4>
-                            <div class="flex text-yellow-400">
-                                @for ($i = 0; $i < 5; $i++)
-                                    <i class="fas fa-star"></i>
-                                @endfor
-                            </div>
-                        </div>
-                    </div>
-                    <p class="text-gray-600 italic">"Un bon service"</p>
-                </div>
-                {{-- @foreach ($testimonials as $testimonial)
-                @endforeach --}}
-            </div>
-        </div>
-    </section>
+    @include('pages.components.testimonials')
 
     @push('scripts')
         <script>
             $(function() {
                 var currentStep = 1;
 
-                window.nextStep = function(step) {
-                    $('#step' + currentStep).addClass('hidden');
-                    $('#step' + currentStep + '-indicator').removeClass('step-active').addClass(
-                        'bg-gray-300 text-gray-600');
+                /* MAP & ICONS */
+
+                // ==========================
+                // 🔎 AUTOCOMPLETE (Nominatim)
+                // ==========================
+                // debounce pour éviter trop d'appels API
+                function debounce(fn, delay = 400) {
+                    let timeout;
+                    return (...args) => {
+                        clearTimeout(timeout);
+                        timeout = setTimeout(() => fn(...args), delay);
+                    };
+                }
+
+                // skeleton loader
+                function skeletonHTML() {
+                    return `
+                            <div class="p-3 space-y-2">
+                                <div class="h-4 bg-gray-200 animate-pulse rounded"></div>
+                                <div class="h-4 bg-gray-200 animate-pulse rounded"></div>
+                                <div class="h-4 bg-gray-200 animate-pulse rounded"></div>
+                            </div>
+                            `;
+                }
+
+                // message UI
+                function messageHTML(text) {
+                    return `<div class="p-3 text-sm text-gray-500">${text}</div>`;
+                }
+
+                //search city
+                async function searchCity(query) {
+                    if (query.length < 3) return [];
+
+                    const res = await fetch(
+                        `https://nominatim.openstreetmap.org/search?format=json&countrycodes=bj&q=${query}`);
+                    return await res.json();
+                }
+
+                function setupAutocomplete(inputId, suggestionsId, latId, lngId, clearId, isFrom) {
+                    const input = $('#' + inputId);
+                    const box = $('#' + suggestionsId);
+                    const clearBtn = $('#' + clearId);
+
+                    // clear button
+                    clearBtn.on("click", () => {
+                        input.val("");
+                        $('#' + latId).val("");
+                        $('#' + lngId).val("");
+                        box.addClass("hidden");
+                        clearBtn.addClass("hidden");
+                    });
+
+                    const handleSearch = debounce(async () => {
+                        const query = input.val().trim();
+
+                        // ❌ moins de 3 caractères
+                        if (query.length < 3) {
+                            box.addClass("hidden");
+                            clearBtn.toggleClass("hidden", !query);
+                            return;
+                        }
+
+                        clearBtn.removeClass("hidden");
+
+                        // skeleton
+                        box.html(skeletonHTML());
+                        box.removeClass("hidden");
+
+                        try {
+                            const results = await searchCity(query);
+
+                            box.html("");
+
+                            // ❌ aucun résultat
+                            if (!results.length) {
+                                box.html(messageHTML(
+                                    "Aucune ville ne correspond à votre recherche. Soyez plus précis (ex: Cotonou, Abomey-Calavi...)."
+                                ));
+                                return;
+                            }
+
+                            results.forEach(place => {
+                                const div = $('<div></div>');
+                                div.addClass("p-2 hover:bg-gray-100 cursor-pointer text-sm");
+                                div.text(place.display_name);
+
+                                div.on('click', () => {
+                                    input.val(place.display_name);
+                                    $('#' + latId).val(place.lat);
+                                    $('#' + lngId).val(place.lon);
+                                    box.addClass("hidden");
+
+                                    /* MAP VIEW */
+
+                                    calculateRoute();
+                                });
+
+                                box.append(div);
+                            });
+
+                        } catch (error) {
+                            console.error(error);
+                            box.html(messageHTML(
+                                "Erreur lors de la recherche. Vérifiez votre connexion et réessayez."
+                            ));
+                        }
+                    });
+
+                    input.on("input", handleSearch);
+
+                    // fermer suggestions si clic ailleurs
+                    $(document).on("click", (e) => {
+                        if (!input.is(e.target) && !box.is(e.target) && box.has(e.target).length === 0) {
+                            box.addClass("hidden");
+                        }
+                    });
+                }
+
+                // Init autocomplete
+                setupAutocomplete("from_input", "from_suggestions", "from_lat", "from_lng", "from_clear", true);
+                setupAutocomplete("to_input", "to_suggestions", "to_lat", "to_lng", "to_clear", false);
+
+                // Fonction pour essayer de calculer le prix au chargement si les inputs ont des valeurs
+                function tryCalculateOnLoad() {
+                    const fromVal = $('#from_input').val().trim();
+                    const toVal = $('#to_input').val().trim();
+                    if (fromVal && toVal) {
+                        calculateRoute();
+                    }
+                }
+
+                // Appeler après un court délai pour s'assurer que tout est chargé
+                setTimeout(tryCalculateOnLoad, 500);
+
+                // ==========================
+                // 📏 CALCUL DISTANCE
+                // ==========================
+                async function calculateRoute() {
+                    const fromLat = $("#from_lat").val();
+                    const fromLng = $("#from_lng").val();
+                    const toLat = $("#to_lat").val();
+                    const toLng = $("#to_lng").val();
+
+                    if (!fromLat || !toLat) return;
+
+                    $("#preview-price").html(skeletonHTML());
+
+                    $("#pricePreview").removeClass("hidden");
+
+                    try {
+                        const res = await fetch("/pricing/price", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                            },
+                            body: JSON.stringify({
+                                fromLng,
+                                fromLat,
+                                toLng,
+                                toLat
+                            })
+                        });
+
+                        const data = await res.json();
+
+                        $("#preview-price").text(data.price + " FCFA");
+
+                        $("#total-price").text(data.price + " FCFA");
+
+                        $("#pricePreview").removeClass("hidden");
+
+                        // ==========================
+                        // 🗺️ TRACE DE LA ROUTE
+                        // ==========================
+
+                    } catch (error) {
+                        console.error("Erreur lors du calcul de la route:", error);
+                        $("#preview-price").text("Erreur de calcul");
+                        $("#total-price").text("Erreur de calcul");
+                        $("#pricePreview").removeClass("hidden");
+                    }
+                }
+
+                function showError(input, message) {
+                    const container = $(input).closest('.mb-4');
+                    const error = container.find('.error-message');
+
+                    if (error.length) {
+                        error.text(message);
+                        error.removeClass('hidden');
+                    }
+
+                    $(input).addClass('border-red-500');
+                }
+
+                function clearError(input) {
+                    const container = $(input).closest('.mb-4');
+                    const error = container.find('.error-message');
+
+                    if (error.length) {
+                        error.text("");
+                        error.addClass('hidden');
+                    }
+
+                    $(input).removeClass('border-red-500');
+                }
+
+                function validateStep(stepNumber) {
+                    const step = $('#step' + stepNumber);
+                    const inputs = step.find('input, textarea, select');
+
+                    let isValid = true;
+
+                    inputs.each(function() {
+                        const input = $(this);
+                        if (!input.attr('required')) return;
+
+                        clearError(input[0]);
+
+                        // champ vide
+                        if (!input.val().trim()) {
+                            showError(input[0], "Ce champ est obligatoire");
+                            isValid = false;
+                            return;
+                        }
+
+                        // validation téléphone
+                        if (input.attr('type') === "tel") {
+                            const regex = /^\d{6,15}$/;
+                            if (!regex.test(input.val())) {
+                                showError(input[0], "Numéro invalide");
+                                isValid = false;
+                                return;
+                            }
+                        }
+
+                        // validation date
+                        if (input.attr('type') === "date") {
+                            const tomorrow = new Date();
+                            tomorrow.setDate(tomorrow.getDate() + 1);
+                            tomorrow.setHours(0, 0, 0, 0);
+                            const selected = new Date(input.val());
+
+                            if (selected < tomorrow) {
+                                showError(input[0], "Choisissez une date à partir d'aujourd'hui");
+                                isValid = false;
+                                return;
+                            }
+                        }
+
+                        // validation heure
+                        if (input.attr('type') === "time") {
+                            const dateInput = step.find('input[type="date"]');
+                            if (dateInput.length) {
+                                const selectedDate = new Date(dateInput.val());
+                                const today = new Date();
+                                today.setHours(0, 0, 0, 0);
+                                selectedDate.setHours(0, 0, 0, 0);
+
+                                if (selectedDate.getTime() === today.getTime()) {
+                                    const now = new Date();
+                                    const selectedTime = new Date();
+                                    const [hours, minutes] = input.val().split(':');
+                                    selectedTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
+                                    if (selectedTime <= now) {
+                                        showError(input[0], "Choisissez une heure dans le futur");
+                                        isValid = false;
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+                    });
+
+                    return isValid;
+                }
+
+                function setIndicator(activeStep) {
+                    // Indicateurs seulement 1..3 (step4 est invisible)
+                    for (let i = 1; i <= 3; i++) {
+                        const $ind = $('#step' + i + '-indicator');
+                        if (!$ind.length) continue;
+
+                        if (i === activeStep) {
+                            $ind.addClass('step-active')
+                                .removeClass('bg-[#FFE7C1] text-gray-600 bg-gray-300');
+                        } else {
+                            $ind.removeClass('step-active')
+                                .addClass('bg-[#FFE7C1] text-gray-600');
+                        }
+                    }
+                }
+
+                function showStep(step) {
+                    // cacher 1..4
+                    for (let i = 1; i <= 4; i++) $('#step' + i).addClass('hidden');
+
+                    // afficher step demandé
+                    $('#step' + step).removeClass('hidden');
 
                     currentStep = step;
 
-                    $('#step' + currentStep).removeClass('hidden');
-                    $('#step' + currentStep + '-indicator').addClass('step-active').removeClass(
-                        'bg-gray-300 text-gray-600');
-
-                    if (currentStep === 3) {
-                        calculatePrice();
+                    // Indicateur : si step4 => on garde step3 actif (ou step1 si tu préfères)
+                    if (step === 4) {
+                        setIndicator(3);
+                    } else {
+                        setIndicator(step);
                     }
+
+                    // recalcul à l’entrée de l’étape 3 (si nécessaire)
+                    /* if (step === 3 && typeof calculateRoute === 'function') {
+                        calculateRoute();
+                    } */
+                }
+
+                window.nextStep = function(step) {
+                    if (!validateStep(currentStep)) return;
+                    showStep(step);
                 };
 
                 window.prevStep = function(step) {
-                    $('#step' + currentStep).addClass('hidden');
-                    $('#step' + currentStep + '-indicator').removeClass('step-active').addClass(
-                        'bg-gray-300 text-gray-600');
+                    showStep(step);
+                };
 
-                    currentStep = step;
+                window.newBooking = function() {
+                    const form = $('#bookingForm')[0];
+                    form.reset();
 
-                    $('#step' + currentStep).removeClass('hidden');
-                    $('#step' + currentStep + '-indicator').addClass('step-active').removeClass(
-                        'bg-gray-300 text-gray-600');
+                    // reset multi-day
+                    $('#days_hidden').val(1);
+                    $('#daysWrapper').addClass('hidden');
+                    $('#multi_day').prop('checked', false);
+
+                    // reset prix UI
+                    $('#pricePreview').addClass('hidden');
+                    $('#preview-price').text('-- FCFA');
+                    $('#total-price').text('-- FCFA');
+
+                    // reset message promo si tu l’utilises
+                    $('#promo-message').html('');
+
+                    showStep(1);
+                    window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                    });
                 };
 
                 window.selectTripType = function(e, type) {
@@ -502,7 +707,7 @@
                     }
                 };
 
-                window.calculatePrice = function() {
+                /* window.calculatePrice = function() {
                     var from = $('#from_zone_id').val();
                     var to = $('#to_zone_id').val();
 
@@ -558,21 +763,15 @@
                                 $('#preview-price').text('-- FCFA');
                             }
                         });
-                };
+                }; */
 
-                // Calcul automatique quand on change les selects départ/destination
-                $('#from_zone_id, #to_zone_id').on('change', function() {
-                    // Clear previous promo message
-                    $('#promo-message').html('');
-                    calculatePrice();
-                });
 
-                // Essayer au chargement de la page si les selects ont une valeur
-                if ($('#from_zone_id').val() && $('#to_zone_id').val()) {
-                    calculatePrice();
-                }
+                /* // Essayer au chargement de la page si les selects ont une valeur
+                 if ($('#from_zone_id').val() && $('#to_zone_id').val()) {
+                     calculatePrice();
+                 } */
 
-                window.applyPromo = function() {
+                /* window.applyPromo = function() {
                     calculatePrice();
                     var promo = $('#promo_code').val();
                     if (promo) {
@@ -580,7 +779,7 @@
                             '<span class="text-green-600"><i class="fas fa-check-circle"></i> Code promo appliqué</span>'
                         );
                     }
-                };
+                }; */
 
                 // Gestion réservation multi-jours
                 $('#multi_day').on('change', function() {
@@ -593,18 +792,31 @@
                         // Revert to single-day default
                         $('#days_hidden').val(1);
                     }
-                    // Recalculate price whenever the option changes
-                    calculatePrice();
                 });
 
                 $('#days_input').on('input', function() {
-                    var v = parseInt($(this).val(), 10);
-                    if (isNaN(v) || v < 2) {
-                        v = 2;
-                        $(this).val(v);
+                    // Remove non-numeric characters in real-time
+                    var v = $(this).val().replace(/[^0-9]/g, '');
+                    $(this).val(v);
+
+                    // Update hidden input while typing
+                    if (v) {
+                        $('#days_hidden').val(v);
                     }
-                    $('#days_hidden').val(v);
-                    calculatePrice();
+                });
+
+                // Validate on blur (when user leaves the field)
+                $('#days_input').on('blur', function() {
+                    var v = $(this).val().replace(/[^0-9]/g, '');
+                    var num = parseInt(v, 10);
+
+                    // If empty or less than 2, set to 2
+                    if (isNaN(num) || num < 2) {
+                        num = 2;
+                    }
+
+                    $(this).val(num);
+                    $('#days_hidden').val(num);
                 });
 
                 $('a[href^="#"]').on('click', function(e) {
@@ -616,6 +828,14 @@
                         }, 600);
                     }
                 });
+
+                // ✅ Afficher step4 automatiquement si succès (flash session)
+                const hasSuccess = @json((bool) session('success'));
+                if (hasSuccess) {
+                    showStep(4);
+                } else {
+                    showStep(1);
+                }
             });
         </script>
     @endpush

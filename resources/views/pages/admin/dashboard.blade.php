@@ -36,7 +36,7 @@
         <div class="bg-white rounded-lg shadow-md p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-gray-500 text-sm font-semibold">Conducteurs Actifs</p>
+                    <p class="text-gray-500 text-sm font-semibold">Agents Actifs</p>
                     <p class="text-3xl font-bold text-gray-800 mt-2">
                         {{ $stats['active_drivers'] }}/{{ $stats['total_drivers'] }}</p>
                 </div>
@@ -52,7 +52,7 @@
         <div class="bg-white rounded-lg shadow-md p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-gray-500 text-sm font-semibold">Revenus</p>
+                    <p class="text-gray-500 text-sm font-semibold">Revenue</p>
                     <p class="text-3xl font-bold text-gray-800 mt-2">
                         {{ number_format($stats['total_revenue'], 0, ',', ' ') }}</p>
                 </div>
@@ -72,141 +72,234 @@
             <h3 class="text-xl font-bold text-gray-800">Réservations récentes</h3>
 
         </div>
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            N° Réservation</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Client</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Conducteur</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Trajet</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Date</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse($recentBookings as $booking)
-                        <tr class="hover:bg-gray-50 transition">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                {{ $booking->booking_number }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($booking->user->name ?? 'Client') }}"
-                                        class="w-8 h-8 rounded-full mr-3">
-                                    <div>
-                                        {{-- <div class="text-sm font-medium text-gray-900">
-                                            {{ $booking->user->name ?? 'N/A' }}</div> --}}
-                                        <div class="text-sm text-gray-500">{{ $booking->phone }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                @if ($booking->driver)
+        @if ($recentBookings && $recentBookings->count() > 0)
+            <div class="overflow-x-auto p-4">
+                <table class="min-w-full divide-y divide-gray-200 display" id="datatable1">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                N° Réservation</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Client</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Agent</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Trajet</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @forelse($recentBookings as $booking)
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    {{ $booking->booking_number }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
-                                        <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($booking->driver->user->name ?? 'Conducteur') }}"
+                                        <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($booking->user->name ?? 'Client') }}"
                                             class="w-8 h-8 rounded-full mr-3">
-                                        <div class="text-sm text-gray-900">{{ $booking->driver->user->name ?? 'N/A' }}
+                                        <div>
+                                            {{-- <div class="text-sm font-medium text-gray-900">
+                                            {{ $booking->user->name ?? 'N/A' }}</div> --}}
+                                            <div class="text-sm text-gray-500">{{ $booking->phone }}
+                                            </div>
                                         </div>
                                     </div>
-                                    @if ($booking->status !== 'completed')
-                                        <button onclick="confirmRemoveDriver('{{ $booking->id }}')"
-                                            class="text-red-600 hover:text-red-800 text-sm font-semibold">
-                                            <i class="fas fa-user-times"></i> Retirer
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    @if ($booking->driver)
+                                        <div class="flex items-center">
+                                            <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($booking->driver->user->name ?? 'Agent') }}"
+                                                class="w-8 h-8 rounded-full mr-3">
+                                            <div class="text-sm text-gray-900">{{ $booking->driver->user->name ?? 'N/A' }}
+                                            </div>
+                                        </div>
+                                        @if ($booking->status !== 'completed')
+                                            <button onclick="confirmRemoveDriver('{{ $booking->id }}')"
+                                                class="text-red-600 hover:text-red-800 text-sm font-semibold">
+                                                <i class="fas fa-user-times"></i> Retirer
+                                            </button>
+                                        @endif
+                                    @else
+                                        <button onclick="assignDriver('{{ $booking->id }}')"
+                                            class="text-purple-600 hover:text-purple-800 text-sm font-semibold">
+                                            <i class="fas fa-plus-circle"></i> Assigner
                                         </button>
                                     @endif
-                                @else
-                                    <button onclick="assignDriver('{{ $booking->id }}')"
-                                        class="text-purple-600 hover:text-purple-800 text-sm font-semibold">
-                                        <i class="fas fa-plus-circle"></i> Assigner
-                                    </button>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="text-sm text-gray-900">
-                                    {{ $booking->fromZone->name ?? 'N/A' }}</div>
-                                <div class="text-sm text-gray-500"><i class="fas fa-arrow-right"></i>
-                                    {{ $booking->toZone->name ?? 'N/A' }}</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ formatDateTimeFr($booking->pickup_datetime) }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-sm text-gray-900">
+                                        {{ Str::limit($booking->from_location, 25, '...') ?? 'N/A' }}</div>
+                                    <div class="text-sm text-gray-500"><i class="fas fa-arrow-right"></i>
+                                        {{ Str::limit($booking->to_location, 25, '...') ?? 'N/A' }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {{ formatDateTimeFr($booking->pickup_date_time) }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
 
-                                <span
-                                    class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ bookingStatusBadge($booking->status) }}">
-                                    {{ bookingStatusLabel($booking->status) }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                <button onclick="viewBooking('{{ $booking->id }}')"
-                                    class="text-blue-600 hover:text-blue-800 mr-3">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <button onclick="editBooking('{{ $booking->id }}')"
-                                    class="text-green-600 hover:text-green-800 mr-3">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="8" class="px-6 py-4 text-center text-gray-500">
-                                Aucune réservation récente trouvée.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+                                    <span
+                                        class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ bookingStatusBadge($booking->status) }}">
+                                        {{ bookingStatusLabel($booking->status) }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <button onclick="viewBooking('{{ $booking->id }}')"
+                                        class="text-blue-600 hover:text-blue-800 mr-3">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button onclick="editBooking('{{ $booking->id }}')"
+                                        class="text-green-600 hover:text-green-800 mr-3">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="8" class="px-6 py-4 text-center text-gray-500">
+                                    Aucune réservation récente trouvée.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        @else
+            <div class="px-6 py-12 text-center">
+                <p class="px-6 py-4 text-center text-gray-500">Aucune réservation</p>
+                <i class="fas fa-inbox text-4xl text-gray-400 mb-4"></i>
+            </div>
+        @endif
     </div>
 
     <!-- Quick Actions -->
-    <div class="grid md:grid-cols-3 gap-6 mt-8">
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h4 class="text-lg font-bold text-gray-800 mb-4">Actions rapides</h4>
-            <div class="space-y-3">
-                <a href="{{ route('admin.bookings.index') }}"
-                    class="block w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition text-center">
-                    <i class="fas fa-plus mr-2"></i> Voir les réservations
-                </a>
-                <a href="{{ route('admin.drivers.create') }}"
-                    class="block w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition text-center">
-                    <i class="fas fa-user-plus mr-2"></i> Ajouter conducteur
-                </a>
-                <a href="{{ route('admin.promo-codes.create') }}"
-                    class="block w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition text-center">
-                    <i class="fas fa-ticket-alt mr-2"></i> Créer code promo
-                </a>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+        <!-- Top Drivers Revenue -->
+        <div class="bg-white rounded-lg shadow-md mb-8 md:col-span-2">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">Top 5 Agents par Revenus</h3>
+            </div>
+            @if ($stats['driver_revenues'] && $stats['driver_revenues']->count() > 0)
+                <div class="overflow-x-auto p-4">
+                    <table class="min-w-full divide-y divide-gray-200 display" id="datatable2">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    Agent</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    Revenus
+                                    Total</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    Commissions</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    Débits</th>
+                                <th
+                                    class="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @forelse($stats['driver_revenues'] as $index => $driver)
+                                <tr class="hover:bg-gray-50 transition">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($driver->user->name) }}"
+                                                class="w-10 h-10 rounded-full mr-3">
+                                            <div>
+                                                <div class="text-sm font-medium text-gray-900">{{ $driver->user->name }}
+                                                </div>
+                                                <div class="text-sm text-gray-500">{{ $driver->user->phone }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="text-lg font-semibold text-green-600">
+                                            {{ number_format($driver->bookings_sum_driver_earning ?? 0, 0, ',', ' ') }}
+                                            FCFA
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="text-lg font-semibold text-green-600">
+                                            {{ number_format($driver->commissions_sum_amount ?? 0, 0, ',', ' ') }} FCFA
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="text-lg font-semibold text-green-600">
+                                            {{ number_format($driver->commission_due ?? 0, 0, ',', ' ') }} FCFA
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-left">
+                                        <a href="{{ route('admin.drivers.show', $driver->user) }}"
+                                            class="text-blue-600 hover:text-blue-800">
+                                            <i class="fas fa-eye mr-2"></i> Voir
+                                        </a>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="4" class="px-6 py-4 text-center text-gray-500">
+                                        Aucune donnée de revenu disponible
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            @else
+                <div class="px-6 py-12 text-center">
+                    <p class="px-6 py-4 text-center text-gray-500">Aucun agent trouvé.</p>
+                    <i class="fas fa-inbox text-4xl text-gray-400 mb-4"></i>
+                </div>
+            @endif
+        </div>
+
+        <div class="space-y-6">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h4 class="text-lg font-bold text-gray-800 mb-4">Actions rapides</h4>
+                <div class="space-y-3">
+                    <a href="{{ route('admin.bookings.index') }}"
+                        class="block w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition text-center">
+                        <i class="fas fa-plus mr-2"></i> Voir les réservations
+                    </a>
+                    <a href="{{ route('admin.drivers.create') }}"
+                        class="block w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition text-center">
+                        <i class="fas fa-user-plus mr-2"></i> Ajouter Agent
+                    </a>
+                    {{-- <a href="{{ route('admin.promo-codes.create') }}"
+                        class="block w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition text-center">
+                        <i class="fas fa-ticket-alt mr-2"></i> Créer code promo
+                    </a> --}}
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h4 class="text-lg font-bold text-gray-800 mb-4">Statistiques du jour</h4>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Courses complétées</span>
+                        <span class="font-bold text-green-600">{{ $todayStats['completed_today'] }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">En cours</span>
+                        <span class="font-bold text-blue-600">{{ $todayStats['in_progress_today'] }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Annulées</span>
+                        <span class="font-bold text-red-600">{{ $todayStats['cancelled_today'] }}</span>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h4 class="text-lg font-bold text-gray-800 mb-4">Statistiques du jour</h4>
-            <div class="space-y-3">
-                <div class="flex justify-between items-center">
-                    <span class="text-gray-600">Courses complétées</span>
-                    <span class="font-bold text-green-600">{{ $todayStats['completed_today'] }}</span>
-                </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-gray-600">En cours</span>
-                    <span class="font-bold text-blue-600">{{ $todayStats['in_progress_today'] }}</span>
-                </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-gray-600">Annulées</span>
-                    <span class="font-bold text-red-600">{{ $todayStats['cancelled_today'] }}</span>
-                </div>
-            </div>
-        </div>
 
         {{-- <div class="bg-white rounded-lg shadow-md p-6">
             <h4 class="text-lg font-bold text-gray-800 mb-4">Notifications</h4>
@@ -221,7 +314,7 @@
                 <div class="flex items-start">
                     <i class="fas fa-exclamation-triangle text-yellow-500 mt-1 mr-3"></i>
                     <div>
-                        <p class="text-sm text-gray-800 font-semibold">2 conducteurs inactifs</p>
+                        <p class="text-sm text-gray-800 font-semibold">2 Agents inactifs</p>
                         <p class="text-xs text-gray-500">Il y a 1 heure</p>
                     </div>
                 </div>
@@ -229,16 +322,16 @@
         </div> --}}
     </div>
 
-    <!-- Modal pour assigner un conducteur -->
+    <!-- Modal pour assigner un Agent -->
     <div id="assignDriverModal"
         class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden items-center justify-center z-10">
         <div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div class="mt-3">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Assigner un Conducteur</h3>
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Assigner un Agent</h3>
                 <input type="hidden" id="currentBookingId" value="">
                 <div class="mb-4">
                     <label for="driverSelect" class="block text-sm font-medium text-gray-700 mb-2">
-                        Sélectionnez un conducteur disponible
+                        Sélectionnez un Agent disponible
                     </label>
                     <select id="driverSelect"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -262,8 +355,8 @@
     <!-- Modal de retrait -->
     <div id="removeDriverModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-10">
         <div class="bg-white rounded-lg p-8 max-w-md w-full">
-            <h3 class="text-2xl font-bold text-gray-800 mb-4">Retirer le conducteur</h3>
-            <p class="text-gray-600 mb-4">Êtes-vous sûr de vouloir retirer le conducteur de cette course ? Cette action est
+            <h3 class="text-2xl font-bold text-gray-800 mb-4">Retirer le Agent</h3>
+            <p class="text-gray-600 mb-4">Êtes-vous sûr de vouloir retirer le Agent de cette course ? Cette action est
                 irréversible.</p>
 
             <input type="hidden" id="removeBookingId" value="">
@@ -299,7 +392,7 @@
                 const $select = $('#driverSelect');
                 $select.html('<option value="">Chargement...</option>');
 
-                // Charger la liste des conducteurs disponibles
+                // Charger la liste des Agents disponibles
                 $.ajax({
                     url: '/admin/drivers',
                     method: 'GET',
@@ -308,12 +401,13 @@
                     },
                     dataType: 'json',
                     success: function(data) {
-                        $select.html('<option value="">Sélectionnez un conducteur</option>');
+                        $select.html('<option value="">Sélectionnez un Agent</option>');
+                        console.log(data);
 
-                        if (data && data.data && data.data.length > 0) {
-                            data.data.forEach(function(user) {
+                        if (data && data.length > 0) {
+                            data.forEach(function(user) {
                                 const driverId = user.driver ? user.driver.id : user.id;
-                                const driverName = user.name ?? 'Conducteur';
+                                const driverName = user.name ?? 'Agent';
 
                                 $select.append(
                                     $('<option>', {
@@ -323,11 +417,11 @@
                                 );
                             });
                         } else {
-                            $select.html('<option value="">Aucun conducteur disponible</option>');
+                            $select.html('<option value="">Aucun Agent disponible</option>');
                         }
                     },
                     error: function(xhr) {
-                        console.error('Erreur chargement conducteurs:', xhr.status, xhr.responseText);
+                        console.error('Erreur chargement Agents:', xhr.status, xhr.responseText);
                         $select.html('<option value="">Erreur de chargement</option>');
                     }
                 });
@@ -349,7 +443,7 @@
                 const driverId = $('#driverSelect').val();
 
                 if (!driverId) {
-                    showAlert('error', 'Veuillez sélectionner un conducteur');
+                    showAlert('error', 'Veuillez sélectionner un Agent');
                     return;
                 }
 
