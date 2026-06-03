@@ -50,8 +50,8 @@ class DriverController extends Controller
         $validated = $request->validate(
             [
                 'name' => 'required|string|max:255',
-                'email' => 'nullable|email|unique:users,email',
-                'phone' => 'required|string|unique:users,phone',
+                'email' => 'nullable|email|unique:users,email,NULL,id,profil,driver',
+                'phone' => 'required|string|unique:users,phone,NULL,id,profil,driver',
                 'password' => 'required|string|min:8',
                 'adresse' => 'nullable|string|max:255',
                 'license_number' => 'required|string',
@@ -122,8 +122,8 @@ class DriverController extends Controller
         $validated = $request->validate(
             [
                 'name' => 'required|string|max:255',
-                'email' => 'nullable|email|unique:users,email,' . $driver->id,
-                'phone' => 'required|string|unique:users,phone,' . $driver->id,
+                'email' => 'nullable|email|unique:users,email,' . $driver->id . ',id,profil,driver',
+                'phone' => 'required|string|unique:users,phone,' . $driver->id . ',id,profil,driver',
                 'is_active' => 'boolean',
                 'adresse' => 'nullable|string|max:255',
                 'license_number' => 'required|string|unique:drivers,license_number,' . $driver->driver->id,

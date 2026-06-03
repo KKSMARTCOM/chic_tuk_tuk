@@ -402,9 +402,10 @@
                     dataType: 'json',
                     success: function(data) {
                         $select.html('<option value="">Sélectionnez un Agent</option>');
+                        console.log(data);
 
-                        if (data && data.data && data.data.length > 0) {
-                            data.data.forEach(function(user) {
+                        if (data && data.length > 0) {
+                            data.forEach(function(user) {
                                 const driverId = user.driver ? user.driver.id : user.id;
                                 const driverName = user.name ?? 'Agent';
 
