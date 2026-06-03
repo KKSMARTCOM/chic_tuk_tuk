@@ -160,12 +160,12 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label for="license_number" class="block text-sm font-medium text-gray-700">Numéro de permis <span
-                                class="text-red-600">*</span></label>
+                        <label for="license_number" class="block text-sm font-medium text-gray-700">Catégorie de permis
+                            <span class="text-red-600">*</span></label>
                         <input type="text" name="license_number" id="license_number"
                             value="{{ old('license_number') }}"
                             class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('license_number') border-red-500 @enderror"
-                            placeholder="Numéro du permis">
+                            placeholder="Catégorie de permis">
                         @error('license_number')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
@@ -189,10 +189,10 @@
                         <select name="vehicle_type" id="vehicle_type"
                             class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('vehicle_type') border-red-500 @enderror">
                             <option value="">-- Sélectionnez un type --</option>
-                            <option value="moto" {{ old('vehicle_type') == 'moto' ? 'selected' : '' }}>Moto</option>
+                            {{-- <option value="moto" {{ old('vehicle_type') == 'moto' ? 'selected' : '' }}>Moto</option> --}}
                             <option value="tricycle" {{ old('vehicle_type') == 'tricycle' ? 'selected' : '' }}>Tricycle
                             </option>
-                            <option value="car" {{ old('vehicle_type') == 'car' ? 'selected' : '' }}>Voiture</option>
+                            {{-- <option value="car" {{ old('vehicle_type') == 'car' ? 'selected' : '' }}>Voiture</option> --}}
                         </select>
                         @error('vehicle_type')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
