@@ -3,15 +3,13 @@
 @section('content')
     <div class="container mx-auto px-4 py-8">
         <div class="bg-white rounded-lg shadow-md mb-8">
-            <div class="px-6 py-4 border-b border-gray-200 block md:flex items-center justify-between">
-                <h1 class="text-2xl font-bold text-gray-800">Demande de Pauses</h1>
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h1 class="text-lg md:text-2xl font-bold text-gray-800">Demande de Pauses</h1>
 
-                <div class="mt-4 md:mt-0">
-                    <a href="{{ route('driver.leaves.index') }}"
-                        class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition">
-                        <i class="fas fa-arrow-left mr-2"></i> Retour
-                    </a>
-                </div>
+                <a href="{{ route('driver.leaves.index') }}"
+                    class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition">
+                    <i class="fas fa-arrow-left mr-2"></i> Retour
+                </a>
             </div>
         </div>
 
@@ -19,21 +17,21 @@
             <!-- Main Form -->
             <div class="lg:col-span-2">
                 <div class="bg-white rounded-lg shadow-md p-6">
-                    <h1 class="text-2xl font-bold text-gray-800 mb-6">Demander une Pause</h1>
+                    <h1 class="text-lg md:text-2xl font-bold text-gray-800 mb-6">Demander une Pause</h1>
 
                     <!-- Leave Summary -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 p-4 bg-blue-50 rounded-lg">
                         <div>
-                            <p class="text-sm text-blue-600 font-semibold uppercase">Disponibles à date</p>
+                            <p class="text-xs md:text-sm text-blue-600 font-semibold uppercase">Disponibles à date</p>
                             <p class="text-2xl font-bold text-blue-900">{{ $leaveInfo['available_leave_days'] }} jours</p>
                         </div>
                         <div>
-                            <p class="text-sm text-blue-600 font-semibold uppercase">Restants</p>
+                            <p class="text-xs md:text-sm text-blue-600 font-semibold uppercase">Restants</p>
                             <p class="text-2xl font-semibold text-blue-900">{{ $leaveInfo['remaining_leave_days'] }} jours
                             </p>
                         </div>
                         <div>
-                            <p class="text-sm text-blue-600 font-semibold uppercase">Utilisés</p>
+                            <p class="text-xs md:text-sm text-blue-600 font-semibold uppercase">Utilisés</p>
                             <p class="text-2xl font-semibold text-blue-900">{{ $leaveInfo['leave_days_used'] }} jours</p>
                         </div>
                     </div>

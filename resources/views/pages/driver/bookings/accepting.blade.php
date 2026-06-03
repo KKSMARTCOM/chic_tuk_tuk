@@ -4,7 +4,7 @@
     <!-- Mes Courses Actives -->
     <div class="bg-white rounded-lg shadow-md mb-8">
         <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-            <h3 class="text-xl font-bold text-gray-800">Mes Courses Actives</h3>
+            <h3 class="text-lg md:text-xl font-bold text-gray-800">Mes Courses Actives</h3>
             <button onclick="location.reload()" class="text-green-600 hover:text-green-700">
                 <i class="fas fa-sync-alt"></i> Actualiser
             </button>

@@ -162,7 +162,7 @@
 
     <!-- Modal pour assigner un Agent -->
     <div id="assignDriverModal"
-        class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden items-center justify-center z-10">
+        class="fixed px-4 inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden items-center justify-center z-10">
         <div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div class="mt-3">
                 <h3 class="text-lg font-medium text-gray-900 mb-4">Assigner un Agent</h3>
@@ -191,7 +191,7 @@
     </div>
 
     <!-- Modal de retrait -->
-    <div id="removeDriverModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-10">
+    <div id="removeDriverModal" class="fixed px-4 inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-10">
         <div class="bg-white rounded-lg p-8 max-w-md w-full">
             <h3 class="text-2xl font-bold text-gray-800 mb-4">Retirer le Agent</h3>
             <p class="text-gray-600 mb-4">Êtes-vous sûr de vouloir retirer le Agent de cette course ? Cette action est

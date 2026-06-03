@@ -5,8 +5,8 @@
     <div class="bg-white rounded-lg shadow-md mb-8">
         <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-800">Gestion des Commissions</h1>
-                <p class="text-gray-600">Gérez les commissions des Agents</p>
+                <h1 class="text-lg md:text-2xl font-bold text-gray-800">Gestion des Commissions</h1>
+                <p class="text-sm md:text-base text-gray-600">Gérez les commissions des Agents</p>
             </div>
         </div>
     </div>

@@ -5,8 +5,8 @@
         <!-- Header -->
         <div class="bg-white rounded-lg shadow-md mb-8">
             <div class="px-6 py-4 border-b border-gray-200">
-                <h1 class="text-2xl font-bold text-gray-900">Gestion des Rôles et Permissions</h1>
-                <p class="text-gray-600">Gérez les rôles et permissions des utilisateurs</p>
+                <h1 class="text-lg md:text-2xl font-bold text-gray-900">Gestion des Rôles et Permissions</h1>
+                <p class="text-sm md:text-base text-gray-600">Gérez les rôles et permissions des utilisateurs</p>
             </div>
         </div>
 
@@ -100,7 +100,7 @@
             <div class="mb-6 flex justify-between items-center bg-white px-6 py-4 rounded-lg">
                 <h2 class="text-xl font-semibold text-gray-900">Permissions</h2>
                 <button type="button" onclick="openPermissionModal()"
-                    class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                    class="inline-flex  text-nowrap items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
                     <i class="fa fa-plus mr-2"></i>
                     Nouvelle Permission
                 </button>

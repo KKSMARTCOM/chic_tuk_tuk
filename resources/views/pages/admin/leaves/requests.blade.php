@@ -3,11 +3,11 @@
 @section('content')
     <div class="bg-white rounded-lg shadow-md mb-8">
         <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-            <h1 class="text-2xl font-bold text-gray-800">Demandes de pause en Attente</h1>
+            <h1 class="text-lg md:text-2xl font-bold text-gray-800">Demandes de pause en Attente</h1>
 
             <div class="flex space-x-3">
                 <a href="{{ route('admin.leaves.index') }}"
-                    class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition">
+                    class="bg-gray-600 text-white text-nowrap px-4 py-2 rounded-lg hover:bg-gray-700 transition">
                     <i class="fas fa-arrow-left mr-2"></i> Retour
                 </a>
             </div>
@@ -106,7 +106,7 @@
 
     <!-- Approve Modal -->
     <div id="approveModal"
-        class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-20 w-full h-full">
+        class="fixed px-4 inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-20 w-full h-full">
         <div class="bg-white rounded-lg p-6 max-w-md w-full">
             <h2 class="text-xl font-bold text-gray-800 mb-4">Confirmer l'approbation</h2>
             <p class="text-gray-700 mb-6">Êtes-vous sûr de vouloir approuver cette demande de Pause ?</p>
@@ -126,7 +126,7 @@
     </div>
 
     <!-- Reject Modal -->
-    <div id="rejectModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div id="rejectModal" class="fixed px-4 inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
         <div class="bg-white rounded-lg p-6 w-full max-w-md">
             <h2 class="text-xl font-bold text-gray-800 mb-4">Rejeter la demande</h2>
             <form id="rejectForm" method="POST">

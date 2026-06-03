@@ -3,15 +3,17 @@
 @section('content')
     <!-- Header -->
     <div class="bg-white rounded-lg shadow-md mb-8">
-        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+        <div class="px-6 py-4 border-b border-gray-200 block md:flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-800">Gestion des Paiements</h1>
-                <p class="text-gray-600">Enregistrez et gérez les paiements des Agents</p>
+                <h1 class="text-lg md:text-2xl font-bold text-gray-800">Gestion des Paiements</h1>
+                <p class="text-sm md:text-base text-gray-600">Enregistrez et gérez les paiements des Agents</p>
             </div>
-            <a href="{{ route('admin.payments.create') }}"
-                class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg">
-                <i class="fas fa-plus mr-2"></i> Nouveau Paiement
-            </a>
+            <div class="mt-4 md:mt-0">
+                <a href="{{ route('admin.payments.create') }}"
+                    class="bg-blue-600 hover:bg-blue-700 text-white text-nowrap font-semibold py-2 px-4 rounded-lg">
+                    <i class="fas fa-plus mr-2"></i> Nouveau Paiement
+                </a>
+            </div>
         </div>
     </div>
 
