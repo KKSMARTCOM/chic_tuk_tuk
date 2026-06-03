@@ -36,12 +36,8 @@ class BookingController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('booking_number', 'LIKE', "%{$search}%")
                     ->orWhere('phone', 'LIKE', "%{$search}%")
-                    ->orWhereHas('fromZone', function ($zoneQuery) use ($search) {
-                        $zoneQuery->where('name', 'LIKE', "%{$search}%");
-                    })
-                    ->orWhereHas('toZone', function ($zoneQuery) use ($search) {
-                        $zoneQuery->where('name', 'LIKE', "%{$search}%");
-                    });
+                    ->orWhere('from_location', 'LIKE', "%{$search}%")
+                    ->orWhere('to_location', 'LIKE', "%{$search}%");
             });
         }
 

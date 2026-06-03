@@ -71,12 +71,8 @@ class PageController extends Controller
                 $query->where(function ($q) use ($globalSearch) {
                     $q->where('booking_number', 'LIKE', "%{$globalSearch}%")
                         ->orWhere('phone', 'LIKE', "%{$globalSearch}%")
-                        ->orWhereHas('fromZone', function ($zq) use ($globalSearch) {
-                            $zq->where('name', 'LIKE', "%{$globalSearch}%");
-                        })
-                        ->orWhereHas('toZone', function ($zq) use ($globalSearch) {
-                            $zq->where('name', 'LIKE', "%{$globalSearch}%");
-                        });
+                        ->orWhere('from_location', 'LIKE', "%{$globalSearch}%")
+                        ->orWhere('to_location', 'LIKE', "%{$globalSearch}%");
                 });
             }
 
@@ -93,12 +89,8 @@ class PageController extends Controller
                 $query->where(function ($q) use ($globalSearch) {
                     $q->where('booking_number', 'LIKE', "%{$globalSearch}%")
                         ->orWhere('phone', 'LIKE', "%{$globalSearch}%")
-                        ->orWhereHas('fromZone', function ($zoneQuery) use ($globalSearch) {
-                            $zoneQuery->where('name', 'LIKE', "%{$globalSearch}%");
-                        })
-                        ->orWhereHas('toZone', function ($zoneQuery) use ($globalSearch) {
-                            $zoneQuery->where('name', 'LIKE', "%{$globalSearch}%");
-                        });
+                        ->orWhere('from_location', 'LIKE', "%{$globalSearch}%")
+                        ->orWhere('to_location', 'LIKE', "%{$globalSearch}%");
                 });
             }
 
@@ -117,12 +109,8 @@ class PageController extends Controller
                 $query->where(function ($q) use ($globalSearch) {
                     $q->where('booking_number', 'LIKE', "%{$globalSearch}%")
                         ->orWhere('phone', 'LIKE', "%{$globalSearch}%")
-                        ->orWhereHas('fromZone', function ($zoneQuery) use ($globalSearch) {
-                            $zoneQuery->where('name', 'LIKE', "%{$globalSearch}%");
-                        })
-                        ->orWhereHas('toZone', function ($zoneQuery) use ($globalSearch) {
-                            $zoneQuery->where('name', 'LIKE', "%{$globalSearch}%");
-                        });
+                        ->orWhere('from_location', 'LIKE', "%{$globalSearch}%")
+                        ->orWhere('to_location', 'LIKE', "%{$globalSearch}%");
                 });
             }
 

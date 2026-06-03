@@ -32,7 +32,7 @@
                 </div>
                 <a href="{{ route('admin.drivers.create') }}"
                     class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
-                    <i class="fas fa-plus mr-2"></i> Nouveau Agent
+                    <i class="fas fa-plus mr-2"></i> Nouvel Agent
                 </a>
             </div>
         </div>

@@ -44,6 +44,7 @@ class DashboardController extends Controller
         $driverRevenues = Driver::with('user')
 
             ->whereHas('bookings', function ($query) {
+                $query->where('status', 'completed');
                 $query->where('driver_earning', '>', 0);
             })
 

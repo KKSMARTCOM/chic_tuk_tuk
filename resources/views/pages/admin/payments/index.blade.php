@@ -180,8 +180,8 @@
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                 Date
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Référence</th>
+                            {{-- <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Référence</th> --}}
                             <th class="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                 Actions</th>
                         </tr>
@@ -211,10 +211,10 @@
                                 <td class="px-6 py-4 text-sm text-gray-700">
                                     {{ formatDateFr($payment->payment_date) }}
                                 </td>
-                                <td class="px-6 py-4 text-sm text-gray-700">
+                                {{-- <td class="px-6 py-4 text-sm text-gray-700">
                                     {{ $payment->reference_number ?? '--' }}
-                                </td>
-                                <td class="px-6 py-4 text-right text-sm">
+                                </td> --}}
+                                <td class="px-6 py-4 text-left text-sm">
                                     <a href="{{ route('admin.payments.show', $payment) }}"
                                         class="text-blue-600 hover:text-blue-800 mr-3">
                                         <i class="fas fa-eye"></i>
@@ -223,14 +223,14 @@
                                         class="text-green-600 hover:text-green-800 mr-3">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <form action="{{ route('admin.payments.destroy', $payment) }}" method="POST"
+                                    {{-- <form action="{{ route('admin.payments.destroy', $payment) }}" method="POST"
                                         class="inline-block" onclick="return confirm('Êtes-vous sûr ?')">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="text-red-600 hover:text-red-800">
                                             <i class="fas fa-trash"></i>
                                         </button>
-                                    </form>
+                                    </form> --}}
                                 </td>
                             </tr>
                         @empty
