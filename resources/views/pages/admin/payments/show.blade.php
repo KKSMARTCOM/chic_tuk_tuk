@@ -5,15 +5,15 @@
     <div class="bg-white rounded-lg shadow-md mb-8">
         <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-800 mt-2">Détails du Paiement</h1>
+                <h1 class="text-lg md:text-2xl font-bold text-gray-800 mt-2">Détails du Paiement</h1>
             </div>
-            <div class="flex gap-2">
+            <div class="block md:flex gap-2">
                 <a href="{{ route('admin.payments.edit', $payment) }}"
-                    class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg">
+                    class="bg-green-600 hover:bg-green-700 block text-white font-semibold py-2 px-4 rounded-lg">
                     <i class="fas fa-edit mr-2"></i> Modifier
                 </a>
                 <a href="{{ route('admin.payments.index') }}"
-                    class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition">
+                    class="bg-gray-600 text-white px-4 py-2 block mt-2 md:mt-0 rounded-lg hover:bg-gray-700 transition">
                     <i class="fas fa-arrow-left mr-2"></i> Retour
                 </a>
                 {{--  <form action="{{ route('admin.payments.destroy', $payment) }}" method="POST" class="inline-block"

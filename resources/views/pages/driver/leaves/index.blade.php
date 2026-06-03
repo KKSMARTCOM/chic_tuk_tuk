@@ -4,35 +4,35 @@
     <div class="container mx-auto px-4 py-8">
         <div class="bg-white rounded-lg shadow-md mb-8">
             <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                <h1 class="text-3xl font-bold text-gray-800">Mes Pauses</h1>
+                <h1 class="text-lg md:text-xl font-bold text-gray-800">Mes Pauses</h1>
 
                 <a href="{{ route('driver.leaves.create') }}"
-                    class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-medium">
+                    class="bg-blue-600 text-white text-sm md:text-base px-4 py-2 rounded-lg hover:bg-blue-700 font-medium">
                     + Demander une Pause
                 </a>
             </div>
         </div>
 
         <!-- Summary Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
             <div class="bg-blue-50 rounded-lg shadow p-6 border-l-4 border-blue-500">
-                <p class="text-sm text-blue-600 font-semibold uppercase">Jours par mois</p>
+                <p class="text-xs md:text-sm text-blue-600 font-semibold uppercase">Jours par mois</p>
                 <p class="text-3xl font-bold text-blue-900 mt-2">{{ $leaveInfo['leave_days_per_month'] }}</p>
             </div>
             <div class="bg-purple-50 rounded-lg shadow p-6 border-l-4 border-purple-500">
-                <p class="text-sm text-purple-600 font-semibold uppercase">Total du contrat</p>
+                <p class="text-xs md:text-sm text-purple-600 font-semibold uppercase">Total du contrat</p>
                 <p class="text-3xl font-bold text-purple-900 mt-2">{{ $leaveInfo['total_leave_days'] }}</p>
             </div>
             <div class="bg-orange-50 rounded-lg shadow p-6 border-l-4 border-orange-500">
-                <p class="text-sm text-orange-600 font-semibold uppercase">Jours utilisés</p>
+                <p class="text-xs md:text-sm text-orange-600 font-semibold uppercase">Jours utilisés</p>
                 <p class="text-3xl font-bold text-orange-900 mt-2">{{ $leaveInfo['leave_days_used'] }}</p>
             </div>
             <div class="bg-indigo-50 rounded-lg shadow p-6 border-l-4 border-indigo-500">
-                <p class="text-sm text-indigo-600 font-semibold uppercase">Disponibles à date</p>
+                <p class="text-xs md:text-sm text-indigo-600 font-semibold uppercase">Disponibles à date</p>
                 <p class="text-3xl font-bold text-indigo-900 mt-2">{{ $leaveInfo['available_leave_days'] }}</p>
             </div>
             <div class="bg-green-50 rounded-lg shadow p-6 border-l-4 border-green-500">
-                <p class="text-sm text-green-600 font-semibold uppercase">Jours restants</p>
+                <p class="text-xs md:text-sm text-green-600 font-semibold uppercase">Jours restants</p>
                 <p class="text-3xl font-bold text-green-900 mt-2">{{ $leaveInfo['remaining_leave_days'] }}</p>
             </div>
         </div>

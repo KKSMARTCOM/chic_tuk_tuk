@@ -2,20 +2,22 @@
 
 @section('content')
     <div class="bg-white rounded-lg shadow-md mb-8">
-        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+        <div class="px-6 py-4 border-b border-gray-200 block md:flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-800">Gestion des Pauses</h1>
-                <p class="text-gray-600">Gérez les Pauses de vos agents</p>
+                <h1 class="text-lg md:text-2xl font-bold text-gray-800">Gestion des Pauses</h1>
+                <p class="text-sm md:text-base text-gray-600">Gérez les Pauses de vos agents</p>
             </div>
-            <a href="{{ route('admin.leave.requests.index') }}"
-                class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                Demandes en attente
-                @if (collect($drivers)->sum('pending_requests') > 0)
-                    <span class="ml-2 bg-red-500 text-white px-2 py-1 rounded-full text-sm">
-                        {{ collect($drivers)->sum('pending_requests') }}
-                    </span>
-                @endif
-            </a>
+            <div class="mt-4 md:mt-0">
+                <a href="{{ route('admin.leave.requests.index') }}"
+                    class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                    Demandes en attente
+                    @if (collect($drivers)->sum('pending_requests') > 0)
+                        <span class="ml-2 bg-red-500 text-white px-2 py-1 rounded-full text-sm">
+                            {{ collect($drivers)->sum('pending_requests') }}
+                        </span>
+                    @endif
+                </a>
+            </div>
         </div>
     </div>
 

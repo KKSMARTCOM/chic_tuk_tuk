@@ -5,8 +5,8 @@
     <div class="bg-white rounded-lg shadow-md mb-8">
         <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-800">Gestion des Agents</h1>
-                <p class="text-gray-600">Gérez vos Agents et leurs véhicules</p>
+                <h1 class="text-lg md:text-2xl font-bold text-gray-800">Gestion des Agents</h1>
+                <p class="text-xs md:text-base text-gray-600">Gérez vos Agents et leurs véhicules</p>
             </div>
             <div class="flex items-center space-x-3">
                 <div class="relative group">
@@ -31,7 +31,7 @@
                     </div>
                 </div>
                 <a href="{{ route('admin.drivers.create') }}"
-                    class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
+                    class="bg-purple-600 text-white text-nowrap px-4 py-2 rounded-lg hover:bg-purple-700 transition">
                     <i class="fas fa-plus mr-2"></i> Nouvel Agent
                 </a>
             </div>
@@ -39,7 +39,7 @@
     </div>
 
     <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-6 mb-8">
         <div class="bg-white rounded-lg shadow-md p-6">
             <div class="flex items-center">
                 <div class="w-16 h-16 flex items-center justify-center rounded-full bg-blue-100 text-blue-600">

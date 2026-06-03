@@ -5,16 +5,16 @@
     <div class="bg-white rounded-lg shadow-md mb-8">
         <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-800">Détails du Agent</h1>
-                <p class="text-gray-600">{{ $driverData->name }}</p>
+                <h1 class="text-lg md:text-2xl font-bold text-gray-800">Détails de l'Agent</h1>
+                <p class="text-sm md:text-base text-gray-600">{{ $driverData->name }}</p>
             </div>
-            <div class="flex space-x-3">
+            <div class="block md:flex gap-3">
                 <a href="{{ route('admin.drivers.edit', $driverData) }}"
-                    class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
+                    class="bg-purple-600 block text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
                     <i class="fas fa-edit mr-2"></i> Modifier
                 </a>
                 <a href="{{ route('admin.drivers.index') }}"
-                    class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition">
+                    class="bg-gray-600 block mt-2 md:mt-0 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition">
                     <i class="fas fa-arrow-left mr-2"></i> Retour
                 </a>
             </div>
@@ -103,9 +103,10 @@
                     @if ($driverData->driver && $driverData->driver->bookings->count() > 0)
                         <div class="space-y-4">
                             @foreach ($driverData->driver->bookings->take(5) as $booking)
-                                <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                                    <div class="flex items-center space-x-4">
-                                        <div class="flex-shrink-0">
+                                <div
+                                    class="block md:flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                                    <div class="block md:flex items-center space-x-4">
+                                        <div class="flex-shrink-0 mb-4 md:mb-0">
                                             <span
                                                 class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ bookingStatusBadge($booking->status) }}">
                                                 {{ bookingStatusLabel($booking->status) }}
@@ -313,7 +314,7 @@
     </div>
 
     <!-- Modal de confirmation - Disponibilité -->
-    <div id="availabilityModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-20">
+    <div id="availabilityModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center px-4 z-20">
         <div class="bg-white rounded-lg p-8 max-w-md w-full">
             <h3 class="text-2xl font-bold text-gray-800 mb-4">Confirmer l'action</h3>
             <p class="text-gray-600 mb-6" id="availabilityMessage"></p>
@@ -333,7 +334,7 @@
     </div>
 
     <!-- Modal de confirmation - Statut -->
-    <div id="statusModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-20">
+    <div id="statusModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center px-4 z-20">
         <div class="bg-white rounded-lg p-8 max-w-md w-full">
             <h3 class="text-2xl font-bold text-gray-800 mb-4">Confirmer l'action</h3>
             <p class="text-gray-600 mb-6" id="statusMessage"></p>
@@ -353,7 +354,7 @@
     </div>
 
     <!-- Modal d'ajout de pause -->
-    <div id="leaveModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-20">
+    <div id="leaveModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center px-4 z-20">
         <div class="bg-white rounded-lg p-8 max-w-xl w-full">
             <h2 class="text-xl font-semibold text-indigo-900 mb-4">Ajouter une Pause instantanée</h2>
             <form action="{{ route('admin.leaves.add-instant', $driverData->driver->id) }}" method="POST"
@@ -419,7 +420,7 @@
     </div>
 
     <!-- Modal d'ajout de paiement -->
-    <div id="paymentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-20">
+    <div id="paymentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center px-4 z-20">
         <div class="bg-white rounded-lg p-8 max-w-xl w-full">
             <h3 class="text-2xl font-bold text-gray-800 mb-4">Confirmer l'action</h3>
             <form action="{{ route('admin.payments.store') }}" method="POST">

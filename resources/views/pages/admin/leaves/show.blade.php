@@ -4,8 +4,8 @@
     <div class="bg-white rounded-lg shadow-md mb-8">
         <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-800">Détails des Pauses</h1>
-                <p class="text-gray-600">{{ $driver->name }}</p>
+                <h1 class="text-lg md:text-2xl font-bold text-gray-800">Détails des Pauses</h1>
+                <p class="text-sm md:text-base text-gray-600">{{ $driver->name }}</p>
             </div>
             <div class="flex space-x-3">
                 <a href="{{ route('admin.leaves.index') }}"
@@ -213,7 +213,7 @@
     </div>
 
     <!-- Approve Modal -->
-    <div id="approveModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-20">
+    <div id="approveModal" class="fixed px-4 inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-20">
         <div class="bg-white rounded-lg p-6 max-w-md w-full">
             <h2 class="text-xl font-bold text-gray-800 mb-4">Confirmer l'approbation</h2>
             <p class="text-gray-700 mb-6">Êtes-vous sûr de vouloir approuver cette demande de Pause ?</p>
@@ -233,7 +233,7 @@
     </div>
 
     <!-- Reject Modal -->
-    <div id="rejectModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-20">
+    <div id="rejectModal" class="fixed px-4 inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-20">
         <div class="bg-white rounded-lg p-6 max-w-md w-full">
             <h2 class="text-xl font-bold text-gray-800 mb-4">Rejeter la demande</h2>
             <form id="rejectForm" method="POST">
@@ -260,7 +260,7 @@
     </div>
 
     <!-- Revoke Modal -->
-    <div id="revokeModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-20">
+    <div id="revokeModal" class="fixed px-4 inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-20">
         <div class="bg-white rounded-lg p-6 max-w-md w-full">
             <h2 class="text-xl font-bold text-gray-800 mb-4">Révoquer le Pause</h2>
             <p class="text-gray-700 mb-6">Êtes-vous sûr de vouloir révoquer ce Pause ? Cette action libérera un jour pour

@@ -67,7 +67,7 @@
                     <section id="personal-info" class="settings-section bg-gray-50 rounded-lg p-6">
                         <div class="flex items-center mb-6">
                             <i class="fas fa-user text-green-600 text-2xl mr-3"></i>
-                            <h2 class="text-2xl font-bold text-gray-800">Informations personnelles</h2>
+                            <h2 class="text-lg md:text-2xl font-bold text-gray-800">Informations personnelles</h2>
                         </div>
 
                         <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">
@@ -142,7 +142,7 @@
                     <section id="photo" class="settings-section bg-gray-50 rounded-lg p-6">
                         <div class="flex items-center mb-6">
                             <i class="fas fa-image text-blue-600 text-2xl mr-3"></i>
-                            <h2 class="text-2xl font-bold text-gray-800">Photo de profil</h2>
+                            <h2 class="text-lg md:text-2xl font-bold text-gray-800">Photo de profil</h2>
                         </div>
 
                         <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">
@@ -193,7 +193,7 @@
                     <section id="notifications" class="settings-section bg-gray-50 rounded-lg p-6">
                         <div class="flex items-center mb-6">
                             <i class="fas fa-bell text-yellow-600 text-2xl mr-3"></i>
-                            <h2 class="text-2xl font-bold text-gray-800">Préférences de notification</h2>
+                            <h2 class="text-lg md:text-2xl font-bold text-gray-800">Préférences de notification</h2>
                         </div>
 
                         <form action="{{ route('settings.notifications') }}" method="POST">
@@ -251,7 +251,7 @@
                     <section id="password" class="settings-section bg-gray-50 rounded-lg p-6">
                         <div class="flex items-center mb-6">
                             <i class="fas fa-lock text-red-600 text-2xl mr-3"></i>
-                            <h2 class="text-2xl font-bold text-gray-800">Sécurité</h2>
+                            <h2 class="text-lg md:text-2xl font-bold text-gray-800">Sécurité</h2>
                         </div>
 
                         <form action="{{ route('settings.password') }}" method="POST">

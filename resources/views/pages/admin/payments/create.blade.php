@@ -5,12 +5,12 @@
     <div class="bg-white rounded-lg shadow-md mb-8">
         <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-800">Enregistrer un Paiement</h1>
-                <p class="text-gray-600">Ajouter un nouveau paiement d'un Agent</p>
+                <h1 class="text-lg md:text-2xl font-bold text-gray-800">Enregistrer un Paiement</h1>
+                <p class="text-sm md:text-base text-gray-600">Ajouter un nouveau paiement d'un Agent</p>
             </div>
             <div class="flex space-x-3">
                 <a href="{{ route('admin.payments.index') }}"
-                    class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition">
+                    class="bg-gray-600 text-white text-nowrap px-4 py-2 rounded-lg hover:bg-gray-700 transition">
                     <i class="fas fa-arrow-left mr-2"></i> Retour
                 </a>
             </div>

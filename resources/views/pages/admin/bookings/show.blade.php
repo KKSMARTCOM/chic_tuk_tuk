@@ -5,16 +5,16 @@
     <div class="bg-white rounded-lg shadow-md mb-8">
         <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-800">Détails de la Réservation</h1>
-                <p class="text-gray-600">N° {{ $booking->booking_number }}</p>
+                <h1 class="text-lg md:text-2xl font-bold text-gray-800">Détails de la Réservation</h1>
+                <p class="text-sm md:text-base text-gray-600">N° {{ $booking->booking_number }}</p>
             </div>
-            <div class="flex space-x-3">
+            <div class="block md:flex space-x-3">
                 <a href="{{ route('admin.bookings.edit', $booking) }}"
-                    class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
+                    class="bg-purple-600 text-white block px-4 py-2 rounded-lg hover:bg-purple-700 transition">
                     <i class="fas fa-edit mr-2"></i> Modifier
                 </a>
                 <a href="{{ route('admin.bookings.index') }}"
-                    class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition">
+                    class="bg-gray-600 text-white block mt-2 md:mt-0 px-4 py-2 rounded-lg hover:bg-gray-700 transition">
                     <i class="fas fa-arrow-left mr-2"></i> Retour
                 </a>
             </div>
@@ -221,7 +221,7 @@
 
     <!-- Modal pour assigner un Agent -->
     <div id="assignDriverModal"
-        class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden items-center justify-center z-10">
+        class="fixed px-4 inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden items-center justify-center z-10">
         <div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div class="mt-3">
                 <h3 class="text-lg font-medium text-gray-900 mb-4">Assigner un Agent</h3>
@@ -250,7 +250,7 @@
     </div>
 
     <!-- Modal de retrait -->
-    <div id="removeDriverModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-10">
+    <div id="removeDriverModal" class="fixed px-4 inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-10">
         <div class="bg-white rounded-lg p-8 max-w-md w-full">
             <h3 class="text-2xl font-bold text-gray-800 mb-4">Retirer le Agent</h3>
             <p class="text-gray-600 mb-4">Êtes-vous sûr de vouloir retirer le Agent de cette course ? Cette action est
@@ -270,7 +270,7 @@
     </div>
 
     <!-- Modal d'annulation -->
-    <div id="cancelModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-10">
+    <div id="cancelModal" class="fixed px-4 inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-10">
         <div class="bg-white rounded-lg p-8 max-w-md w-full">
             <h3 class="text-2xl font-bold text-gray-800 mb-4">Annuler la course</h3>
             <p class="text-gray-600 mb-4">Êtes-vous sûr de vouloir annuler cette course ? Cette action est
@@ -295,7 +295,7 @@
     </div>
 
     <!-- Modal de suppression -->
-    <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-10">
+    <div id="deleteModal" class="fixed px-4 inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-10">
         <div class="bg-white rounded-lg p-8 max-w-md w-full">
             <h3 class="text-2xl font-bold text-gray-800 mb-4">Supprimer la course</h3>
             <p class="text-gray-600 mb-4">Êtes-vous sûr de vouloir supprimer cette course ? Cette action est
@@ -343,8 +343,8 @@
                     dataType: 'json',
                     success: function(data) {
                         $select.html('<option value="">Sélectionnez un Agent</option>');
-                        if (data && data.data && data.data.length > 0) {
-                            data.data.forEach(function(user) {
+                        if (data && data.length > 0) {
+                            data.forEach(function(user) {
                                 const driverId = user.driver ? user.driver.id : user.id;
                                 const driverName = user.name ?? 'Agent';
                                 $select.append($('<option>', {

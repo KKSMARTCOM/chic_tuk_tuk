@@ -113,9 +113,9 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-bold text-gray-800">Dernières réservations acceptées</h2>
+                <h2 class="text-lg md:text-2xl font-bold text-gray-800">Dernières réservations acceptées</h2>
                 <a href="{{ route('driver.bookings.accepting') }}"
-                    class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition duration-200">
+                    class="bg-blue-500 hover:bg-blue-600 text-white text-nowrap px-4 py-2 rounded-lg transition duration-200">
                     Voir plus
                 </a>
             </div>
@@ -168,9 +168,9 @@
 
         <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-bold text-gray-800">Dernières réservations disponibles</h2>
+                <h2 class="text-lg md:text-2xl font-bold text-gray-800">Dernières réservations disponibles</h2>
                 <a href="{{ route('driver.bookings.available') }}"
-                    class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition duration-200">
+                    class="bg-blue-500 hover:bg-blue-600 text-white text-nowrap px-4 py-2 rounded-lg transition duration-200">
                     Voir plus
                 </a>
             </div>

@@ -5,7 +5,7 @@
     <div class="bg-white rounded-lg shadow-md mb-8">
         <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-800">Détails de la Commission</h1>
+                <h1 class="text-lg md:text-2xl font-bold text-gray-800">Détails de la Commission</h1>
             </div>
             <div class="flex space-x-3">
                 <a href="{{ route('admin.commissions.index') }}"

@@ -178,7 +178,7 @@
     </div>
 
     <!-- Quick Actions -->
-    <div class="grid md:grid-cols-3 gap-6 mt-8">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
         <!-- Top Drivers Revenue -->
         <div class="bg-white rounded-lg shadow-md mb-8 md:col-span-2">
             <div class="px-6 py-4 border-b border-gray-200">
