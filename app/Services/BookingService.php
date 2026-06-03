@@ -380,7 +380,7 @@ class BookingService
             throw new \Exception('La course demandée est introuvable.');
         }
 
-        if (!in_array($booking->status, ['completed', 'cancelled'])) {
+        if (!in_array($booking->status, ['cancelled'])) {
             throw new \Exception('Cette course ne peut pas être supprimée car elle est en cours ou en attente.');
         }
 

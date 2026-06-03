@@ -40,9 +40,7 @@ class PaymentController extends Controller
     public function create()
     {
         try {
-            $drivers = Driver::with('user')
-                ->orderBy('id')
-                ->get();
+            $drivers = Driver::with('user')->orderBy('id')->get();
 
             return view('pages.admin.payments.create', compact('drivers'));
         } catch (\Exception $e) {
@@ -58,11 +56,25 @@ class PaymentController extends Controller
         try {
             $validated = $request->validate([
                 'driver_id' => 'required|exists:drivers,id',
-                'amount' => 'required|numeric|min:0.01',
+                'amount'           => [
+                    'required',
+                    'numeric',
+                    'min:0.01',
+                    function ($attribute, $value, $fail) use ($request) {
+                        $driverId  = $request->driver_id;
+                        $totalDue  = \App\Models\Commission::where('driver_id', $driverId)->sum('amount');
+                        $totalPaid = \App\Models\Payment::where('driver_id', $driverId)->sum('amount');
+                        $remaining = $totalDue - $totalPaid;
+
+                        if ($value > $remaining) {
+                            $fail("Le montant ne peut pas dépasser la commission restante due ({$remaining}).");
+                        }
+                    },
+                ],
                 'payment_method' => 'required|in:cash,bank_transfer,check,mobile_money,other',
                 'payment_date' => 'required|date',
                 'notes' => 'nullable|string|max:500',
-                'reference_number' => 'nullable|string|max:100|unique:payments',
+                //'reference_number' => 'nullable|string|max:100|unique:payments',
             ]);
 
             $this->paymentService->create($validated);

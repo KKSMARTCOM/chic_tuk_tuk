@@ -3,11 +3,17 @@
 @section('content')
     <!-- Header -->
     <div class="bg-white rounded-lg shadow-md mb-8">
-        <div class="px-6 py-4 border-b border-gray-200 flex items-center">
-            <a href="{{ route('admin.payments.index') }}" class="text-blue-600 hover:text-blue-800">
-                <i class="fas fa-arrow-left mr-2"></i> Retour
-            </a>
-            <h1 class="text-2xl font-bold text-gray-800 ml-4">Enregistrer un Paiement</h1>
+        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">Enregistrer un Paiement</h1>
+                <p class="text-gray-600">Ajouter un nouveau paiement d'un Agent</p>
+            </div>
+            <div class="flex space-x-3">
+                <a href="{{ route('admin.payments.index') }}"
+                    class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition">
+                    <i class="fas fa-arrow-left mr-2"></i> Retour
+                </a>
+            </div>
         </div>
     </div>
 
@@ -25,7 +31,7 @@
                     <option value="">-- Sélectionner un agent --</option>
                     @foreach ($drivers as $driver)
                         <option value="{{ $driver->id }}" {{ old('driver_id') == $driver->id ? 'selected' : '' }}>
-                            {{ $driver->user?->name ?? 'N/A' }} (ID: {{ $driver->id }})
+                            {{ $driver->user?->name ?? 'N/A' }} (Agent ID: {{ $driver->agent_id }})
                         </option>
                     @endforeach
                 </select>
@@ -79,7 +85,7 @@
             </div>
 
             <!-- Numéro de Référence -->
-            <div class="mb-6">
+            {{-- <div class="mb-6">
                 <label class="block text-gray-700 text-sm font-semibold mb-2">Numéro de Référence</label>
                 <input type="text" name="reference_number" placeholder="Numéro de reçu ou référence"
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 @error('reference_number') border-red-500 @enderror"
@@ -87,7 +93,7 @@
                 @error('reference_number')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
-            </div>
+            </div> --}}
 
             <!-- Notes -->
             <div class="mb-6">

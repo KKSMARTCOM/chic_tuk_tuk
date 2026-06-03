@@ -218,7 +218,7 @@
                 <div class="px-6 py-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Numéro de permis</label>
+                            <label class="block text-sm font-medium text-gray-700">Catégorie du permis</label>
                             <p class="mt-1 text-sm text-gray-900">{{ $driverData->driver->license_number ?? 'N/A' }}</p>
                         </div>
                         <div>
@@ -405,11 +405,11 @@
                             Ajouter la Pause
                         </button>
                         <button type="button" onclick="adminClearDates()"
-                            class="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 font-medium transition">
+                            class="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-700 font-medium transition">
                             Réinitialiser
                         </button>
                         <button type="button" onclick="closeLeaveModal()"
-                            class="flex-1 bg-red-300 text-white px-4 py-2 rounded-lg hover:bg-red-400 font-medium transition">
+                            class="flex-1 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-700 font-medium transition">
                             Annuler
                         </button>
                     </div>
@@ -475,7 +475,7 @@
                 </div>
 
                 <!-- Numéro de Référence -->
-                <div class="mb-6">
+                {{-- <div class="mb-6">
                     <label class="block text-gray-700 text-sm font-semibold mb-2">Numéro de Référence</label>
                     <input type="text" name="reference_number" placeholder="Numéro de reçu ou référence"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 @error('reference_number') border-red-500 @enderror"
@@ -483,7 +483,7 @@
                     @error('reference_number')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror
-                </div>
+                </div> --}}
 
                 <!-- Notes -->
                 <div class="mb-6">
@@ -502,7 +502,7 @@
                         <i class="fas fa-save mr-2"></i> Enregistrer
                     </button>
                     <button type="button" onclick="closePaymentModal()"
-                        class="flex-1 bg-gray-400 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg text-center">
+                        class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg text-center">
                         <i class="fas fa-times mr-2"></i> Annuler
                     </button>
                 </div>

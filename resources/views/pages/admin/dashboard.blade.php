@@ -237,7 +237,7 @@
                                             {{ number_format($driver->commission_due ?? 0, 0, ',', ' ') }} FCFA
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right">
+                                    <td class="px-6 py-4 whitespace-nowrap text-left">
                                         <a href="{{ route('admin.drivers.show', $driver->user) }}"
                                             class="text-blue-600 hover:text-blue-800">
                                             <i class="fas fa-eye mr-2"></i> Voir

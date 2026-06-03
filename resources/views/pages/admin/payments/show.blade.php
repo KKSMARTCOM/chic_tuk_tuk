@@ -5,9 +5,6 @@
     <div class="bg-white rounded-lg shadow-md mb-8">
         <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
             <div>
-                <a href="{{ route('admin.payments.index') }}" class="text-blue-600 hover:text-blue-800">
-                    <i class="fas fa-arrow-left mr-2"></i> Retour
-                </a>
                 <h1 class="text-2xl font-bold text-gray-800 mt-2">Détails du Paiement</h1>
             </div>
             <div class="flex gap-2">
@@ -15,7 +12,11 @@
                     class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg">
                     <i class="fas fa-edit mr-2"></i> Modifier
                 </a>
-                <form action="{{ route('admin.payments.destroy', $payment) }}" method="POST" class="inline-block"
+                <a href="{{ route('admin.payments.index') }}"
+                    class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition">
+                    <i class="fas fa-arrow-left mr-2"></i> Retour
+                </a>
+                {{--  <form action="{{ route('admin.payments.destroy', $payment) }}" method="POST" class="inline-block"
                     onclick="return confirm('Êtes-vous sûr ?')">
                     @csrf
                     @method('DELETE')
@@ -23,7 +24,7 @@
                         class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg">
                         <i class="fas fa-trash mr-2"></i> Supprimer
                     </button>
-                </form>
+                </form> --}}
             </div>
         </div>
     </div>

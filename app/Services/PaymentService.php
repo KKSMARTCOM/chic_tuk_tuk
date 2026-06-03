@@ -15,13 +15,30 @@ class PaymentService
      */
     public function create(array $data)
     {
+        $driver = Driver::findOrFail($data['driver_id']);
+
+        // Total des commissions dues à ce jour
+        $totalDue = Commission::where('driver_id', $data['driver_id'])->sum('amount');
+
+        // Total déjà payé
+        $totalPaid = Payment::where('driver_id', $data['driver_id'])->sum('amount');
+
+        // Reste à payer
+        $remaining = $totalDue - $totalPaid;
+
+        if ($data['amount'] > $remaining) {
+            throw new \Exception(
+                "Le montant saisi ({$data['amount']}) dépasse la commission restante due ({$remaining})."
+            );
+        }
+
         $payment = Payment::create([
             'driver_id' => $data['driver_id'],
             'amount' => $data['amount'],
             'payment_method' => $data['payment_method'],
             'payment_date' => $data['payment_date'],
             'notes' => $data['notes'] ?? null,
-            'reference_number' => $data['reference_number'] ?? null,
+            //'reference_number' => $data['reference_number'] ?? null,
         ]);
 
         return $payment;
