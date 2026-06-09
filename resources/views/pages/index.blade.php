@@ -18,7 +18,7 @@
                         <h2 class="text-5xl font-bold mb-6">Voyagez avec Style et Confort</h2>
                         <p class="text-xl mb-8 text-purple-100">Découvrez une nouvelle façon de vous déplacer avec nos
                             chic tuk tuk. Unique, modèle et confortable.</p>
-                        <div class="flex space-x-6">
+                        <div class="flex space-x-6 mb-12">
                             <div class="text-center">
                                 <div class="text-4xl font-bold">500+</div>
                                 <div class="text-purple-200">Courses réalisées</div>
@@ -32,6 +32,11 @@
                                 <div class="text-purple-200">Agents</div>
                             </div>
                         </div>
+                        <a href="https://wa.me/22956141438?text=Bonjour%0AJ'aimerais%20avoir%20plus%20d'informations"
+                            target="_blank" rel="noopener noreferrer"
+                            class="px-3 py-2 rounded-md bg-[#FFB230] font-semibold">
+                            Contactez-nous
+                        </a>
                     </div>
 
                     <!-- Formulaire de Réservation Multi-étapes -->
@@ -194,7 +199,7 @@
                                 <!-- Option multi-jours -->
                                 <div class="mb-4">
                                     <label class="inline-flex items-center text-gray-700 font-semibold">
-                                        <input type="checkbox" id="multi_day" class="mr-3">
+                                        <input type="checkbox" name="multi_day" id="multi_day" class="mr-3">
                                         <span>Réservation sur plusieurs jours</span>
                                     </label>
 
@@ -764,12 +769,6 @@
                             }
                         });
                 }; */
-
-
-                /* // Essayer au chargement de la page si les selects ont une valeur
-                 if ($('#from_zone_id').val() && $('#to_zone_id').val()) {
-                     calculatePrice();
-                 } */
 
                 /* window.applyPromo = function() {
                     calculatePrice();

@@ -390,14 +390,14 @@ class BookingService
     public function markExpiredBookings(): int
     {
         $expiredBookings = Booking::where('status', 'pending')
-            ->whereRaw("CONCAT(pickup_date, ' ', pickup_time)::timestamp < ?", [now()])
+            ->whereRaw("(pickup_date::date + pickup_time::time) < ?", [now()])
             ->whereNull('expired_at')
             ->get();
 
         foreach ($expiredBookings as $booking) {
             $booking->update([
                 'status' => 'expired',
-                //'expired_at' => now(),
+                'expired_at' => now(),
             ]);
         }
 
@@ -416,7 +416,7 @@ class BookingService
 
         foreach ($recurringBookings as $booking) {
             // Créer la nouvelle course pour le jour suivant
-            $newPickupDate  = Carbon::parse($booking->pickup_date . ' ' . $booking->pickup_time)->addDay();
+            $newPickupDate  = Carbon::parse($booking->pickup_date)->setTimeFromTimeString($booking->pickup_time)->addDay();
             $nextRecurring  = $newPickupDate->copy()->addDay();
             $newRemaining   = $booking->remaining_days - 1;
 
