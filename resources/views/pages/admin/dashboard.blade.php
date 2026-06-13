@@ -97,7 +97,23 @@
                         @forelse($recentBookings as $booking)
                             <tr class="hover:bg-gray-50 transition">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                    {{ $booking->booking_number }}
+                                    <span>{{ $booking->booking_number }}</span>
+
+                                    <div class="mt-2">
+                                        @if ($booking->days > 1)
+                                            <span
+                                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200">
+                                                <i class="fas fa-rotate text-emerald-600"></i>
+                                                Abonnement · {{ $booking->days }}j
+                                            </span>
+                                        @else
+                                            <span
+                                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-200">
+                                                <i class="fas fa-car-side text-blue-500"></i>
+                                                Course unique
+                                            </span>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
@@ -153,10 +169,13 @@
                                         class="text-blue-600 hover:text-blue-800 mr-3">
                                         <i class="fas fa-eye"></i>
                                     </button>
-                                    <button onclick="editBooking('{{ $booking->id }}')"
-                                        class="text-green-600 hover:text-green-800 mr-3">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
+
+                                    @if ($booking->status === 'pending')
+                                        <button onclick="editBooking('{{ $booking->id }}')"
+                                            class="text-green-600 hover:text-green-800 mr-3">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    @endif
                                 </td>
                             </tr>
                         @empty

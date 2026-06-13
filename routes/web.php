@@ -9,13 +9,15 @@ use App\Http\Controllers\Web\PageController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PageController::class, 'index'])->name('home');
-Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 
 // Prix public: récupère le tarif entre deux zones (option: ?days=)
 Route::post('/pricing/price', [PricingController::class, 'calculatePrice'])->name('pricing.get-price');
-
-Route::post('/login-store', [AuthController::class, 'loginStore'])->name('login.store');
 Route::post('/bookings', [BookingController::class, 'store'])->name('bookings.store');
+
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/login-store', [AuthController::class, 'loginStore'])->name('login.store');
+});
 
 Route::middleware(['auth:sanctum', 'role:admin,driver,client'])->group(function () {
     Route::get('/logout', [AuthController::class, 'logout'])->name('logout');

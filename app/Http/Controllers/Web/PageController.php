@@ -42,7 +42,8 @@ class PageController extends Controller
 
     public function availableBookings()
     {
-        $bookings = $this->bookingService->get('pending');
+        $driver   = Auth::user()->driver;
+        $bookings = $this->bookingService->getAvailableBookings($driver->id);
 
         return view('pages.driver.bookings.available', compact('bookings'));
     }
@@ -76,7 +77,7 @@ class PageController extends Controller
                 });
             }
 
-            $bookings = $query->with(['user', 'driver.user', 'fromZone', 'toZone'])
+            $bookings = $query->with(['user', 'driver.user'])
                 ->orderByRaw("CONCAT(pickup_date, ' ', pickup_time) DESC")
                 ->paginate($perPage)
                 ->withQueryString();
@@ -94,7 +95,7 @@ class PageController extends Controller
                 });
             }
 
-            $bookings = $query->with(['user', 'driver.user', 'fromZone', 'toZone'])
+            $bookings = $query->with(['user', 'driver.user'])
                 ->orderByRaw("CONCAT(pickup_date, ' ', pickup_time) DESC")
                 ->paginate($perPage)
                 ->withQueryString();
@@ -114,7 +115,7 @@ class PageController extends Controller
                 });
             }
 
-            $bookings = $query->with(['user', 'driver.user', 'fromZone', 'toZone'])
+            $bookings = $query->with(['user', 'driver.user'])
                 ->orderByRaw("CONCAT(pickup_date, ' ', pickup_time) DESC")
                 ->paginate($perPage)
                 ->withQueryString();

@@ -53,6 +53,18 @@ class Booking extends Model
         'to_lat',
         'distance',
 
+        // Champs pour les trajets récurrents
+        'week_days',
+        'round_trip',
+        'return_time',
+        'trip_type',
+        'trip_count',
+        'subscription_driver_id',
+        'is_revoked',
+        'revoked_at',
+        'revoked_by',
+        'client_name',
+        'subscription_end_date',
     ];
 
     protected $casts = [
@@ -66,8 +78,14 @@ class Booking extends Model
         'discount' => 'decimal:2',
         'total_price' => 'decimal:2',
         'is_recurring' => 'boolean',
+
+        'round_trip'  => 'boolean',
+        'is_revoked'  => 'boolean',
+        'revoked_at'  => 'datetime',
+        'subscription_end_date' => 'date',
     ];
 
+    // Génération du booking_number unique à la création d'une réservation
     protected static function boot()
     {
         parent::boot();
@@ -76,7 +94,61 @@ class Booking extends Model
             $booking->booking_number = 'CTT-' . strtoupper(Str::random(8));
         });
     }
+    //*********** */
+    // RELATIONS
+    //*********** */
+    // Une réservation appartient à un utilisateur (client)
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
+    // Une réservation peut être associée à un agent (driver)
+    public function driver()
+    {
+        return $this->belongsTo(Driver::class, 'driver_id');
+    }
+
+    // Une réservation peut être associée à un circuit touristique
+    public function touristCircuit()
+    {
+        return $this->belongsTo(TouristCircuit::class);
+    }
+
+    // Une réservation peut être associée à un code promo
+    public function promoCode()
+    {
+        return $this->belongsTo(PromoCode::class);
+    }
+
+    // Une réservation peut avoir un témoignage
+    public function testimonial()
+    {
+        return $this->hasOne(Testimonial::class);
+    }
+
+    // Réservations parent/enfant pour les trajets récurrents
+    public function parentBooking()
+    {
+        return $this->belongsTo(Booking::class, 'parent_booking_id');
+    }
+
+    // Réservations enfants pour les trajets récurrents
+    public function childBookings()
+    {
+        return $this->hasMany(Booking::class, 'parent_booking_id');
+    }
+
+    // Relation agent abonnement
+    public function subscriptionDriver()
+    {
+        return $this->belongsTo(Driver::class, 'subscription_driver_id');
+    }
+
+    //*********** */
+    // ACCESSORS
+    //*********** */
+    // Formatage de l'heure de prise en charge en HH:MM pour affichage
     public function getPickupTimeFormattedAttribute()
     {
         if (!$this->pickup_time) {
@@ -88,6 +160,7 @@ class Booking extends Model
             : Carbon::parse($this->pickup_time)->format('H:i');
     }
 
+    // Combinaison de la date et de l'heure de prise en charge pour affichage ou calculs
     public function getPickupDateTimeAttribute()
     {
         $date = $this->pickup_date instanceof Carbon ? $this->pickup_date->format('Y-m-d') : $this->pickup_date;
@@ -96,63 +169,27 @@ class Booking extends Model
         return trim($date . ' ' . $time);
     }
 
-    public function user()
+    // Aperçu commission (calculé à la volée si pas encore enregistré)
+    public function getCommissionPreviewAttribute(): int
     {
-        return $this->belongsTo(User::class);
+        if (!is_null($this->commission) && $this->commission > 0) {
+            return (int) $this->commission;
+        }
+
+        return (int) ceil((($this->base_price * 15) / 100) / 50) * 50;
     }
 
-    public function driver()
+    // Aperçu revenu agent
+    public function getDriverEarningPreviewAttribute(): int
     {
-        return $this->belongsTo(Driver::class, 'driver_id');
+        if (!is_null($this->driver_earning) && $this->driver_earning > 0) {
+            return (int) $this->driver_earning;
+        }
+
+        return (int) $this->base_price - $this->commission_preview;
     }
 
-    public function touristCircuit()
-    {
-        return $this->belongsTo(TouristCircuit::class);
-    }
-
-    public function promoCode()
-    {
-        return $this->belongsTo(PromoCode::class);
-    }
-
-    public function testimonial()
-    {
-        return $this->hasOne(Testimonial::class);
-    }
-
-    public function canBeCancelled()
-    {
-        return $this->status !== 'completed' &&
-            $this->status !== 'cancelled' &&
-            $this->status !== 'expired';
-    }
-
-    public function canBeCompleted()
-    {
-        return $this->status === 'in_progress';
-    }
-
-    public function fromZone()
-    {
-        return $this->belongsTo(Zone::class, 'from_zone');
-    }
-
-    public function toZone()
-    {
-        return $this->belongsTo(Zone::class, 'to_zone');
-    }
-
-    public function parentBooking()
-    {
-        return $this->belongsTo(Booking::class, 'parent_booking_id');
-    }
-
-    public function childBookings()
-    {
-        return $this->hasMany(Booking::class, 'parent_booking_id');
-    }
-
+    // Accessors pour timestamps
     public function getStartedAtTimestampAttribute()
     {
         return $this->started_at
@@ -162,6 +199,7 @@ class Booking extends Model
             : null;
     }
 
+    // Accessor pour durée de la course
     public function getDurationAttribute()
     {
         if (!$this->started_at || !$this->completed_at) {
@@ -171,5 +209,85 @@ class Booking extends Model
         $seconds = $this->started_at->diffInSeconds($this->completed_at);
 
         return gmdate('H:i:s', $seconds);
+    }
+
+    // Indique si c'est un abonnement parent
+    public function getIsSubscriptionParentAttribute(): bool
+    {
+        return $this->is_recurring && is_null($this->parent_booking_id);
+    }
+
+    // Indique si c'est une course enfant d'abonnement
+    public function getIsSubscriptionChildAttribute(): bool
+    {
+        return !is_null($this->parent_booking_id);
+    }
+
+    // Numéro de la course dans l'abonnement (ex: "Course 3")
+    public function getSubscriptionIndexAttribute(): ?int
+    {
+        if (!$this->parent_booking_id) {
+            return null;
+        }
+
+        // Compte les courses créées avant celle-ci dans le même abonnement
+        return Booking::where('parent_booking_id', $this->parent_booking_id)
+            ->where('created_at', '<=', $this->created_at)
+            ->count();
+    }
+
+    // Label complet ex: "Course 3 — Abonnement CTT-XXXXXXXX"
+    public function getSubscriptionLabelAttribute(): string
+    {
+        if ($this->is_subscription_parent) {
+            return 'Abonnement parent — ' . $this->booking_number;
+        }
+
+        if ($this->is_subscription_child) {
+            $parent = $this->parentBooking;
+            $index  = $this->subscription_index + 1; // +1 car le parent = J1
+            return "Course {$index} — Abonnement {$parent?->booking_number}";
+        }
+
+        return 'Course unique';
+    }
+
+    //*********** */
+    // MÉTHODES DE LOGIQUE MÉTIER
+    //*********** */
+    // Vérifie si la réservation peut être annulée (non encore complétée, annulée ou expirée)
+    public function canBeCancelled()
+    {
+        return $this->status !== 'completed' &&
+            $this->status !== 'cancelled' &&
+            $this->status !== 'expired';
+    }
+
+    // Vérifie si la réservation peut être démarrée (acceptée par un agent et pas encore commencée)
+    public function canBeCompleted()
+    {
+        return $this->status === 'in_progress';
+    }
+
+    // Vérifie si la course est visible par un agent donné
+    public function isVisibleToDriver(string $driverId): bool
+    {
+        // Course unique → visible par tous
+        if (!$this->is_recurring) {
+            return true;
+        }
+
+        // Course d'abonnement révoquée → visible par tous comme course libre
+        if ($this->is_revoked) {
+            return true;
+        }
+
+        // Abonnement sans agent lié encore → visible par tous
+        if (!$this->subscription_driver_id) {
+            return true;
+        }
+
+        // Abonnement avec agent lié → uniquement cet agent
+        return $this->subscription_driver_id === $driverId;
     }
 }

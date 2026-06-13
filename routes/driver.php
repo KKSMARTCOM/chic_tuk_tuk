@@ -17,6 +17,7 @@ Route::middleware(['auth:sanctum', 'role:driver'])->prefix('driver')->name('driv
     Route::post('/bookings/{booking}/start', [BookingController::class, 'startBooking'])->name('bookings.start');
     Route::post('/bookings/{booking}/complete', [BookingController::class, 'completeBooking'])->name('bookings.complete');
     Route::post('/bookings/{booking}/cancel', [BookingController::class, 'cancelBooking'])->name('bookings.cancel');
+    Route::post('/bookings/{booking}/revoke-subscription', [BookingController::class, 'revokeSubscription'])->name('bookings.revoke-subscription');
     //A retoucher
     Route::get('/history', [DashboardController::class, 'history'])->name('history');
     Route::get('/profile', [DashboardController::class, 'profile'])->name('profile');

@@ -18,7 +18,7 @@
                         <h2 class="text-5xl font-bold mb-6">Voyagez avec Style et Confort</h2>
                         <p class="text-xl mb-8 text-purple-100">Découvrez une nouvelle façon de vous déplacer avec nos
                             chic tuk tuk. Unique, modèle et confortable.</p>
-                        <div class="flex space-x-6">
+                        <div class="flex space-x-6 mb-12">
                             <div class="text-center">
                                 <div class="text-4xl font-bold">500+</div>
                                 <div class="text-purple-200">Courses réalisées</div>
@@ -32,6 +32,11 @@
                                 <div class="text-purple-200">Agents</div>
                             </div>
                         </div>
+                        <a href="https://wa.me/22956141438?text=Bonjour%0AJ'aimerais%20avoir%20plus%20d'informations"
+                            target="_blank" rel="noopener noreferrer"
+                            class="px-3 py-2 rounded-md bg-[#FFB230] font-semibold">
+                            Contactez-nous
+                        </a>
                     </div>
 
                     <!-- Formulaire de Réservation Multi-étapes -->
@@ -194,7 +199,8 @@
                                 <!-- Option multi-jours -->
                                 <div class="mb-4">
                                     <label class="inline-flex items-center text-gray-700 font-semibold">
-                                        <input type="checkbox" id="multi_day" class="mr-3">
+                                        <input type="checkbox" id="multi_day"
+                                            class="w-4 h-4 accent-[#286b41] cursor-pointer mr-3">
                                         <span>Réservation sur plusieurs jours</span>
                                     </label>
 
@@ -203,12 +209,53 @@
 
                                     <!-- Visible input shown only when multi-day checked (no name attribute) -->
                                     <div id="daysWrapper" class="mt-3 hidden">
-                                        <label class="block text-gray-700 font-semibold mb-2">Nombre de jours <span
-                                                class="text-red-500">*</span></label>
-                                        <input type="text" id="days_input" inputmode="numeric" min="2"
-                                            value="2"
-                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent"
-                                            placeholder="Entrez le nombre de jours">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2">
+                                            {{-- Nombre de jours --}}
+                                            <div>
+                                                <label class="block text-gray-700 font-semibold mb-2">Nombre de jours <span
+                                                        class="text-red-500">*</span></label>
+                                                <input type="text" id="days_input" inputmode="numeric" min="2"
+                                                    value="2"
+                                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent"
+                                                    placeholder="Entrez le nombre de jours">
+                                            </div>
+
+                                            {{-- Jours de la semaine --}}
+                                            <div>
+                                                <label class="block text-gray-700 font-semibold mb-2">
+                                                    Jours de circulation <span class="text-red-500">*</span>
+                                                </label>
+                                                <select name="week_days" id="week_days"
+                                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent bg-white">
+                                                    <option value="lun_ven">Lun → Ven (5j/sem)</option>
+                                                    <option value="lun_sam">Lun → Sam (6j/sem)</option>
+                                                    <option value="lun_dim">Lun → Dim (7j/sem)</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                            {{-- Aller-Retour --}}
+                                            <div class="flex items-center gap-3">
+                                                <input type="checkbox" name="round_trip" id="round_trip" value="1"
+                                                    class="w-4 h-4 accent-[#286b41] cursor-pointer">
+                                                <label for="round_trip"
+                                                    class="text-gray-700 font-semibold cursor-pointer">
+                                                    Aller-Retour
+                                                    <span class="text-sm font-normal text-gray-500 ml-1">(prix × 2)</span>
+                                                </label>
+                                            </div>
+
+                                            {{-- Heure de retour (visible uniquement si aller-retour coché) --}}
+                                            <div id="returnTimeWrapper" class="mt-3 hidden">
+                                                <label class="block text-gray-700 font-semibold mb-2">
+                                                    Heure de retour <span class="text-red-500">*</span>
+                                                </label>
+                                                <input type="time" name="return_time" id="return_time"
+                                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent">
+                                                <p class="text-red-500 text-sm mt-1 hidden" id="return_time_error"></p>
+                                            </div>
+                                        </div>
                                     </div>
                                     @error('days')
                                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
@@ -232,12 +279,12 @@
                             <!-- Étape 3: Détails et Confirmation -->
                             <div id="step3" class="step-content hidden">
                                 <div class="mb-4">
-                                    <label class="block text-gray-700 font-semibold mb-2">Numéro de téléphone <spani
-                                            class="text-red-500">*</spani< /label>
-                                            <input type="tel" name="phone" value="{{ old('phone') }}"
-                                                id="phone" placeholder="01 90 12 34 56" pattern="^\d{6,15}$"
-                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent"
-                                                required>
+                                    <label class="block text-gray-700 font-semibold mb-2">Numéro de téléphone <span
+                                            class="text-red-500">*</span></label>
+                                    <input type="tel" name="phone" value="{{ old('phone') }}" id="phone"
+                                        placeholder="01 90 12 34 56" pattern="^\d{6,15}$"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent"
+                                        required>
                                 </div>
                                 <p class="text-red-500 text-sm mt-1 hidden error-message"></p>
                                 @error('phone')
@@ -254,12 +301,86 @@
                                 </div>
                                 {{-- PROMO-CODE --}}
 
-                                <div class="bg-purple-50 rounded-lg p-4 mb-6">
-                                    {{-- REDUCTION --}}
-                                    <div class="flex justify-between text-lg font-bold text-[#286b41]">
-                                        <span>Total:</span>
+                                {{-- RÉCAPITULATIF UNIFIÉ --}}
+                                <div id="bookingSummary"
+                                    class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-6 space-y-3">
+
+                                    <p class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                        <i class="fas fa-receipt text-[#286b41]"></i>
+                                        Récapitulatif de la réservation
+                                    </p>
+
+                                    {{-- Trajet --}}
+                                    <div class="flex justify-between text-sm text-gray-600">
+                                        <span class="text-gray-500">De</span>
+                                        <span id="recap-from"
+                                            class="font-medium text-gray-700 text-right max-w-[60%] truncate">--</span>
+                                    </div>
+                                    <div class="flex justify-between text-sm text-gray-600">
+                                        <span class="text-gray-500">Vers</span>
+                                        <span id="recap-to"
+                                            class="font-medium text-gray-700 text-right max-w-[60%] truncate">--</span>
+                                    </div>
+
+                                    {{-- Date & heure --}}
+                                    <div class="flex justify-between text-sm text-gray-600">
+                                        <span class="text-gray-500">Date de départ</span>
+                                        <span id="recap-date" class="font-medium text-gray-700">--</span>
+                                    </div>
+                                    <div class="flex justify-between text-sm text-gray-600">
+                                        <span class="text-gray-500">Heure</span>
+                                        <span id="recap-time" class="font-medium text-gray-700">--</span>
+                                    </div>
+
+                                    <div class="border-t border-gray-200"></div>
+
+                                    {{-- Bloc course unique --}}
+                                    <div id="recap-single">
+                                        <div class="flex justify-between text-sm text-gray-600">
+                                            <span class="text-gray-500">Type</span>
+                                            <span class="font-medium text-gray-700">Trajet unique</span>
+                                        </div>
+                                        <div class="flex justify-between text-sm text-gray-600 mt-2">
+                                            <span class="text-gray-500">Prix</span>
+                                            <span id="recap-single-price" class="font-medium text-gray-700">-- FCFA</span>
+                                        </div>
+                                    </div>
+
+                                    {{-- Bloc abonnement (caché par défaut) --}}
+                                    <div id="recap-subscription" class="hidden space-y-2">
+                                        <div class="flex justify-between text-sm text-gray-600">
+                                            <span class="text-gray-500">Type</span>
+                                            <span
+                                                class="inline-flex items-center gap-1 font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full text-xs">
+                                                <i class="fas fa-rotate"></i> Abonnement
+                                            </span>
+                                        </div>
+                                        <div class="flex justify-between text-sm text-gray-600">
+                                            <span class="text-gray-500">Prix par trajet</span>
+                                            <span id="recap-sub-unit" class="font-medium text-gray-700">-- FCFA</span>
+                                        </div>
+                                        <div class="flex justify-between text-sm text-gray-600" id="recap-sub-round-row">
+                                            <span class="text-gray-500">Aller-Retour</span>
+                                            <span class="font-medium text-gray-700">× 2</span>
+                                        </div>
+                                        <div class="flex justify-between text-sm text-gray-600">
+                                            <span class="text-gray-500">Nombre de jrs</span>
+                                            <span id="recap-sub-days" class="font-medium text-gray-700">--</span>
+                                        </div>
+                                        <div class="flex justify-between text-sm text-gray-600">
+                                            <span class="text-gray-500 text-nowrap">Jrs de circulat*</span>
+                                            <span id="recap-sub-weekdays"
+                                                class="font-medium text-gray-700 text-nowrap">--</span>
+                                        </div>
+                                    </div>
+
+                                    {{-- Total --}}
+                                    <div
+                                        class="border-t border-gray-200 pt-3 flex justify-between font-bold text-base text-[#286b41]">
+                                        <span>Total</span>
                                         <span id="total-price">-- FCFA</span>
                                     </div>
+
                                 </div>
 
                                 <div class="flex space-x-4">
@@ -269,7 +390,7 @@
                                     </button>
                                     <button type="submit"
                                         class="flex-1 py-3 gradient-bg text-white rounded-lg font-semibold hover:opacity-90 transition">
-                                        Confirmer la réservation <i class="fas fa-check ml-2"></i>
+                                        Confirmer <i class="fas fa-check ml-2"></i>
                                     </button>
                                 </div>
                             </div>
@@ -502,9 +623,16 @@
 
                         const data = await res.json();
 
+                        unitPrice = parseFloat(data.price) || 0;
+
                         $("#preview-price").text(data.price + " FCFA");
 
-                        $("#total-price").text(data.price + " FCFA");
+                        // Si abonnement actif, recalculer le total
+                        if ($('#multi_day').is(':checked')) {
+                            updateSubscriptionSummary();
+                        } else {
+                            $('#total-price').text(data.price.toLocaleString() + ' FCFA');
+                        }
 
                         $("#pricePreview").removeClass("hidden");
 
@@ -610,6 +738,21 @@
                                 }
                             }
                         }
+
+                        // Validation heure de retour (si aller-retour coché)
+                        if (input.attr('id') === 'return_time' && $('#round_trip').is(':checked')) {
+                            const departureTime = $('#pickup_time').val();
+                            if (!input.val()) {
+                                showError(input[0], "L'heure de retour est obligatoire");
+                                isValid = false;
+                                return;
+                            }
+                            if (departureTime && input.val() <= departureTime) {
+                                showError(input[0], "L'heure de retour doit être après l'heure de départ");
+                                isValid = false;
+                                return;
+                            }
+                        }
                     });
 
                     return isValid;
@@ -656,6 +799,7 @@
                 window.nextStep = function(step) {
                     if (!validateStep(currentStep)) return;
                     showStep(step);
+                    if (step === 3) updateRecap();
                 };
 
                 window.prevStep = function(step) {
@@ -665,7 +809,7 @@
                 window.newBooking = function() {
                     const form = $('#bookingForm')[0];
                     form.reset();
-
+                    unitPrice = 0;
                     // reset multi-day
                     $('#days_hidden').val(1);
                     $('#daysWrapper').addClass('hidden');
@@ -678,6 +822,13 @@
 
                     // reset message promo si tu l’utilises
                     $('#promo-message').html('');
+
+                    $('#recap-from, #recap-to, #recap-date, #recap-time').text('--');
+                    $('#recap-single-price').text('-- FCFA');
+                    $('#recap-subscription').addClass('hidden');
+                    $('#recap-single').removeClass('hidden');
+                    $('#returnTimeWrapper').addClass('hidden');
+                    $('#return_time').removeAttr('required').val('');
 
                     showStep(1);
                     window.scrollTo({
@@ -707,79 +858,72 @@
                     }
                 };
 
-                /* window.calculatePrice = function() {
-                    var from = $('#from_zone_id').val();
-                    var to = $('#to_zone_id').val();
+                // ================================
+                // ABONNEMENT MULTI-JOURS
+                // ================================
 
-                    // If from or to not selected, clear values, hide preview and return
-                    if (!from || !to) {
-                        $('#base-price').text('-- FCFA');
-                        $('#discount').text('0 FCFA');
-                        $('#total-price').text('-- FCFA');
-                        if ($('#pricePreview').length) {
-                            $('#pricePreview').addClass('hidden');
-                            $('#preview-price').text('-- FCFA');
+                // Prix unitaire retourné par l'API (mis à jour par calculateRoute)
+                var unitPrice = 0;
+
+                // Labels lisibles pour les jours de semaine
+                var weekDaysLabels = {
+                    'lun_ven': 'Lun → Ven (5j/sem)',
+                    'lun_sam': 'Lun → Sam (6j/sem)',
+                    'lun_dim': 'Lun → Dim (7j/sem)',
+                };
+
+                function updateRecap() {
+                    var isSubscription = $('#multi_day').is(':checked');
+                    var days = parseInt($('#days_hidden').val()) || 1;
+                    var isRound = $('#round_trip').is(':checked');
+                    var tripPrice = isRound ? unitPrice * 2 : unitPrice;
+                    var total = isSubscription ? tripPrice * days : unitPrice;
+
+                    // Trajet & horaire
+                    $('#recap-from').text($('#from_input').val() || '--');
+                    $('#recap-to').text($('#to_input').val() || '--');
+                    $('#recap-date').text($('#pickup_date').val() || '--');
+                    $('#recap-time').text($('#pickup_time').val() || '--');
+
+                    if (isSubscription) {
+                        // Afficher bloc abonnement, masquer bloc unique
+                        $('#recap-single').addClass('hidden');
+                        $('#recap-subscription').removeClass('hidden');
+
+                        $('#recap-sub-unit').text(unitPrice.toLocaleString() + ' FCFA');
+                        $('#recap-sub-days').text(days + ' jour(s)');
+                        $('#recap-sub-weekdays').text(weekDaysLabels[$('#week_days').val()] || '--');
+
+                        if (isRound) {
+                            $('#recap-sub-round-row').removeClass('hidden');
+                            // Ajouter l'heure de retour dans le récap
+                            var returnTime = $('#return_time').val();
+                            $('#recap-sub-round-row').html(`
+                                <span class="text-gray-500">Aller-Retour</span>
+                                <span class="font-medium text-gray-700">
+                                    × 2 ${returnTime ? '— retour à ' + returnTime : ''}
+                                </span>
+                            `);
+                        } else {
+                            $('#recap-sub-round-row').addClass('hidden');
                         }
-                        return;
+                    } else {
+                        // Afficher bloc unique, masquer bloc abonnement
+                        $('#recap-single').removeClass('hidden');
+                        $('#recap-subscription').addClass('hidden');
+                        $('#recap-single-price').text(unitPrice ? unitPrice.toLocaleString() + ' FCFA' : '-- FCFA');
                     }
 
-                    var days = ($('#days_hidden').length ? $('#days_hidden').val() : 1) || 1;
-                    var promo = $('#promo_code').val() || '';
-
-                    var url = '/pricing/price/' + encodeURIComponent(from) + '/' + encodeURIComponent(to) +
-                        '?days=' + encodeURIComponent(days);
-                    if (promo) {
-                        url += '&promo_code=' + encodeURIComponent(promo);
+                    // Total
+                    if (unitPrice) {
+                        $('#total-price').text(total.toLocaleString() + ' FCFA');
                     }
+                }
 
-                    $.getJSON(url)
-                        .done(function(data) {
-                            $('#base-price').text((data.base_price).toLocaleString() + ' FCFA');
-                            $('#discount').text((data.discount).toLocaleString() + ' FCFA');
-                            $('#total-price').text((data.total_price).toLocaleString() + ' FCFA');
-
-                            // Update inline preview if present
-                            if ($('#pricePreview').length) {
-                                $('#pricePreview').removeClass('hidden');
-                                var previewText = (data.base_price).toLocaleString() + ' FCFA';
-                                if (data.days && data.days > 1) {
-                                    previewText = 'Base: ' + (data.base_price).toLocaleString() +
-                                        ' FCFA — Total: ' + (data.total_price).toLocaleString() + ' FCFA';
-                                }
-                                $('#preview-price').text(previewText);
-                            }
-                        })
-                        .fail(function(xhr) {
-                            var msg = 'Erreur lors du calcul du prix';
-                            if (xhr && xhr.responseJSON && xhr.responseJSON.error) {
-                                msg = xhr.responseJSON.error;
-                            }
-                            $('#promo-message').html('<span class="text-red-600">' + msg + '</span>');
-                            $('#base-price').text('-- FCFA');
-                            $('#discount').text('0 FCFA');
-                            $('#total-price').text('-- FCFA');
-                            if ($('#pricePreview').length) {
-                                $('#pricePreview').addClass('hidden');
-                                $('#preview-price').text('-- FCFA');
-                            }
-                        });
-                }; */
-
-
-                /* // Essayer au chargement de la page si les selects ont une valeur
-                 if ($('#from_zone_id').val() && $('#to_zone_id').val()) {
-                     calculatePrice();
-                 } */
-
-                /* window.applyPromo = function() {
-                    calculatePrice();
-                    var promo = $('#promo_code').val();
-                    if (promo) {
-                        $('#promo-message').html(
-                            '<span class="text-green-600"><i class="fas fa-check-circle"></i> Code promo appliqué</span>'
-                        );
-                    }
-                }; */
+                // Mettre à jour le récap abonnement
+                function updateSubscriptionSummary() {
+                    updateRecap();
+                }
 
                 // Gestion réservation multi-jours
                 $('#multi_day').on('change', function() {
@@ -787,10 +931,17 @@
                         $('#daysWrapper').removeClass('hidden');
                         // Update hidden days value with visible input value
                         $('#days_hidden').val($('#days_input').val());
+                        updateSubscriptionSummary();
                     } else {
                         $('#daysWrapper').addClass('hidden');
                         // Revert to single-day default
                         $('#days_hidden').val(1);
+                        $('#subscriptionSummary').addClass('hidden');
+
+                        // Rétablir le prix simple
+                        if (unitPrice) {
+                            $('#total-price').text(unitPrice.toLocaleString() + ' FCFA');
+                        }
                     }
                 });
 
@@ -802,6 +953,7 @@
                     // Update hidden input while typing
                     if (v) {
                         $('#days_hidden').val(v);
+                        updateRecap();
                     }
                 });
 
@@ -817,6 +969,25 @@
 
                     $(this).val(num);
                     $('#days_hidden').val(num);
+                    updateRecap();
+                });
+
+                // Changement jours de semaine
+                $('#week_days').on('change', function() {
+                    updateRecap();
+                });
+
+                // Checkbox aller-retour
+                $('#round_trip').on('change', function() {
+                    if ($(this).is(':checked')) {
+                        $('#returnTimeWrapper').removeClass('hidden');
+                        $('#return_time').attr('required', true);
+                    } else {
+                        $('#returnTimeWrapper').addClass('hidden');
+                        $('#return_time').removeAttr('required').val('');
+                        $('#return_time_error').addClass('hidden');
+                    }
+                    updateRecap();
                 });
 
                 $('a[href^="#"]').on('click', function(e) {
