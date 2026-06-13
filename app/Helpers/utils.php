@@ -83,3 +83,60 @@ if (!function_exists('vehiculeType')) {
         };
     }
 }
+
+if (!function_exists('calculateEndDate')) {
+    function calculateEndDate(string $startDate, int $days, string $weekDays): Carbon
+    {
+        // Jours autorisés selon le pattern
+        $allowedDays = match ($weekDays) {
+            'lun_ven' => [1, 2, 3, 4, 5],       // Lun=1 ... Ven=5
+            'lun_sam' => [1, 2, 3, 4, 5, 6],    // + Sam=6
+            'lun_dim' => [1, 2, 3, 4, 5, 6, 0], // + Dim=0
+            default   => [1, 2, 3, 4, 5, 6, 0], // tous les jours
+        };
+
+        $current   = Carbon::parse($startDate);
+        $remaining = $days;
+
+        // J1 compte si son jour est autorisé
+        if (!in_array($current->dayOfWeek, $allowedDays)) {
+            throw new \Exception(
+                'La date de départ choisie ne correspond pas aux jours de circulation sélectionnés.'
+            );
+        }
+
+        // Compter les jours ouvrés jusqu'à épuiser $days
+        while ($remaining > 1) {
+            $current->addDay();
+
+            if (in_array($current->dayOfWeek, $allowedDays)) {
+                $remaining--;
+            }
+        }
+
+        return $current; // date du dernier jour
+    }
+}
+
+if (!function_exists('getNextAllowedDay')) {
+    function getNextAllowedDay(Carbon $from, string $weekDays): ?Carbon
+    {
+        $allowedDays = match ($weekDays) {
+            'lun_ven' => [1, 2, 3, 4, 5],
+            'lun_sam' => [1, 2, 3, 4, 5, 6],
+            'lun_dim' => [1, 2, 3, 4, 5, 6, 0],
+            default   => [1, 2, 3, 4, 5, 6, 0],
+        };
+
+        $next = $from->copy()->addDay();
+
+        // Avancer jusqu'au prochain jour autorisé (max 7 jours pour éviter boucle infinie)
+        $attempts = 0;
+        while (!in_array($next->dayOfWeek, $allowedDays) && $attempts < 7) {
+            $next->addDay();
+            $attempts++;
+        }
+
+        return $attempts < 7 ? $next : null;
+    }
+}

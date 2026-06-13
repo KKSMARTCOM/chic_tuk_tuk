@@ -60,8 +60,7 @@ class DriverService
     {
         return User::where('profil', 'driver')
             ->with(['driver', 'driver.bookings' => function ($query) {
-                $query->with(['fromZone', 'toZone'])
-                    ->orderByRaw("CONCAT(pickup_date, ' ', pickup_time) DESC");
+                $query->orderByRaw("CONCAT(pickup_date, ' ', pickup_time) DESC");
             }])
             ->findOrFail($driverId);
     }
@@ -186,7 +185,6 @@ class DriverService
             });
 
         $recentBookings = Booking::where('status', 'pending')
-            ->with(['fromZone', 'toZone'])
             ->orderByRaw("CONCAT(pickup_date, ' ', pickup_time) DESC")
             ->latest()
             ->take(5)
@@ -194,7 +192,6 @@ class DriverService
 
         $recentBookingsAccepting = Booking::where('driver_id', $driver->id)
             ->where('status', 'confirmed')
-            ->with(['fromZone', 'toZone'])
             ->orderByRaw("CONCAT(pickup_date, ' ', pickup_time) DESC")
             ->latest()
             ->take(5)

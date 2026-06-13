@@ -5,9 +5,10 @@
     <div class="px-6 py-4 bg-white rounded-lg shadow-md">
         <div class="py-4 border-b border-gray-200 flex items-center justify-between">
             <h3 class="text-xl font-bold text-gray-800">Liste des réservations disponible</h3>
-            {{-- <button class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
-                <i class="fas fa-download mr-2"></i> Exporter
-            </button> --}}
+            <a href="{{ route('admin.bookings.create') }}"
+                class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
+                <i class="fas fa-plus mr-2"></i> Nouvelle réservation
+            </a>
         </div>
 
         <!-- Formulaire de recherche et filtre -->
@@ -77,7 +78,38 @@
                         @forelse($bookings as $booking)
                             <tr class="hover:bg-gray-50 transition">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                    {{ $booking->booking_number }}
+                                    <span>{{ $booking->booking_number }}</span>
+                                    <div class="mt-2">
+                                        @if ($booking->days > 1)
+                                            <span
+                                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200">
+                                                <i class="fas fa-rotate text-emerald-600"></i>
+                                                Abonnement · {{ $booking->days }}j
+                                            </span>
+
+                                            {{-- @if ($booking->round_trip)
+                                                <span
+                                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-600 border border-purple-200">
+                                                    <i class="fas fa-arrows-left-right text-purple-500"></i>
+                                                    Aller-Retour
+                                                </span>
+                                            @endif
+
+                                            @if ($booking->trip_type === 'return')
+                                                <span
+                                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-50 text-orange-600 border border-orange-200">
+                                                    <i class="fas fa-arrow-left text-orange-500"></i>
+                                                    Retour
+                                                </span>
+                                            @endif --}}
+                                        @else
+                                            <span
+                                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-200">
+                                                <i class="fas fa-car-side text-blue-500"></i>
+                                                Course unique
+                                            </span>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
@@ -122,7 +154,7 @@
                                     {{ formatDateTimeFr($booking->pickup_date_time) }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                                    {{ number_format($booking->total_price, 0, ',', ' ') }} FCFA
+                                    {{ number_format($booking->base_price, 0, ',', ' ') }} FCFA
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
 
@@ -136,10 +168,13 @@
                                         class="text-blue-600 hover:text-blue-800 mr-3">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <a href="{{ route('admin.bookings.edit', $booking->id) }}"
-                                        class="text-green-600 hover:text-green-800 mr-3">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
+
+                                    @if ($booking->status === 'pending')
+                                        <a href="{{ route('admin.bookings.edit', $booking->id) }}"
+                                            class="text-green-600 hover:text-green-800 mr-3">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    @endif
                                 </td>
                             </tr>
                         @empty

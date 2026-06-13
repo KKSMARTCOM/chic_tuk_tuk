@@ -13,19 +13,46 @@
             @if ($bookings->count() > 0)
                 <div class="space-y-4">
                     @foreach ($bookings as $booking)
+                        @php
+                            $isParent = $booking->is_subscription_parent;
+                            $isChild = $booking->is_subscription_child;
+                            $isReturn = $booking->trip_type === 'return';
+
+                            // Label de la course
+                            if ($isParent) {
+                                $courseLabel =
+                                    "Course n°1 de l'abonnement " .
+                                    ($booking->client_name ?? ($booking->user?->name ?? $booking->booking_number));
+                            } elseif ($isChild) {
+                                $index = $booking->subscription_index + 1;
+                                $parentRef =
+                                    $booking->parentBooking?->client_name ??
+                                    ($booking->parentBooking?->user?->name ?? $booking->parentBooking?->booking_number);
+                                $courseLabel = "Course n°{$index} de l'abonnement {$parentRef}";
+                            } else {
+                                $courseLabel = 'Course unique';
+                            }
+
+                            // Suffixe aller/retour
+                            if ($booking->round_trip) {
+                                $courseLabel .= $isReturn ? ' (Retour)' : ' (Aller)';
+                            }
+                        @endphp
+
                         <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
                             <div class="flex items-start justify-between">
                                 <div class="flex-1">
-                                    <div class="flex items-center mb-4">
+                                    {{-- En-tête --}}
+                                    <div class="flex flex-wrap items-center gap-2 mb-3">
                                         <span
-                                            class="px-3 py-1 text-xs font-semibold rounded-full 
-                                        {{ bookingStatusBadge($booking->status) }}">
+                                            class="px-3 py-1 text-xs font-semibold rounded-full {{ bookingStatusBadge($booking->status) }}">
                                             {{ bookingStatusLabel($booking->status) }}
                                         </span>
-                                        <span
-                                            class="ml-3 text-sm text-gray-600 font-semibold">{{ $booking->booking_number }}
+                                        <span class="text-sm text-gray-500 font-mono">{{ $booking->booking_number }}</span>
+                                        <span class="text-sm font-semibold text-gray-700">{{ $courseLabel }}</span>
                                     </div>
 
+                                    {{-- Client + WhatsApp --}}
                                     <div class="flex items-center gap-4 mb-2">
                                         <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $booking->phone) }}?text={{ urlencode('Bonjour, je suis votre chauffeur pour la course ' . $booking->booking_number) }}"
                                             target="_blank"
@@ -34,34 +61,32 @@
                                         </a>
 
                                         <div>
-                                            {{-- <h4 class="font-bold text-gray-800">Joana Samson
-                                            </h4> --}}
+                                            <h4 class="font-bold text-gray-800">
+                                                {{ $booking->client_name ?? ($booking->user?->name ?? 'Client') }}
+                                            </h4>
                                             <p class="text-sm text-gray-600"><i class="fas fa-phone mr-1"></i>
                                                 {{ $booking->phone }}</p>
                                         </div>
                                     </div>
 
+                                    {{-- Trajet --}}
                                     <div class="bg-gray-50 rounded-lg p-3 mb-3">
                                         <div class="flex items-start mb-2">
-                                            <i class="fas fa-circle text-green-500 text-xs mt-1 mr-3"></i>
+                                            <i class="fas fa-circle text-green-500 text-xs mt-1 mr-3 shrink-0"></i>
                                             <div>
-                                                <p class="text-sm font-semibold text-gray-800">Point de
-                                                    départ</p>
-                                                <p class="text-sm text-gray-600">
-                                                    {{ $booking->from_location }}</p>
+                                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                                                    Départ</p>
+                                                <p class="text-sm text-gray-800">{{ $booking->from_location }}</p>
                                             </div>
                                         </div>
                                         <div class="flex items-start">
-                                            <i class="fas fa-circle text-red-500 text-xs mt-1 mr-3"></i>
+                                            <i class="fas fa-circle text-red-500 text-xs mt-1 mr-3 shrink-0"></i>
                                             <div>
-                                                <p class="text-sm font-semibold text-gray-800">
+                                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                                                     Destination</p>
-                                                <p class="text-sm text-gray-600">
-                                                    {{ $booking->to_location }}</p>
+                                                <p class="text-sm text-gray-800">{{ $booking->to_location }}</p>
                                             </div>
                                         </div>
-                                        {{-- @if ($booking->dropoff_location)
-                                @endif --}}
                                     </div>
 
                                     @if ($booking->status === 'in_progress')
@@ -72,15 +97,15 @@
                                         </div>
                                     @endif
 
-                                    <div class="flex items-center space-x-4 text-sm text-gray-600">
-                                        <span><i class="far fa-clock mr-1"></i>
-                                            {{ formatDateTimeFr($booking->pickup_date_time) }}</span>
-                                        {{-- <span><i class="fas fa-users mr-1"></i> {{ $booking->passengers }}
-                                            passager(s)</span> --}}
-                                        <span><i class="fas fa-route mr-1"></i> {{ $booking->distance }}
-                                            km estimé</span>
-                                        <span class="font-bold text-green-600"><i class="fas fa-money-bill mr-1"></i>
-                                            {{ $booking->total_price }} FCFA</span>
+                                    {{-- Méta --}}
+                                    <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                                        <span><i
+                                                class="far fa-clock mr-1"></i>{{ formatDateTimeFr($booking->pickup_date_time) }}</span>
+                                        <span><i class="fas fa-route mr-1"></i>{{ $booking->distance }} km estimé</span>
+                                        <span class="font-bold text-green-600">
+                                            <i class="fas fa-money-bill mr-1"></i>
+                                            {{ number_format($booking->base_price, 0, ',', ' ') }} FCFA
+                                        </span>
                                     </div>
 
                                     @if ($booking->special_requests)

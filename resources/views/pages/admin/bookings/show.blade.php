@@ -9,10 +9,13 @@
                 <p class="text-sm md:text-base text-gray-600">N° {{ $booking->booking_number }}</p>
             </div>
             <div class="block md:flex space-x-3">
-                <a href="{{ route('admin.bookings.edit', $booking) }}"
-                    class="bg-purple-600 text-white block px-4 py-2 rounded-lg hover:bg-purple-700 transition">
-                    <i class="fas fa-edit mr-2"></i> Modifier
-                </a>
+                @if ($booking->status === 'pending')
+                    <a href="{{ route('admin.bookings.edit', $booking) }}"
+                        class="bg-purple-600 text-white block px-4 py-2 rounded-lg hover:bg-purple-700 transition">
+                        <i class="fas fa-edit mr-2"></i> Modifier
+                    </a>
+                @endif
+
                 <a href="{{ route('admin.bookings.index') }}"
                     class="bg-gray-600 text-white block mt-2 md:mt-0 px-4 py-2 rounded-lg hover:bg-gray-700 transition">
                     <i class="fas fa-arrow-left mr-2"></i> Retour
@@ -28,21 +31,74 @@
             <div class="bg-white rounded-lg shadow-md">
                 <div class="px-6 py-4 border-b border-gray-200">
                     <h3 class="text-lg font-semibold text-gray-800">Informations de la Réservation</h3>
+
+                    {{-- Badge type de course --}}
+                    <div class="flex flex-wrap items-center gap-2">
+
+                        @if ($booking->is_subscription_parent)
+                            <span
+                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200">
+                                <i class="fas fa-rotate"></i>
+                                Abonnement parent · {{ $booking->days }}j
+                            </span>
+                        @elseif ($booking->is_subscription_child)
+                            <span
+                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200">
+                                <i class="fas fa-link"></i>
+                                {{ $booking->subscription_label }}
+                            </span>
+                        @else
+                            <span
+                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-200">
+                                <i class="fas fa-car-side"></i>
+                                Course unique
+                            </span>
+                        @endif
+
+                        @if ($booking->round_trip)
+                            <span
+                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-600 border border-purple-200">
+                                <i class="fas fa-arrows-left-right"></i>
+                                Aller-Retour
+                            </span>
+                        @endif
+
+                        @if ($booking->trip_type === 'return')
+                            <span
+                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-50 text-orange-600 border border-orange-200">
+                                <i class="fas fa-arrow-left"></i>
+                                Retour
+                            </span>
+                        @endif
+
+                        @if ($booking->is_revoked)
+                            <span
+                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-200">
+                                <i class="fas fa-ban"></i>
+                                Révoquée
+                            </span>
+                        @endif
+
+                    </div>
                 </div>
                 <div class="px-6 py-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                        {{-- Client --}}
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Client</label>
                             <div class="mt-1 flex items-center">
-                                <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($booking->user->name ?? 'Client') }}"
+                                <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($booking->client_name ?? 'Client') }}"
                                     class="w-10 h-10 rounded-full mr-3">
                                 <div>
-                                    <p class="text-sm font-medium text-gray-900">{{ $booking->user->name ?? 'N/A' }}</p>
+                                    <p class="text-sm font-medium text-gray-900">{{ $booking->client_name ?? 'N/A' }}</p>
                                     <p class="text-sm text-gray-500">{{ $booking->user->email ?? '' }}</p>
                                     <p class="text-sm text-gray-500">{{ $booking->phone }}</p>
                                 </div>
                             </div>
                         </div>
+
+                        {{-- Agent --}}
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Agent</label>
                             @if ($booking->driver)
@@ -59,6 +115,24 @@
                                 <p class="mt-1 text-sm text-gray-500">Aucun Agent assigné</p>
                             @endif
                         </div>
+
+                        {{-- Agent abonnement lié --}}
+                        @if ($booking->is_recurring && $booking->subscriptionDriver)
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700">Agent lié à l'abonnement</label>
+                                <div class="mt-1 flex items-center gap-3">
+                                    <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($booking->subscriptionDriver->user->name ?? 'Agent') }}"
+                                        class="w-8 h-8 rounded-full">
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-900">
+                                            {{ $booking->subscriptionDriver->user->name }}</p>
+                                        <p class="text-xs text-gray-500">Lié à toutes les courses de cet abonnement</p>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
+                        {{-- Trajet --}}
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700">Trajet</label>
                             <div class="mt-1">
@@ -67,31 +141,78 @@
                                     {{ $booking->to_location ?? 'N/A' }}</p>
                             </div>
                         </div>
+
+                        {{-- Distance --}}
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Distance estimée</label>
                             <p class="mt-1 text-sm text-gray-900">{{ $booking->distance ?? 'N/A' }} km</p>
                         </div>
+
+                        {{-- Date départ --}}
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Date et heure de départ</label>
                             <p class="mt-1 text-sm text-gray-900">
                                 {{ formatDateTimeFr($booking->pickup_date_time) }}</p>
                             </p>
                         </div>
+
+                        {{-- Heure de retour si aller-retour --}}
+                        @if ($booking->round_trip && $booking->return_time)
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Heure de retour</label>
+                                <p class="mt-1 text-sm text-gray-900">{{ $booking->return_time }}</p>
+                            </div>
+                        @endif
+
+                        {{-- Prix du trajet --}}
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Prix total</label>
+                            <label class="block text-sm font-medium text-gray-700">Prix du trajet </label>
                             <p class="mt-1 text-lg font-semibold text-purple-600">
-                                {{ number_format($booking->total_price, 0, ',', ' ') }} FCFA</p>
+                                {{ number_format($booking->base_price, 0, ',', ' ') }} FCFA</p>
                         </div>
+
+                        {{-- Prix total si abonnement --}}
+                        @if ($booking->days > 1)
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Prix de l'abonnement </label>
+                                <p class="mt-1 text-lg font-semibold text-purple-600">
+                                    {{ number_format($booking->total_price, 0, ',', ' ') }} FCFA</p>
+                            </div>
+                        @endif
+
+                        {{-- Commission --}}
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Commission</label>
+                            <label class="block text-sm font-medium text-gray-700 flex items-center gap-1">
+                                Commission
+                                @if (!$booking->commission)
+                                    <span
+                                        class="text-xs font-normal text-amber-500 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full ml-1">
+                                        Aperçu
+                                    </span>
+                                @endif
+                            </label>
                             <p class="mt-1 text-lg font-semibold text-purple-600">
-                                {{ number_format($booking->commission, 0, ',', ' ') }} FCFA</p>
+                                {{ number_format($booking->commission_preview, 0, ',', ' ') }} FCFA
+                            </p>
                         </div>
+
+                        {{-- Revenu agent --}}
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Revenue agent</label>
+                            <label class="block text-sm font-medium text-gray-700 flex items-center gap-1">
+                                Revenu agent
+                                @if (!$booking->driver_earning)
+                                    <span
+                                        class="text-xs font-normal text-amber-500 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full ml-1">
+                                        Aperçu
+                                    </span>
+                                @endif
+                            </label>
                             <p class="mt-1 text-lg font-semibold text-purple-600">
-                                {{ number_format($booking->driver_earning, 0, ',', ' ') }} FCFA</p>
+                                {{ number_format($booking->driver_earning_preview, 0, ',', ' ') }} FCFA
+                            </p>
                         </div>
+
+                        {{-- Statut --}}
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Statut</label>
                             <span
@@ -99,6 +220,17 @@
                                 {{ bookingStatusLabel($booking->status) }}
                             </span>
                         </div>
+
+                        {{-- Révocation --}}
+                        @if ($booking->is_revoked)
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Révocation</label>
+                                <p class="mt-1 text-sm text-red-500">
+                                    <i class="fas fa-ban mr-1"></i>
+                                    Course révoquée le {{ formatDateTimeFr($booking->revoked_at) }}
+                                </p>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -114,36 +246,85 @@
                             <label class="block text-sm font-medium text-gray-700">Nombre de passagers</label>
                             <p class="mt-1 text-sm text-gray-900">{{ $booking->passengers }}</p>
                         </div>
-                        <div>
+                        {{-- <div>
                             <label class="block text-sm font-medium text-gray-700">Circuit touristique</label>
                             <p class="mt-1 text-sm text-gray-900">{{ $booking->touristCircuit->name ?? 'N/A' }}</p>
-                        </div>
-                        <div>
+                        </div> --}}
+                        {{-- <div>
                             <label class="block text-sm font-medium text-gray-700">Code promo</label>
                             <p class="mt-1 text-sm text-gray-900">{{ $booking->promoCode->code ?? 'Aucun' }}</p>
-                        </div>
+                        </div> --}}
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Nombre de jours</label>
                             <p class="mt-1 text-sm text-gray-900">{{ $booking->days ?? 1 }}</p>
                         </div>
-                        @if ($booking->is_recurring)
+                        @if ($booking->days > 1)
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Prochaine date</label>
-                                <p class="mt-1 text-sm text-gray-900">{{ formatDateTimeFr($booking->next_recurring_date) }}
-                                </p>
-                            </div>
-                        @endif
-                        @if ($booking->remaining_days && $booking->remaining_days > 1)
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Nombre de jours restant</label>
+                                <label class="block text-sm font-medium text-gray-700">Jours de circulation</label>
                                 <p class="mt-1 text-sm text-gray-900">
-                                    {{ $booking->remaining_days > 1 ? $booking->remaining_days : 'Dernier jour' }}
+                                    {{ match ($booking->week_days) {
+                                        'lun_ven' => 'Lundi → Vendredi',
+                                        'lun_sam' => 'Lundi → Samedi',
+                                        'lun_dim' => 'Lundi → Dimanche',
+                                        default => 'N/A',
+                                    } }}
                                 </p>
                             </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Jours restants</label>
+                                <p class="mt-1 text-sm text-gray-900">
+                                    {{ $booking->remaining_days > 1 ? $booking->remaining_days . ' jour(s)' : 'Dernier jour' }}
+                                </p>
+                            </div>
+
+                            @if ($booking->is_recurring)
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Date de fin de
+                                        l'abonnement</label>
+                                    <p class="mt-1 text-sm text-gray-900">
+                                        {{ formatDateFr($booking->subscription_end_date) }}</p>
+                                </div>
+                            @endif
+
+                            @if ($booking->is_subscription_child)
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Abonnement parent</label>
+                                    <a href="{{ route('admin.bookings.show', $booking->parent_booking_id) }}"
+                                        class="mt-1 inline-flex items-center gap-1 text-sm text-[#286b41] hover:underline">
+                                        <i class="fas fa-arrow-up-right-from-square text-xs"></i>
+                                        {{ $booking->parentBooking?->booking_number }}
+                                    </a>
+                                </div>
+                            @endif
+
+                            @if ($booking->is_subscription_parent)
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Courses enfants</label>
+                                    <div class="mt-1 space-y-1">
+                                        @forelse ($booking->childBookings as $child)
+                                            <a href="{{ route('admin.bookings.show', $child) }}"
+                                                class="flex items-center justify-between text-sm text-gray-700 hover:text-[#286b41] hover:underline">
+                                                <span>
+                                                    <i class="fas fa-link text-xs text-gray-400 mr-1"></i>
+                                                    {{ $child->subscription_label }}
+                                                </span>
+                                                <span
+                                                    class="px-2 py-0.5 rounded-full text-xs {{ bookingStatusBadge($child->status) }}">
+                                                    {{ bookingStatusLabel($child->status) }}
+                                                </span>
+                                            </a>
+                                        @empty
+                                            <p class="text-sm text-gray-400">Aucune course enfant encore créée</p>
+                                        @endforelse
+                                    </div>
+                                </div>
+                            @endif
                         @endif
+
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700">Instructions spéciales</label>
-                            <p class="mt-1 text-sm text-gray-900">{{ $booking->special_instructions ?? 'Aucune' }}</p>
+                            <p class="mt-1 text-sm text-gray-900">{{ $booking->special_requests ?? 'Aucune' }}</p>
                         </div>
                     </div>
                 </div>
