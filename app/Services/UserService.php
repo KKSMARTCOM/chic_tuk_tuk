@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Role;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -47,16 +48,42 @@ class UserService
         ];
     }
 
-    public function generatePassword(): string
+    public function generatePassword(int $length = 8): string
     {
-        // Génère un mot de passe qui respecte les règles de validation
+        // Génère un mot de passe qui respecte les règles de validation : 8 caractères, 1 majuscule, 1 minuscule, 1 chiffre, 1 caractère spécial
+        $uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $lowercase = 'abcdefghijklmnopqrstuvwxyz';
+        $digits    = '0123456789';
+        $specials  = '@$!%*#?&';
+
+        $password = [
+            $uppercase[random_int(0, strlen($uppercase) - 1)],
+            $lowercase[random_int(0, strlen($lowercase) - 1)],
+            $digits[random_int(0, strlen($digits) - 1)],
+            $specials[random_int(0, strlen($specials) - 1)],
+        ];
+
+        $allChars = $uppercase . $lowercase . $digits . $specials;
+
+        for ($i = count($password); $i < $length; $i++) {
+            $password[] = $allChars[random_int(0, strlen($allChars) - 1)];
+        }
+
+        shuffle($password);
+
+        return implode('', $password);
+    }
+
+    /*     public function generatePassword(): string
+    {
+        
         $upper   = strtoupper(Str::random(2));
         $digits  = rand(10, 99);
         $special = Str::random(2, '@$!%*#?&');
         $lower   = Str::random(4);
 
         return str_shuffle($upper . $digits . $special . $lower);
-    }
+    } */
 
     public function create(array $data): User
     {
@@ -113,7 +140,7 @@ class UserService
     public function delete(User $user): void
     {
         // Empêcher la suppression de son propre compte
-        if ($user->id === auth()->id()) {
+        if ($user->id === Auth::id()) {
             throw new \Exception('Vous ne pouvez pas supprimer votre propre compte.');
         }
 

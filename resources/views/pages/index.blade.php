@@ -34,7 +34,7 @@
                         </div>
                         <a href="https://wa.me/22956141438?text=Bonjour%0AJ'aimerais%20avoir%20plus%20d'informations"
                             target="_blank" rel="noopener noreferrer"
-                            class="px-3 py-2 rounded-md bg-[#FFB230] font-semibold">
+                            class="px-6 py-3 rounded-md bg-[#FFB230] font-semibold text-black">
                             Contactez-nous
                         </a>
                     </div>
@@ -227,9 +227,9 @@
                                                 </label>
                                                 <select name="week_days" id="week_days"
                                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent bg-white">
-                                                    <option value="lun_ven">Lun → Ven (5j/sem)</option>
-                                                    <option value="lun_sam">Lun → Sam (6j/sem)</option>
-                                                    <option value="lun_dim">Lun → Dim (7j/sem)</option>
+                                                    <option value="lun_ven">Lun → Ven (5j/7)</option>
+                                                    <option value="lun_sam">Lun → Sam (6j/7)</option>
+                                                    <option value="lun_dim">Lun → Dim (7j/7)</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -867,9 +867,9 @@
 
                 // Labels lisibles pour les jours de semaine
                 var weekDaysLabels = {
-                    'lun_ven': 'Lun → Ven (5j/sem)',
-                    'lun_sam': 'Lun → Sam (6j/sem)',
-                    'lun_dim': 'Lun → Dim (7j/sem)',
+                    'lun_ven': 'Lun → Ven (5j/7)',
+                    'lun_sam': 'Lun → Sam (6j/7)',
+                    'lun_dim': 'Lun → Dim (7j/7)',
                 };
 
                 function updateRecap() {

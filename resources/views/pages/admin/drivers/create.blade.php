@@ -63,9 +63,17 @@
                 <div>
                     <label for="password" class="block text-sm font-medium text-gray-700">Mot de passe <span
                             class="text-red-600">*</span></label>
-                    <input type="text" name="password" id="password"
-                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('password') border-red-500 @enderror"
-                        placeholder="Entrez un mot de passe sécurisé">
+
+                    <div class="flex gap-2 mt-1">
+                        <input type="text" name="password" id="password"
+                            class=" block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('password') border-red-500 @enderror"
+                            placeholder="Entrez un mot de passe sécurisé">
+                        <button type="button" onclick="generatePassword()"
+                            class="px-3 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition text-sm font-semibold whitespace-nowrap">
+                            <i class="fas fa-refresh mr-1"></i> Générer
+                        </button>
+                    </div>
+
                     @error('password')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
@@ -220,4 +228,19 @@
             </button>
         </div>
     </form>
+
+    @push('scripts')
+        <script>
+            // Génère un mot de passe via AJAX
+            async function generatePassword() {
+                const res = await fetch('{{ route('admin.users.generate-password') }}');
+                const data = await res.json();
+                document.getElementById('password').value = data.password;
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                generatePassword();
+            });
+        </script>
+    @endpush
 @endsection
