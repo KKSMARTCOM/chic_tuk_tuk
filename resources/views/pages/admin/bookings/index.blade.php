@@ -79,34 +79,45 @@
                             <tr class="hover:bg-gray-50 transition">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                     <span>{{ $booking->booking_number }}</span>
-                                    <div class="mt-2">
-                                        @if ($booking->days > 1)
+                                    <div class="mt-2 max-w-[200px] w-full flex flex-wrap gap-2">
+                                        @if ($booking->is_subscription_parent)
                                             <span
                                                 class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200">
-                                                <i class="fas fa-rotate text-emerald-600"></i>
-                                                Abonnement · {{ $booking->days }}j
+                                                <i class="fas fa-rotate"></i>
+                                                Abonnement parent · {{ $booking->days }}j
                                             </span>
-
-                                            {{-- @if ($booking->round_trip)
-                                                <span
-                                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-600 border border-purple-200">
-                                                    <i class="fas fa-arrows-left-right text-purple-500"></i>
-                                                    Aller-Retour
-                                                </span>
-                                            @endif
-
-                                            @if ($booking->trip_type === 'return')
-                                                <span
-                                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-50 text-orange-600 border border-orange-200">
-                                                    <i class="fas fa-arrow-left text-orange-500"></i>
-                                                    Retour
-                                                </span>
-                                            @endif --}}
+                                        @elseif ($booking->is_subscription_child)
+                                            <span
+                                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200">
+                                                <i class="fas fa-link"></i>
+                                                {{ $booking->subscription_label }}
+                                            </span>
                                         @else
                                             <span
                                                 class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-200">
-                                                <i class="fas fa-car-side text-blue-500"></i>
+                                                <i class="fas fa-car-side"></i>
                                                 Course unique
+                                            </span>
+                                        @endif
+
+                                        @if ($booking->round_trip)
+                                            <span title="Aller-Retour"
+                                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-600 border border-purple-200">
+                                                <i class="fas fa-arrows-left-right"></i>
+                                            </span>
+                                        @endif
+
+                                        @if ($booking->trip_type === 'return')
+                                            <span title="Retour"
+                                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-50 text-orange-600 border border-orange-200">
+                                                <i class="fas fa-arrow-left"></i>
+                                            </span>
+                                        @endif
+
+                                        @if ($booking->is_revoked)
+                                            <span title="Révoquée"
+                                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-200">
+                                                <i class="fas fa-ban"></i>
                                             </span>
                                         @endif
                                     </div>
