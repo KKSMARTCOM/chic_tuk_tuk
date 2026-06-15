@@ -80,7 +80,7 @@
         </div>
         @if ($users->count() > 0)
             <div class="overflow-x-auto p-4">
-                <table id="datatable1" class="min-w-full divide-y divide-gray-200 display">
+                <table class="min-w-full divide-y divide-gray-200 display" id="datatable1">
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Utilisateur</th>
@@ -128,31 +128,36 @@
                                         {{ $user->is_active ? 'Actif' : 'Inactif' }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm flex items-center gap-3">
-                                    <button
-                                        onclick="openEditModal({{ $user->toJson() }}, {{ $user->roles->pluck('name')->toJson() }})"
-                                        class="text-green-600 hover:text-green-800" title="Modifier">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button onclick="openPasswordModal('{{ $user->id }}')"
-                                        class="text-blue-600 hover:text-blue-800" title="Modifier le mot de passe">
-                                        <i class="fas fa-key"></i>
-                                    </button>
-                                    <form action="{{ route('admin.users.toggle-status', $user) }}" method="POST"
-                                        class="inline">
-                                        @csrf
-                                        <button type="submit"
-                                            class="{{ $user->is_active ? 'text-orange-500 hover:text-orange-700' : 'text-green-500 hover:text-green-700' }}"
-                                            title="{{ $user->is_active ? 'Désactiver' : 'Activer' }}">
-                                            <i class="fas {{ $user->is_active ? 'fa-toggle-on' : 'fa-toggle-off' }}"></i>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <div class="flex items-center gap-3">
+
+                                        <button
+                                            onclick="openEditModal({{ $user->toJson() }}, {{ $user->roles->pluck('name')->toJson() }})"
+                                            class="text-green-600 hover:text-green-800" title="Modifier">
+                                            <i class="fas fa-edit"></i>
                                         </button>
-                                    </form>
-                                    @if ($user->id !== auth()->id())
-                                        <button onclick="openDeleteModal('{{ $user->id }}', '{{ $user->name }}')"
-                                            class="text-red-600 hover:text-red-800" title="Supprimer">
-                                            <i class="fas fa-trash"></i>
+                                        <button onclick="openPasswordModal('{{ $user->id }}')"
+                                            class="text-blue-600 hover:text-blue-800" title="Modifier le mot de passe">
+                                            <i class="fas fa-key"></i>
                                         </button>
-                                    @endif
+                                        <form action="{{ route('admin.users.toggle-status', $user) }}" method="POST"
+                                            class="inline">
+                                            @csrf
+                                            <button type="submit"
+                                                class="{{ $user->is_active ? 'text-orange-500 hover:text-orange-700' : 'text-green-500 hover:text-green-700' }}"
+                                                title="{{ $user->is_active ? 'Désactiver' : 'Activer' }}">
+                                                <i
+                                                    class="fas {{ $user->is_active ? 'fa-toggle-on' : 'fa-toggle-off' }}"></i>
+                                            </button>
+                                        </form>
+                                        @if ($user->id !== auth()->id())
+                                            <button title="Supprimer"
+                                                onclick="openDeleteModal('{{ $user->id }}', '{{ $user->name }}')"
+                                                class="text-red-600 hover:text-red-800" title="Supprimer">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach
@@ -169,7 +174,7 @@
 
     {{-- ===== MODAL CRÉATION ===== --}}
     <div id="createModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-30">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
             <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
                 <h3 class="text-lg font-bold text-gray-800">Nouvel Utilisateur</h3>
                 <button onclick="closeCreateModal()" class="text-gray-400 hover:text-gray-600">
@@ -206,7 +211,7 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Rôle Spatie</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Rôle</label>
                         <select name="role"
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
                             <option value="">— Par défaut (profil) —</option>
@@ -341,14 +346,32 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Nouveau mot de passe <span
                             class="text-red-500">*</span></label>
-                    <input type="password" name="password" required minlength="8"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <div class="relative">
+                        <input type="password" name="password" id="password" required minlength="8"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+
+                        <button type="button" onclick="togglePassword('password', this)"
+                            class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700">
+
+                            <i class="fa fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
+
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Confirmer <span
                             class="text-red-500">*</span></label>
-                    <input type="password" name="password_confirmation" required
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+
+                    <div class="relative">
+                        <input type="password" name="password_confirmation" id="password_confirmation" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+
+                        <button type="button" onclick="togglePassword('password_confirmation', this)"
+                            class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700">
+
+                            <i class="fa fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="flex gap-3 pt-2">
                     <button type="button" onclick="closePasswordModal()"
@@ -445,6 +468,23 @@
             function closePasswordModal() {
                 document.getElementById('passwordModal').classList.add('hidden');
                 document.getElementById('passwordModal').classList.remove('flex');
+            }
+
+            function togglePassword(inputId, button) {
+                const input = document.getElementById(inputId);
+                const icon = button.querySelector('i');
+
+                if (input.type === 'password') {
+                    input.type = 'text';
+
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    input.type = 'password';
+
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
             }
 
             // ===== SUPPRESSION =====

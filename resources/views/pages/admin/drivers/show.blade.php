@@ -263,6 +263,11 @@
                         Ajouter un paiement
                     </button>
 
+                    <a href="{{ route('admin.payments.driver-details', $driverData->driver->id) }}"
+                        class="w-full text-center block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
+                        <i class="fas fa-chart-line mr-2"></i> Voir les paiements
+                    </a>
+
                     <button
                         onclick="openAvailabilityModal('{{ $driverData->id }}', {{ $driverData->driver->is_available ? 'false' : 'true' }}, '{{ $driverData->name }}', '{{ $driverData->driver->is_available ? 'indisponible' : 'disponible' }}')"
                         class="w-full {{ $driverData->driver->is_available ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700' }} text-white px-4 py-2 rounded-lg transition">

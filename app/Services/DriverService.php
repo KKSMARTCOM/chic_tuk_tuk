@@ -130,7 +130,7 @@ class DriverService
         return $user->load('driver');
     }
 
-    public function updateDriver($driverId, array $data)
+    public function updateDriver(string $driverId, array $data)
     {
         $user = User::findOrFail($driverId);
 
@@ -160,7 +160,13 @@ class DriverService
         return $user->load('driver');
     }
 
-    public function deleteDriver($driverId)
+    public function updateDriverPassword(string $driverId, string $password)
+    {
+        $user = User::findOrFail($driverId);
+        $user->update(['password' => Hash::make($password)]);
+    }
+
+    public function deleteDriver(string $driverId)
     {
         $user = User::findOrFail($driverId);
 

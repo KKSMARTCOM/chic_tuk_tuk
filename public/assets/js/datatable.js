@@ -3,7 +3,7 @@ $(function (e) {
 
     // DATATABLE 1
     $("#datatable1").DataTable({
-        order: [[3, "desc"]],
+        order: [],
         language: {
             processing: "Traitement en cours...",
             search: "Rechercher : ",
@@ -19,7 +19,7 @@ $(function (e) {
 
     // DATATABLE 2
     $("#datatable2").DataTable({
-        order: [[3, "desc"]],
+        order: [],
         language: {
             processing: "Traitement en cours...",
             search: "Rechercher : ",

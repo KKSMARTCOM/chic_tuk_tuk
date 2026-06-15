@@ -28,6 +28,7 @@ Route::middleware(['auth:sanctum'])->prefix('admin')->name('admin.')->group(func
     Route::resource('drivers', DriverController::class)->middleware('permission:view-drivers');
     Route::post('drivers/{driver}/toggle-availability', [DriverController::class, 'toggleAvailability'])->name('drivers.toggle-availability')->middleware('permission:edit-drivers');
     Route::post('drivers/{driver}/toggle-status', [DriverController::class, 'toggleStatus'])->name('drivers.toggle-status')->middleware('permission:edit-drivers');
+    Route::post('drivers/{driver}/update-password', [DriverController::class, 'updatePassword'])->name('drivers.update-password')->middleware('permission:edit-drivers');
 
     // Bookings
     Route::get('bookings', [BookingController::class, 'index'])->name('bookings.index')->middleware('permission:view-bookings');

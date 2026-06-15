@@ -80,13 +80,13 @@
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                 N° Réservation</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Client</th>
+                                Info. Client</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                 Agent</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                 Trajet</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Date</th>
+                                Date de départ</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                 Status</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -144,13 +144,13 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
-                                        <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($booking->user->name ?? 'Client') }}"
+                                        <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($booking->client_name ?? ($booking->user?->name ?? 'Client')) }}"
                                             class="w-8 h-8 rounded-full mr-3">
                                         <div>
-                                            {{-- <div class="text-sm font-medium text-gray-900">
-                                            {{ $booking->user->name ?? 'N/A' }}</div> --}}
-                                            <div class="text-sm text-gray-500">{{ $booking->phone }}
+                                            <div class="text-sm font-medium text-gray-900">
+                                                {{ $booking->client_name ?? ($booking->user?->name ?? 'Client') }}
                                             </div>
+                                            <div class="text-sm text-gray-500">{{ $booking->phone }}</div>
                                         </div>
                                     </div>
                                 </td>

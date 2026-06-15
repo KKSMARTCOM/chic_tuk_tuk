@@ -5,11 +5,14 @@
     <div class="bg-white rounded-lg shadow-md mb-8">
         <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
             <div>
-                <a href="{{ route('admin.payments.index') }}" class="text-blue-600 hover:text-blue-800">
-                    <i class="fas fa-arrow-left mr-2"></i> Retour
-                </a>
                 <h1 class="text-2xl font-bold text-gray-800 mt-2">Détails de Paiement -
                     {{ $driverStats['driver']->user?->name ?? 'N/A' }}</h1>
+            </div>
+            <div class="block md:flex gap-3">
+                <a href="{{ route('admin.payments.index') }}"
+                    class="bg-gray-600 block mt-2 md:mt-0 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition">
+                    <i class="fas fa-arrow-left mr-2"></i> Retour
+                </a>
             </div>
         </div>
     </div>
