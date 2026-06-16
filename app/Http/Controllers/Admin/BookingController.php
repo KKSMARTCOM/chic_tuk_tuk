@@ -41,7 +41,8 @@ class BookingController extends Controller
             });
         }
 
-        $bookings = $query->latest()->get();
+        $sort     = in_array($request->sort, ['asc', 'desc']) ? $request->sort : 'desc';
+        $bookings = $query->orderBy('created_at', $sort)->get();
 
         return view('pages.admin.bookings.index', compact('bookings'));
     }

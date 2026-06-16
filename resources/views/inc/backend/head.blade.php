@@ -25,8 +25,6 @@
     <!-- DATATABLES CSS -->
     <link rel="stylesheet" href="{{ asset('assets/css/datatables.min.css') }}" />
 
-    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
-
     <!-- PWA Script -->
     <script defer src="/js/pwa.js"></script>
 

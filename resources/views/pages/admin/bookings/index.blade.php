@@ -57,6 +57,8 @@
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Ajouter le </th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                 N° Réservation</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                 Info. Client</th>
@@ -78,8 +80,10 @@
                         @forelse($bookings as $booking)
                             <tr class="hover:bg-gray-50 transition">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    {{ formatDateTimeFr($booking->created_at) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                     <span>{{ $booking->booking_number }}</span>
-                                    <div class="mt-2 max-w-[250px] w-full flex flex-wrap gap-2">
+                                    <div class="flex flex-wrap gap-2 max-w-60 w-full">
                                         @if ($booking->is_subscription_parent)
                                             <span
                                                 class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200">
@@ -88,7 +92,7 @@
                                             </span>
                                         @elseif ($booking->is_subscription_child)
                                             <span
-                                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200">
+                                                class="inline-flex line-clamp-1 items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200">
                                                 <i class="fas fa-link"></i>
                                                 {{ $booking->subscription_label }}
                                             </span>
@@ -128,7 +132,7 @@
                                             class="w-8 h-8 rounded-full mr-3">
                                         <div>
                                             <div class="text-sm font-medium text-gray-900">
-                                                {{ $booking->client_name ?? ($booking->user?->name ?? 'Client') }}
+                                                {{ $booking->client_name ?? ($booking->parentBooking->booking_number ?? ($booking->user?->name ?? 'Client')) }}
                                             </div>
                                             <div class="text-sm text-gray-500">{{ $booking->phone }}</div>
                                         </div>
@@ -148,7 +152,7 @@
                                                 <i class="fas fa-user-times"></i> Retirer
                                             </button>
                                         @endif
-                                    @else
+                                    @elseif (!in_array($booking->status, ['expired']))
                                         <button onclick="assignDriver('{{ $booking->id }}')"
                                             class="text-purple-600 hover:text-purple-800 text-sm font-semibold">
                                             <i class="fas fa-plus-circle"></i> Assigner
@@ -157,9 +161,9 @@
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="text-sm text-gray-900">
-                                        {{ Str::limit($booking->from_location, 25, '...') ?? 'N/A' }}</div>
+                                        {{ Str::limit($booking->from_location, 20, '...') ?? 'N/A' }}</div>
                                     <div class="text-sm text-gray-500"><i class="fas fa-arrow-right"></i>
-                                        {{ Str::limit($booking->to_location, 25, '...') ?? 'N/A' }}</div>
+                                        {{ Str::limit($booking->to_location, 20, '...') ?? 'N/A' }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                     {{ formatDateTimeFr($booking->pickup_date_time) }}
@@ -267,6 +271,35 @@
                     'Accept': 'application/json'
                 }
             });
+
+            $("#datatable1").DataTable({
+                order: [
+                    [0, "desc"]
+                ],
+                columnDefs: [{
+                    targets: 0,
+                    searchable: false,
+                }, ],
+                language: {
+                    processing: "Traitement en cours...",
+                    search: "Rechercher : ",
+                    lengthMenu: "Afficher _MENU_ éléments",
+                    info: "Affichage de _START_ à _END_ sur _TOTAL_ ",
+                    infoEmpty: "Affichage de 0 à 0 sur 0",
+                    infoFiltered: "(filtré de _MAX_ éléments au total)",
+                    loadingRecords: "Chargement en cours...",
+                    zeroRecords: "Aucun élément à afficher",
+                    emptyTable: "Aucune donnée disponible dans le tableau",
+                },
+                // Callback pour appliquer select2 après init
+                initComplete: function() {
+                    if (typeof $.fn.select2 !== "undefined") {
+                        $(".dataTables_length select").select2({
+                            minimumResultsForSearch: Infinity,
+                        });
+                    }
+                },
+            })
 
             function assignDriver(bookingId) {
                 $('#currentBookingId').val(bookingId);
