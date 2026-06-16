@@ -36,7 +36,7 @@ class DashboardController extends Controller
 
         $recentBookings = Booking::with(['user', 'driver',])
             ->where('status', 'pending')
-            ->latest()
+            ->orderBy('created_at', 'desc')
             ->take(10)
             ->get();
 

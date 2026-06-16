@@ -133,55 +133,6 @@
             }
         });
 
-        // Charger les notifications
-        function loadNotifications() {
-            fetch('/notifications/unread-count')
-                .then(response => response.json())
-                .then(data => {
-                    const countElement = document.getElementById('notification-count');
-                    if (data.count > 0) {
-                        countElement.textContent = data.count > 99 ? '99+' : data.count;
-                        countElement.classList.remove('opacity-0');
-                    } else {
-                        countElement.classList.add('opacity-0');
-                    }
-                });
-
-            // Charger les 5 dernières notifications pour le dropdown
-            fetch('/notifications?limit=5')
-                .then(response => response.json())
-                .then(data => {
-                    const listElement = document.getElementById('notification-list');
-                    if (data.data && data.data.length > 0) {
-                        let html = '';
-                        data.data.forEach(notification => {
-                            html += `
-            <div class="p-4 border-b hover:bg-gray-50 cursor-pointer" onclick="markAsRead(${notification.id})">
-                <div class="flex items-start space-x-3">
-                    <div class="flex-shrink-0">
-                        <i class="${notification.icon} text-lg"></i>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium text-gray-900 ${notification.is_read ? '' : 'font-bold'}">${notification.title}</p>
-                        <p class="text-sm text-gray-500">${notification.message}</p>
-                        <p class="text-xs text-gray-400 mt-1">${notification.created_at_human}</p>
-                    </div>
-                </div>
-            </div>
-        `;
-                        });
-                        listElement.innerHTML = html;
-                    } else {
-                        listElement.innerHTML = '<div class="p-4 text-center text-gray-500">Aucune notification</div>';
-                    }
-                })
-                .catch(error => {
-                    console.error('Erreur lors du chargement des notifications:', error);
-                    document.getElementById('notification-list').innerHTML =
-                        `<div class="p-4 text-center text-gray-500">Erreur de chargement</div>`;
-                });
-        }
-
         // Marquer une notification comme lue depuis le dropdown
         function markAsRead(id) {
             fetch(`/notifications/${id}/read`, {
@@ -195,11 +146,6 @@
                     loadNotifications(); // Recharger les notifications
                 });
         }
-
-        // Charger le compteur au chargement de la page
-        document.addEventListener('DOMContentLoaded', function() {
-            loadNotifications();
-        });
 
         function showLogoutModal() {
             document.getElementById('logoutModal').classList.remove('hidden');

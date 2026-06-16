@@ -150,6 +150,8 @@
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Ajouter le </th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                 Agent</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                 Contact</th>
@@ -166,6 +168,8 @@
                     <tbody class="bg-white divide-y divide-gray-200">
                         @forelse($drivers as $driver)
                             <tr class="hover:bg-gray-50 transition">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    {{ formatDateTimeFr($driver->created_at) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
                                         <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($driver->name) }}"
@@ -324,6 +328,35 @@
 
     @push('scripts')
         <script>
+            $("#datatable1").DataTable({
+                order: [
+                    [0, "desc"]
+                ],
+                columnDefs: [{
+                    targets: 0,
+                    searchable: false,
+                }, ],
+                language: {
+                    processing: "Traitement en cours...",
+                    search: "Rechercher : ",
+                    lengthMenu: "Afficher _MENU_ éléments",
+                    info: "Affichage de _START_ à _END_ sur _TOTAL_ ",
+                    infoEmpty: "Affichage de 0 à 0 sur 0",
+                    infoFiltered: "(filtré de _MAX_ éléments au total)",
+                    loadingRecords: "Chargement en cours...",
+                    zeroRecords: "Aucun élément à afficher",
+                    emptyTable: "Aucune donnée disponible dans le tableau",
+                },
+                // Callback pour appliquer select2 après init
+                initComplete: function() {
+                    if (typeof $.fn.select2 !== "undefined") {
+                        $(".dataTables_length select").select2({
+                            minimumResultsForSearch: Infinity,
+                        });
+                    }
+                },
+            })
+
             // ===== SUPPRESSION =====
             function confirmDelete(driverId, driverName) {
                 document.getElementById('deleteMessage').textContent =
