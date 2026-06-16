@@ -74,7 +74,7 @@ class DriverController extends Controller
                 'password.required' => 'Le mot de passe est requis.',
                 'password.min' => 'Le mot de passe doit contenir au moins 8 caractères.',
                 'license_number.required' => 'Le numéro de permis est requis.',
-                'license_number.unique' => 'Ce numéro de permis est déjà utilisé.',
+                //'license_number.unique' => 'Ce numéro de permis est déjà utilisé.',
                 'vehicle_number.required' => 'Le numéro de véhicule est requis.',
                 'vehicle_type.required' => 'Le type de véhicule est requis.',
                 'vehicle_type.in' => 'Le type de véhicule sélectionné est invalide.',
@@ -126,7 +126,7 @@ class DriverController extends Controller
                 'phone' => 'required|string|unique:users,phone,' . $driver->id . ',id,profil,driver',
                 'is_active' => 'boolean',
                 'adresse' => 'nullable|string|max:255',
-                'license_number' => 'required|string|unique:drivers,license_number,' . $driver->driver->id,
+                'license_number' => 'required|string|',
                 'vehicle_number' => 'required|string',
                 'vehicle_type' => 'required|string',
                 'is_available' => 'boolean',
@@ -140,7 +140,7 @@ class DriverController extends Controller
             [
                 'email.unique' => 'Cette adresse e-mail est déjà utilisée.',
                 'phone.unique' => 'Ce numéro de téléphone est déjà utilisé.',
-                'license_number.unique' => 'Ce numéro de permis est déjà utilisé.',
+                //'license_number.unique' => 'Ce numéro de permis est déjà utilisé.',
                 'start_date.date' => 'La date de début doit être une date valide.',
             ]
         );

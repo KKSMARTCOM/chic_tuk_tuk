@@ -168,7 +168,7 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label for="license_number" class="block text-sm font-medium text-gray-700">Numéro de
+                        <label for="license_number" class="block text-sm font-medium text-gray-700">Catégorie de
                             permis</label>
                         <input type="text" name="license_number" id="license_number"
                             value="{{ old('license_number', $driver->driver->license_number ?? '') }}"
