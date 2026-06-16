@@ -150,6 +150,8 @@
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Ajouter le </th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                 Agent</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                 Contact</th>
@@ -166,6 +168,8 @@
                     <tbody class="bg-white divide-y divide-gray-200">
                         @forelse($drivers as $driver)
                             <tr class="hover:bg-gray-50 transition">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    {{ formatDateTimeFr($driver->created_at) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
                                         <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($driver->name) }}"
@@ -214,6 +218,10 @@
                                         class="text-green-600 hover:text-green-800 mr-3">
                                         <i class="fas fa-edit"></i>
                                     </a>
+                                    <button onclick="openPasswordModal('{{ $driver->id }}')"
+                                        class="text-blue-600 hover:text-blue-800 mr-3" title="Modifier le mot de passe">
+                                        <i class="fas fa-key"></i>
+                                    </button>
                                     <button onclick="confirmDelete('{{ $driver->id }}', '{{ $driver->name }}')"
                                         class="text-red-600 hover:text-red-800">
                                         <i class="fas fa-trash"></i>
@@ -263,8 +271,93 @@
         </div>
     </div>
 
+    {{-- ===== MODAL MOT DE PASSE ===== --}}
+    <div id="passwordModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-30">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 class="text-lg font-bold text-gray-800">Modifier le mot de passe</h3>
+                <button onclick="closePasswordModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="passwordForm" method="POST" class="p-6 space-y-4">
+                @csrf
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nouveau mot de passe <span
+                            class="text-red-500">*</span></label>
+
+                    <div class="relative">
+                        <input type="password" name="password" id="password" required minlength="8"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+
+                        <button type="button" onclick="togglePassword('password', this)"
+                            class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700">
+
+                            <i class="fa fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Confirmer <span
+                            class="text-red-500">*</span></label>
+                    <div class="relative">
+                        <input type="password" name="password_confirmation" id="password_confirmation" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+
+                        <button type="button" onclick="togglePassword('password_confirmation', this)"
+                            class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700">
+
+                            <i class="fa fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="closePasswordModal()"
+                        class="flex-1 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+                        Annuler
+                    </button>
+                    <button type="submit"
+                        class="flex-1 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold">
+                        Mettre à jour
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     @push('scripts')
         <script>
+            $("#datatable1").DataTable({
+                order: [
+                    [0, "desc"]
+                ],
+                columnDefs: [{
+                    targets: 0,
+                    searchable: false,
+                }, ],
+                language: {
+                    processing: "Traitement en cours...",
+                    search: "Rechercher : ",
+                    lengthMenu: "Afficher _MENU_ éléments",
+                    info: "Affichage de _START_ à _END_ sur _TOTAL_ ",
+                    infoEmpty: "Affichage de 0 à 0 sur 0",
+                    infoFiltered: "(filtré de _MAX_ éléments au total)",
+                    loadingRecords: "Chargement en cours...",
+                    zeroRecords: "Aucun élément à afficher",
+                    emptyTable: "Aucune donnée disponible dans le tableau",
+                },
+                // Callback pour appliquer select2 après init
+                initComplete: function() {
+                    if (typeof $.fn.select2 !== "undefined") {
+                        $(".dataTables_length select").select2({
+                            minimumResultsForSearch: Infinity,
+                        });
+                    }
+                },
+            })
+
+            // ===== SUPPRESSION =====
             function confirmDelete(driverId, driverName) {
                 document.getElementById('deleteMessage').textContent =
                     `Êtes-vous sûr de vouloir supprimer ${driverName} ? Cette action est irréversible.`;
@@ -276,6 +369,35 @@
             function closeDeleteModal() {
                 document.getElementById('deleteModal').classList.add('hidden');
                 document.getElementById('deleteModal').classList.remove('flex');
+            }
+
+            // ===== MOT DE PASSE =====
+            function openPasswordModal(userId) {
+                document.getElementById('passwordForm').action = `/admin/drivers/${userId}/update-password`;
+                document.getElementById('passwordModal').classList.remove('hidden');
+                document.getElementById('passwordModal').classList.add('flex');
+            }
+
+            function closePasswordModal() {
+                document.getElementById('passwordModal').classList.add('hidden');
+                document.getElementById('passwordModal').classList.remove('flex');
+            }
+
+            function togglePassword(inputId, button) {
+                const input = document.getElementById(inputId);
+                const icon = button.querySelector('i');
+
+                if (input.type === 'password') {
+                    input.type = 'text';
+
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    input.type = 'password';
+
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
             }
         </script>
     @endpush

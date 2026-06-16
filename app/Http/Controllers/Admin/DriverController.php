@@ -192,6 +192,17 @@ class DriverController extends Controller
         ]);
     }
 
+    public function updatePassword(Request $request, User $driver)
+    {
+        $validated = $request->validate([
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $this->driverService->updateDriverPassword($driver->id, $validated['password']);
+
+        return redirect()->back()->with('success', 'Mot de passe mis à jour avec succès');
+    }
+
     /*
     public function export(Request $request)
     {

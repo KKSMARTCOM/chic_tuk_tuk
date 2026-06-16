@@ -78,15 +78,17 @@
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Ajouter le </th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                 N° Réservation</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Client</th>
+                                Info. Client</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                 Agent</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                 Trajet</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Date</th>
+                                Date de départ</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                 Status</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -97,17 +99,62 @@
                         @forelse($recentBookings as $booking)
                             <tr class="hover:bg-gray-50 transition">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                    {{ $booking->booking_number }}
+                                    {{ formatDateTimeFr($booking->created_at) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    <span>{{ $booking->booking_number }}</span>
+
+                                    <div class="mt-2 max-w-[250px] w-full flex flex-wrap gap-2">
+                                        @if ($booking->is_subscription_parent)
+                                            <span
+                                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200">
+                                                <i class="fas fa-rotate"></i>
+                                                Abonnement parent · {{ $booking->days }}j
+                                            </span>
+                                        @elseif ($booking->is_subscription_child)
+                                            <span
+                                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200">
+                                                <i class="fas fa-link"></i>
+                                                {{ $booking->subscription_label }}
+                                            </span>
+                                        @else
+                                            <span
+                                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-200">
+                                                <i class="fas fa-car-side"></i>
+                                                Course unique
+                                            </span>
+                                        @endif
+
+                                        @if ($booking->round_trip)
+                                            <span title="Aller-Retour"
+                                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-600 border border-purple-200">
+                                                <i class="fas fa-arrows-left-right"></i>
+                                            </span>
+                                        @endif
+
+                                        @if ($booking->trip_type === 'return')
+                                            <span title="Retour"
+                                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-50 text-orange-600 border border-orange-200">
+                                                <i class="fas fa-arrow-left"></i>
+                                            </span>
+                                        @endif
+
+                                        @if ($booking->is_revoked)
+                                            <span title="Révoquée"
+                                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-200">
+                                                <i class="fas fa-ban"></i>
+                                            </span>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
-                                        <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($booking->user->name ?? 'Client') }}"
+                                        <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($booking->client_name ?? ($booking->user?->name ?? 'Client')) }}"
                                             class="w-8 h-8 rounded-full mr-3">
                                         <div>
-                                            {{-- <div class="text-sm font-medium text-gray-900">
-                                            {{ $booking->user->name ?? 'N/A' }}</div> --}}
-                                            <div class="text-sm text-gray-500">{{ $booking->phone }}
+                                            <div class="text-sm font-medium text-gray-900">
+                                                {{ $booking->client_name ?? ($booking->parentBooking->booking_number ?? ($booking->user?->name ?? 'Client')) }}
                                             </div>
+                                            <div class="text-sm text-gray-500">{{ $booking->phone }}</div>
                                         </div>
                                     </div>
                                 </td>
@@ -153,10 +200,13 @@
                                         class="text-blue-600 hover:text-blue-800 mr-3">
                                         <i class="fas fa-eye"></i>
                                     </button>
-                                    <button onclick="editBooking('{{ $booking->id }}')"
-                                        class="text-green-600 hover:text-green-800 mr-3">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
+
+                                    @if ($booking->status === 'pending')
+                                        <button onclick="editBooking('{{ $booking->id }}')"
+                                            class="text-green-600 hover:text-green-800 mr-3">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    @endif
                                 </td>
                             </tr>
                         @empty
@@ -383,6 +433,60 @@
                     'Accept': 'application/json'
                 }
             });
+
+            $("#datatable1").DataTable({
+                order: [
+                    [0, "desc"]
+                ],
+                columnDefs: [{
+                    targets: 0,
+                    searchable: false,
+                }, ],
+                language: {
+                    processing: "Traitement en cours...",
+                    search: "Rechercher : ",
+                    lengthMenu: "Afficher _MENU_ éléments",
+                    info: "Affichage de _START_ à _END_ sur _TOTAL_ ",
+                    infoEmpty: "Affichage de 0 à 0 sur 0",
+                    infoFiltered: "(filtré de _MAX_ éléments au total)",
+                    loadingRecords: "Chargement en cours...",
+                    zeroRecords: "Aucun élément à afficher",
+                    emptyTable: "Aucune donnée disponible dans le tableau",
+                },
+                // Callback pour appliquer select2 après init
+                initComplete: function() {
+                    if (typeof $.fn.select2 !== "undefined") {
+                        $(".dataTables_length select").select2({
+                            minimumResultsForSearch: Infinity,
+                        });
+                    }
+                },
+            })
+
+            $("#datatable2").DataTable({
+                order: [
+                    [1, "desc"]
+                ],
+                language: {
+                    processing: "Traitement en cours...",
+                    search: "Rechercher : ",
+                    lengthMenu: "Afficher _MENU_ éléments",
+                    info: "Affichage de _START_ à _END_ sur _TOTAL_ ",
+                    infoEmpty: "Affichage de 0 à 0 sur 0",
+                    infoFiltered: "(filtré de _MAX_ éléments au total)",
+                    loadingRecords: "Chargement en cours...",
+                    zeroRecords: "Aucun élément à afficher",
+                    emptyTable: "Aucune donnée disponible dans le tableau",
+                },
+                // Callback pour appliquer select2 après init
+                initComplete: function() {
+                    if (typeof $.fn.select2 !== "undefined") {
+                        $(".dataTables_length select").select2({
+                            minimumResultsForSearch: Infinity,
+                        });
+                    }
+                },
+            })
 
             function assignDriver(bookingId) {
                 $('#currentBookingId').val(bookingId);

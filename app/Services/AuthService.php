@@ -167,8 +167,18 @@ class AuthService
 
             Cookie::queue(Cookie::forget($cookieName));
 
+            // Déconnecter aussi la session web
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
             return redirect('/login')->with('success', 'Déconnecté avec succès.');
         }
+
+        // Sécurité : déconnecter la session même si aucun cookie trouvé
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         return redirect('/login');
     }

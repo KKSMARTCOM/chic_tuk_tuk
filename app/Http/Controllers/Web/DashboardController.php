@@ -34,9 +34,9 @@ class DashboardController extends Controller
                 ->count(),
         ];
 
-        $recentBookings = Booking::with(['user', 'driver', 'fromZone', 'toZone'])
+        $recentBookings = Booking::with(['user', 'driver',])
             ->where('status', 'pending')
-            ->latest()
+            ->orderBy('created_at', 'desc')
             ->take(10)
             ->get();
 

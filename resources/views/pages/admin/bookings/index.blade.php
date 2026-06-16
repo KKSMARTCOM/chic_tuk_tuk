@@ -5,9 +5,10 @@
     <div class="px-6 py-4 bg-white rounded-lg shadow-md">
         <div class="py-4 border-b border-gray-200 flex items-center justify-between">
             <h3 class="text-xl font-bold text-gray-800">Liste des réservations disponible</h3>
-            {{-- <button class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
-                <i class="fas fa-download mr-2"></i> Exporter
-            </button> --}}
+            <a href="{{ route('admin.bookings.create') }}"
+                class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
+                <i class="fas fa-plus mr-2"></i> Nouvelle réservation
+            </a>
         </div>
 
         <!-- Formulaire de recherche et filtre -->
@@ -56,17 +57,19 @@
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Ajouter le </th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                 N° Réservation</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Client</th>
+                                Info. Client</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                 Agent</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                 Trajet</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Date</th>
+                                Date de départ</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Prix</th>
+                                Prix du trajet</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                 Status</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -77,17 +80,61 @@
                         @forelse($bookings as $booking)
                             <tr class="hover:bg-gray-50 transition">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                    {{ $booking->booking_number }}
+                                    {{ formatDateTimeFr($booking->created_at) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    <span>{{ $booking->booking_number }}</span>
+                                    <div class="flex flex-wrap gap-2 max-w-60 w-full">
+                                        @if ($booking->is_subscription_parent)
+                                            <span
+                                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200">
+                                                <i class="fas fa-rotate"></i>
+                                                Abonnement parent · {{ $booking->days }}j
+                                            </span>
+                                        @elseif ($booking->is_subscription_child)
+                                            <span
+                                                class="inline-flex line-clamp-1 items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200">
+                                                <i class="fas fa-link"></i>
+                                                {{ $booking->subscription_label }}
+                                            </span>
+                                        @else
+                                            <span
+                                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-200">
+                                                <i class="fas fa-car-side"></i>
+                                                Course unique
+                                            </span>
+                                        @endif
+
+                                        @if ($booking->round_trip)
+                                            <span title="Aller-Retour"
+                                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-600 border border-purple-200">
+                                                <i class="fas fa-arrows-left-right"></i>
+                                            </span>
+                                        @endif
+
+                                        @if ($booking->trip_type === 'return')
+                                            <span title="Retour"
+                                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-50 text-orange-600 border border-orange-200">
+                                                <i class="fas fa-arrow-left"></i>
+                                            </span>
+                                        @endif
+
+                                        @if ($booking->is_revoked)
+                                            <span title="Révoquée"
+                                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-200">
+                                                <i class="fas fa-ban"></i>
+                                            </span>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
-                                        <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($booking->user->name ?? 'Client') }}"
+                                        <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($booking->client_name ?? ($booking->user?->name ?? 'Client')) }}"
                                             class="w-8 h-8 rounded-full mr-3">
                                         <div>
-                                            {{-- <div class="text-sm font-medium text-gray-900">
-                                            {{ $booking->user->name ?? 'N/A' }}</div> --}}
-                                            <div class="text-sm text-gray-500">{{ $booking->phone }}
+                                            <div class="text-sm font-medium text-gray-900">
+                                                {{ $booking->client_name ?? ($booking->parentBooking->booking_number ?? ($booking->user?->name ?? 'Client')) }}
                                             </div>
+                                            <div class="text-sm text-gray-500">{{ $booking->phone }}</div>
                                         </div>
                                     </div>
                                 </td>
@@ -105,7 +152,7 @@
                                                 <i class="fas fa-user-times"></i> Retirer
                                             </button>
                                         @endif
-                                    @else
+                                    @elseif (!in_array($booking->status, ['expired']))
                                         <button onclick="assignDriver('{{ $booking->id }}')"
                                             class="text-purple-600 hover:text-purple-800 text-sm font-semibold">
                                             <i class="fas fa-plus-circle"></i> Assigner
@@ -114,15 +161,15 @@
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="text-sm text-gray-900">
-                                        {{ Str::limit($booking->from_location, 25, '...') ?? 'N/A' }}</div>
+                                        {{ Str::limit($booking->from_location, 20, '...') ?? 'N/A' }}</div>
                                     <div class="text-sm text-gray-500"><i class="fas fa-arrow-right"></i>
-                                        {{ Str::limit($booking->to_location, 25, '...') ?? 'N/A' }}</div>
+                                        {{ Str::limit($booking->to_location, 20, '...') ?? 'N/A' }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                     {{ formatDateTimeFr($booking->pickup_date_time) }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                                    {{ number_format($booking->total_price, 0, ',', ' ') }} FCFA
+                                    {{ number_format($booking->base_price, 0, ',', ' ') }} FCFA
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
 
@@ -136,10 +183,13 @@
                                         class="text-blue-600 hover:text-blue-800 mr-3">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <a href="{{ route('admin.bookings.edit', $booking->id) }}"
-                                        class="text-green-600 hover:text-green-800 mr-3">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
+
+                                    @if ($booking->status === 'pending')
+                                        <a href="{{ route('admin.bookings.edit', $booking->id) }}"
+                                            class="text-green-600 hover:text-green-800 mr-3">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    @endif
                                 </td>
                             </tr>
                         @empty
@@ -221,6 +271,35 @@
                     'Accept': 'application/json'
                 }
             });
+
+            $("#datatable1").DataTable({
+                order: [
+                    [0, "desc"]
+                ],
+                columnDefs: [{
+                    targets: 0,
+                    searchable: false,
+                }, ],
+                language: {
+                    processing: "Traitement en cours...",
+                    search: "Rechercher : ",
+                    lengthMenu: "Afficher _MENU_ éléments",
+                    info: "Affichage de _START_ à _END_ sur _TOTAL_ ",
+                    infoEmpty: "Affichage de 0 à 0 sur 0",
+                    infoFiltered: "(filtré de _MAX_ éléments au total)",
+                    loadingRecords: "Chargement en cours...",
+                    zeroRecords: "Aucun élément à afficher",
+                    emptyTable: "Aucune donnée disponible dans le tableau",
+                },
+                // Callback pour appliquer select2 après init
+                initComplete: function() {
+                    if (typeof $.fn.select2 !== "undefined") {
+                        $(".dataTables_length select").select2({
+                            minimumResultsForSearch: Infinity,
+                        });
+                    }
+                },
+            })
 
             function assignDriver(bookingId) {
                 $('#currentBookingId').val(bookingId);

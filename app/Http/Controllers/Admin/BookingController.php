@@ -25,7 +25,7 @@ class BookingController extends Controller
 
     public function index(Request $request)
     {
-        $query = Booking::with(['user', 'driver', 'fromZone', 'toZone']);
+        $query = Booking::with(['user', 'driver']);
 
         if ($request->status) {
             $query->where('status', $request->status);
@@ -41,14 +41,95 @@ class BookingController extends Controller
             });
         }
 
-        $bookings = $query->latest()->get();
+        $sort     = in_array($request->sort, ['asc', 'desc']) ? $request->sort : 'desc';
+        $bookings = $query->orderBy('created_at', $sort)->get();
 
         return view('pages.admin.bookings.index', compact('bookings'));
     }
 
+    public function create()
+    {
+        $zones = Zone::all();
+        $touristCircuits = TouristCircuit::all();
+
+        return view('pages.admin.bookings.create', compact('zones', 'touristCircuits'));
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate(
+            [
+                'client_name' => 'nullable|string|max:255',
+                'phone' => 'required|string|max:20',
+
+                'from_location' => 'required',
+                'to_location' => 'required',
+                'from_lat' => 'required_with:from_location|numeric',
+                'from_lng' => 'required_with:from_location|numeric',
+                'to_lat' => 'required_with:to_location|numeric',
+                'to_lng' => 'required_with:to_location|numeric',
+
+                'pickup_date' => 'required|date',
+                'pickup_time' => 'required|date_format:H:i',
+                'days' => 'nullable|integer|min:1',
+                'round_trip' => 'nullable|boolean',
+                'return_time' => 'nullable|date_format:H:i',
+                'week_days' => 'nullable|in:lun_ven,lun_sam,lun_dim',
+                'base_price' => 'required|numeric|min:0',
+                'status' => 'nullable|in:pending,confirmed,in_progress,completed,cancelled',
+                'tourist_circuit_id' => 'nullable|exists:tourist_circuits,id',
+                'special_requests' => 'nullable|string|max:1000',
+            ],
+            [
+                'from_location.required' => 'Veuillez sélectionner une ville de départ.',
+                'to_location.required' => 'Veuillez sélectionner une ville de destination.',
+                'from_lat.required_with' => 'Ville de départ manquantes.',
+                'to_lat.required_with' => 'Ville de destination manquantes.',
+                'tourist_circuit_id.exists' => 'Le circuit touristique sélectionné n\'existe pas.',
+            ]
+        );
+
+        try {
+            $createData = [
+                'client_name' => $request->client_name,
+                'from_location' => $request->from_location,
+                'to_location' => $request->to_location,
+                'from_lng' => $request->from_lng,
+                'from_lat' => $request->from_lat,
+                'to_lng' => $request->to_lng,
+                'to_lat' => $request->to_lat,
+                'phone' => $request->phone,
+                'days' => $request->days ?? 1,
+                'round_trip' => $request->round_trip,
+                'return_time' => $request->return_time,
+                'week_days' => $request->week_days,
+                'pickup_date' => $request->pickup_date,
+                'pickup_time' => $request->pickup_time,
+                'special_requests' => $request->special_requests,
+                'tourist_circuit_id' => $request->tourist_circuit_id,
+                'base_price' => $request->base_price,
+                'status' => $request->status ?? 'pending',
+            ];
+
+            $booking = $this->bookingService->create($createData);
+
+            return redirect()->route('admin.bookings.show', $booking)->with('success', 'Réservation créée avec succès');
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['error' => 'Une erreur est survenue: ' . $e->getMessage()])->withInput();
+        }
+    }
+
     public function show(Booking $booking)
     {
-        $booking->load(['user', 'driver', 'touristCircuit', 'promoCode']);
+        $booking->load([
+            'user',
+            'driver',
+            'touristCircuit',
+            'promoCode',
+            'parentBooking',
+            'childBookings',
+            'subscriptionDriver.user'
+        ]);
 
         $availableDrivers = User::where('profil', 'driver')
             ->where('is_active', true)
@@ -118,6 +199,7 @@ class BookingController extends Controller
             }
 
             $data = [
+                '_partial'  => true,
                 'driver_id' => null,
                 'status' => 'pending',
             ];
@@ -151,7 +233,7 @@ class BookingController extends Controller
                 ]
             );
 
-            $updateData = ['status' => $validated['status']];
+            $updateData = ['_partial'  => true, 'status' => $validated['status']];
 
             if ($validated['status'] === 'cancelled') {
                 if (in_array($booking->status, ['completed', 'in_progress'])) {
@@ -182,7 +264,7 @@ class BookingController extends Controller
 
     public function edit(Booking $booking)
     {
-        $booking->load(['user', 'driver', 'touristCircuit', 'promoCode', 'fromZone', 'toZone']);
+        $booking->load(['user', 'driver', 'touristCircuit', 'promoCode']);
         $zones = Zone::all();
         $touristCircuits = TouristCircuit::all();
 
@@ -193,6 +275,7 @@ class BookingController extends Controller
     {
         $validated = $request->validate(
             [
+                'client_name' => 'nullable|string|max:255',
                 'user_id' => 'nullable|exists:users,id',
                 'phone' => 'required|string|max:20',
 
@@ -206,7 +289,10 @@ class BookingController extends Controller
                 'pickup_date' => 'required|date',
                 'pickup_time' => 'required|date_format:H:i',
                 'days' => 'nullable|integer|min:1',
-                'total_price' => 'required|numeric|min:0',
+                'round_trip' => 'nullable|boolean',
+                'return_time' => 'nullable|date_format:H:i',
+                'week_days' => 'nullable|in:lun_ven,lun_sam,lun_dim',
+                'base_price' => 'required|numeric|min:0',
                 'status' => 'required|in:pending,confirmed,in_progress,completed,cancelled',
                 'tourist_circuit_id' => 'nullable|exists:tourist_circuits,id',
                 'special_requests' => 'nullable|string|max:1000',
@@ -219,11 +305,15 @@ class BookingController extends Controller
 
                 'user_id.exists' => 'L\'utilisateur sélectionné n\'existe pas.',
                 'tourist_circuit_id.exists' => 'Le circuit touristique sélectionné n\'existe pas.',
+
+                'base_price.required' => 'Le prix de base est requis.',
+                'base_price.numeric' => 'Le prix de base doit être un nombre.',
             ]
         );
 
         try {
             $updateData = [
+                'client_name' => $request->client_name,
                 'user_id' => $request->user_id,
 
                 'from_location' => $request->from_location,
@@ -235,13 +325,16 @@ class BookingController extends Controller
 
                 'phone' => $request->phone,
                 'days' => $request->days,
+                'round_trip' => $request->boolean('round_trip'),
+                'return_time' => $request->boolean('round_trip') ? $request->return_time : null,
+                'week_days' => $request->week_days,
                 'pickup_date' => $request->pickup_date,
                 'pickup_time' =>  $request->pickup_time,
                 'status' => $request->status,
                 'special_requests' => $request->special_requests,
                 'tourist_circuit_id' => $request->tourist_circuit_id,
 
-                'total_price' => $request->total_price,
+                'base_price' => $request->base_price,
             ];
 
             $this->bookingService->update($booking, $updateData);

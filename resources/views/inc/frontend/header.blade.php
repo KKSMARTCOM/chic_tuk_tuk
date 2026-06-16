@@ -20,13 +20,22 @@
             </div>
 
             <!-- Bouton Hamburger Mobile -->
-            <button id="hamburger-btn"
-                class="md:hidden flex items-center text-gray-700 hover:text-[#286b41] transition p-2" aria-label="Menu">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16">
-                    </path>
-                </svg>
-            </button>
+            <div class="md:hidden flex items-center gap-4">
+                <a href="https://wa.me/22956141438?text=Bonjour%0AJ'aimerais%20avoir%20plus%20d'informations"
+                    target="_blank" rel="noopener noreferrer"
+                    class="px-3 py-2 flex items-center gap-3 rounded-md bg-[#286b41] text-white text-sm font-semibold">
+                    Contactez-nous <img src="{{ asset('assets/images/png/whatsapp.png') }}" alt="whatsapp-icon"
+                        class="h-5 w-5 object-cover">
+                </a>
+
+                <button id="hamburger-btn" class=" text-gray-700 hover:text-[#286b41] transition p-2" aria-label="Menu">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16M4 18h16">
+                        </path>
+                    </svg>
+                </button>
+            </div>
         </div>
     </div>
 

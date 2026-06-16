@@ -73,6 +73,10 @@ class BookingController extends Controller
 
                 'phone' => 'required|string|regex:/^[0-9+\-\s()]+$/|min:10',
                 'special_requests' => 'nullable|string|max:500',
+
+                'week_days'       => 'required_if:days,>,1|nullable|in:lun_ven,lun_sam,lun_dim',
+                'round_trip'      => 'nullable|boolean',
+                'return_time'     => 'required_if:round_trip,1|nullable|date_format:H:i|after:pickup_time',
             ],
             [
                 'from_location.required' => 'Veuillez sélectionner une ville de départ.',
@@ -84,6 +88,12 @@ class BookingController extends Controller
                 'pickup_date.after' => 'La réservation doit être effectuée au moins 24 heures à l\'avance.',
                 'pickup_time.required' => 'L\'heure de prise en charge est obligatoire.',
                 'days.min' => 'Le nombre de jours est obligatoire pour les réservations multi-jours.',
+
+                'round_trip.boolean' => 'Le type de trajet est invalide.',
+                'return_time.after' => 'L\'heure de retour doit être postérieure à l\'heure de prise en charge.',
+                'return_time.required_if' => 'L\'heure de retour est requise pour les trajets aller-retour.',
+                'week_days.in' => 'Les jours de la semaine sont invalides.',
+                'week_days.required_if' => 'Les jours de la semaine sont requis pour les réservations multi-jours.',
 
                 'phone.required' => 'Le numéro de téléphone est obligatoire.',
             ]
@@ -104,6 +114,9 @@ class BookingController extends Controller
                 'pickup_time' => $request->pickup_time,
                 'special_requests' => $request->special_requests,
                 'promo_code' => $request->promo_code,
+                'week_days' => $request->week_days,
+                'round_trip' => $request->round_trip,
+                'return_time' => $request->return_time,
             ];
 
             $this->bookingService->create($bookingData);
@@ -168,6 +181,18 @@ class BookingController extends Controller
                 'success',
                 'Réservation annulée avec succès.'
             );
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function revokeSubscription(Booking $booking)
+    {
+        try {
+            $driver = Auth::user()->driver;
+            $this->bookingService->revokeFromSubscription($booking->id, $driver->id);
+
+            return back()->with('success', 'Course révoquée. Elle est maintenant accessible aux autres agents.');
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
         }
