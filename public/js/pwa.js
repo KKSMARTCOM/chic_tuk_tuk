@@ -1,282 +1,285 @@
-// Script d'enregistrement du Service Worker et gestion PWA
-console.log("[PWA] Initialisation du PWA");
+// public/js/pwa.js
 
-// Variables globales
-let deferredPrompt;
-let isAppInstalled = false;
+console.log("[PWA] Initialisation");
 
-// Vérifier si l'app est déjà installée
+// ============================================================
+// Clés sessionStorage / localStorage
+// "dismissed" → sessionStorage : oublié à la fermeture du navigateur
+// "installed"  → localStorage  : permanent
+// ============================================================
+const STORAGE_KEYS = {
+    dismissed: "pwa_banner_dismissed", // sessionStorage
+    installed: "pwa_installed", // localStorage
+};
+
+let deferredPrompt = null;
+
+// ============================================================
+// 1. Prompt d'installation natif (Android/Chrome)
+// ============================================================
 window.addEventListener("beforeinstallprompt", (e) => {
-    console.log("[PWA] beforeinstallprompt déclenché");
     e.preventDefault();
     deferredPrompt = e;
-    showInstallPrompt();
+
+    // Ne pas afficher si :
+    // - déjà installé (permanent)
+    // - déjà refusé dans cette session (sessionStorage)
+    const alreadyInstalled = localStorage.getItem(STORAGE_KEYS.installed);
+    const dismissedThisSession = sessionStorage.getItem(STORAGE_KEYS.dismissed);
+
+    console.log(alreadyInstalled);
+    console.log(dismissedThisSession);
+
+    if (!alreadyInstalled && !dismissedThisSession) {
+        setTimeout(showInstallBanner, 3000); // petit délai pour ne pas agresser
+    }
 });
 
+// Détection installation réussie
 window.addEventListener("appinstalled", () => {
-    console.log("[PWA] App installée avec succès");
-    isAppInstalled = true;
+    console.log("[PWA] App installée");
+    localStorage.setItem(STORAGE_KEYS.installed, "1");
+    sessionStorage.removeItem(STORAGE_KEYS.dismissed);
+    hideInstallBanner();
+    showToast("success", "🎉 ChicTukTuk installé avec succès !");
     deferredPrompt = null;
-    hideInstallPrompt();
-    showSuccessMessage();
 });
 
-// Enregistrer le Service Worker
-if ("serviceWorker" in navigator) {
-    window.addEventListener("load", async () => {
-        try {
-            const registration = await navigator.serviceWorker.register(
-                "/sw.js",
-                {
-                    scope: "/",
-                },
-            );
-            console.log(
-                "[PWA] Service Worker enregistré avec succès:",
-                registration,
-            );
-            handleServiceWorkerRegistration(registration);
-        } catch (error) {
-            console.error(
-                "[PWA] Erreur lors de l'enregistrement du Service Worker:",
-                error,
-            );
-        }
-    });
+// ============================================================
+// 2. Bannière d'installation
+// ============================================================
+function showInstallBanner() {
+    const container = document.getElementById("pwa-install-container");
+    if (!container) return;
+
+    container.classList.remove("hidden");
+
+    // Brancher le bouton Installer (une seule fois)
+    const btn = document.getElementById("pwa-install-btn");
+    btn?.addEventListener("click", triggerInstall, { once: true });
 }
 
-// Gestion de l'enregistrement du Service Worker
-function handleServiceWorkerRegistration(registration) {
-    // Écouter les mises à jour
-    registration.addEventListener("updatefound", () => {
-        const newWorker = registration.installing;
-
-        newWorker.addEventListener("statechange", () => {
-            if (newWorker.state === "activated") {
-                showUpdateNotification();
-            }
-        });
-    });
-
-    // Vérifier les mises à jour toutes les heures
-    setInterval(
-        () => {
-            registration.update();
-        },
-        60 * 60 * 1000,
-    );
+function hideInstallBanner() {
+    document.getElementById("pwa-install-container")?.classList.add("hidden");
 }
 
-// Afficher la notification d'installation
-function showInstallPrompt() {
-    const installContainer = document.getElementById("pwa-install-container");
-    if (installContainer) {
-        installContainer.classList.remove("hidden");
-        document
-            .getElementById("pwa-install-btn")
-            .addEventListener("click", installApp);
-        document
-            .getElementById("pwa-dismiss-btn")
-            .addEventListener("click", dismissInstallPrompt);
-    }
-}
-
-// Masquer la notification d'installation
-function hideInstallPrompt() {
-    const installContainer = document.getElementById("pwa-install-container");
-    if (installContainer) {
-        installContainer.classList.add("hidden");
-    }
-}
-
-// Rejeter l'installation
-function dismissInstallPrompt() {
-    hideInstallPrompt();
-    deferredPrompt = null;
-}
-
-// Installer l'app
-async function installApp() {
-    if (!deferredPrompt) {
-        return;
-    }
+async function triggerInstall() {
+    if (!deferredPrompt) return;
 
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    console.log(`[PWA] Choix utilisateur: ${outcome}`);
 
     if (outcome === "accepted") {
-        console.log("[PWA] App acceptée pour installation");
+        // appinstalled event s'occupera du reste
+        console.log("[PWA] Installation acceptée");
     } else {
-        console.log("[PWA] Installation rejetée");
+        // Refus → même comportement que "Plus tard"
+        dismissBanner();
     }
 
     deferredPrompt = null;
 }
 
-// Montrer le message de succès
-function showSuccessMessage() {
-    const successMsg = document.createElement("div");
-    successMsg.className =
-        "fixed bottom-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2 animate-pulse z-50";
-    successMsg.innerHTML = `
-        <i class="fas fa-check-circle"></i>
-        <span>ChicTukTuk installé avec succès!</span>
+function dismissBanner() {
+    // Stocker dans sessionStorage → oublié à la fermeture du navigateur
+    sessionStorage.setItem(STORAGE_KEYS.dismissed, "1");
+    hideInstallBanner();
+    console.log("[PWA] Bannière masquée pour cette session");
+}
+
+// ============================================================
+// 3. Enregistrement du Service Worker
+// ============================================================
+function registerSW() {
+    if (!("serviceWorker" in navigator)) {
+        console.warn("[PWA] Service Worker non supporté");
+        return;
+    }
+
+    window.addEventListener("load", async () => {
+        try {
+            const reg = await navigator.serviceWorker.register("/sw.js", {
+                scope: "/",
+            });
+            console.log("[PWA] SW enregistré:", reg.scope);
+
+            // Écouter les mises à jour
+            reg.addEventListener("updatefound", () => {
+                const newWorker = reg.installing;
+                newWorker?.addEventListener("statechange", () => {
+                    if (
+                        newWorker.state === "installed" &&
+                        navigator.serviceWorker.controller
+                    ) {
+                        showUpdateBanner(reg);
+                    }
+                });
+            });
+
+            // Vérifier une mise à jour toutes les heures
+            setInterval(() => reg.update(), 60 * 60 * 1000);
+        } catch (err) {
+            console.error("[PWA] Erreur SW:", err);
+        }
+    });
+
+    // Recharger après activation d'un nouveau SW
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (!refreshing) {
+            refreshing = true;
+            window.location.reload();
+        }
+    });
+}
+
+// ============================================================
+// 4. Bannière de mise à jour
+// ============================================================
+function showUpdateBanner(registration) {
+    let banner = document.getElementById("pwa-update-banner");
+    if (banner) return; // déjà affichée
+
+    banner = document.createElement("div");
+    banner.id = "pwa-update-banner";
+    banner.className =
+        "fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-white border border-blue-300 rounded-xl shadow-xl px-5 py-4 flex items-center gap-4 max-w-sm w-full";
+    banner.innerHTML = `
+        <i class="fas fa-rotate text-blue-600 text-xl flex-shrink-0"></i>
+        <div class="flex-1">
+            <p class="text-sm font-semibold text-gray-800">Mise à jour disponible</p>
+            <p class="text-xs text-gray-500">Une nouvelle version est prête.</p>
+        </div>
+        <button id="pwa-update-btn" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition flex-shrink-0">
+            Mettre à jour
+        </button>
+        <button onclick="document.getElementById('pwa-update-banner').remove()" class="text-gray-400 hover:text-gray-600 text-lg leading-none flex-shrink-0">&times;</button>
     `;
-    document.body.appendChild(successMsg);
+    document.body.appendChild(banner);
+
+    document.getElementById("pwa-update-btn")?.addEventListener("click", () => {
+        registration.waiting?.postMessage({ type: "SKIP_WAITING" });
+        banner.remove();
+    });
+}
+
+// ============================================================
+// 5. État réseau (online / offline)
+// ============================================================
+function initNetworkStatus() {
+    const container = document.getElementById("connection-status");
+    if (!container) return;
+
+    const showOffline = () => {
+        container.innerHTML = `
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex items-center gap-2 shadow-lg">
+                <i class="fas fa-wifi text-yellow-500"></i>
+                <span class="text-sm text-yellow-800 font-semibold">Mode hors ligne activé</span>
+            </div>`;
+        container.classList.remove("hidden");
+    };
+
+    const showOnline = () => {
+        container.innerHTML = `
+            <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex items-center gap-2 shadow-lg">
+                <i class="fas fa-wifi text-emerald-500"></i>
+                <span class="text-sm text-emerald-800 font-semibold">Connexion rétablie</span>
+            </div>`;
+        container.classList.remove("hidden");
+        setTimeout(() => container.classList.add("hidden"), 3000);
+    };
+
+    if (!navigator.onLine) showOffline();
+    window.addEventListener("offline", showOffline);
+    window.addEventListener("online", showOnline);
+}
+
+// ============================================================
+// 6. Toast générique (succès/erreur)
+// ============================================================
+function showToast(type, message) {
+    const colors = {
+        success: "bg-emerald-600",
+        error: "bg-red-600",
+        info: "bg-blue-600",
+    };
+    const el = document.createElement("div");
+    el.className = `fixed bottom-4 right-4 ${colors[type] ?? colors.info} text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-2 z-50 text-sm font-semibold`;
+    el.innerHTML = `<span>${message}</span>`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 4000);
+}
+
+// ============================================================
+// 7. iOS — Instruction manuelle (Safari uniquement)
+// ============================================================
+function initIosPrompt() {
+    const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    const isStandalone = window.navigator.standalone === true;
+    const dismissed = sessionStorage.getItem(STORAGE_KEYS.dismissed);
+    const installed = localStorage.getItem(STORAGE_KEYS.installed);
+
+    if (!isIos || !isSafari || isStandalone || dismissed || installed) return;
 
     setTimeout(() => {
-        successMsg.remove();
+        const tip = document.createElement("div");
+        tip.id = "ios-install-tip";
+        tip.className =
+            "fixed bottom-4 inset-x-4 z-50 bg-white border border-gray-200 rounded-xl shadow-xl p-4 flex items-start gap-3 max-w-sm mx-auto";
+        tip.innerHTML = `
+            <i class="fas fa-mobile-alt text-blue-600 text-xl flex-shrink-0 mt-0.5"></i>
+            <div class="flex-1">
+                <p class="text-sm font-semibold text-gray-800 mb-1">Installer ChicTukTuk</p>
+                <p class="text-xs text-gray-600">
+                    Appuyez sur <strong>Partager</strong> <i class="fas fa-arrow-up-from-bracket mx-1"></i>
+                    puis <strong>"Sur l'écran d'accueil"</strong>
+                </p>
+            </div>
+            <button id="ios-tip-close" class="text-gray-400 hover:text-gray-600 text-lg leading-none flex-shrink-0">&times;</button>
+        `;
+        document.body.appendChild(tip);
+
+        document
+            .getElementById("ios-tip-close")
+            ?.addEventListener("click", () => {
+                sessionStorage.setItem(STORAGE_KEYS.dismissed, "1");
+                tip.remove();
+            });
     }, 4000);
 }
 
-// Afficher la notification de mise à jour
-function showUpdateNotification() {
-    const updateContainer = document.createElement("div");
-    updateContainer.className =
-        "fixed bottom-4 right-4 bg-blue-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-3 z-50 max-w-sm";
-    updateContainer.innerHTML = `
-        <i class="fas fa-cloud-download-alt"></i>
-        <div class="flex-1">
-            <p class="font-semibold text-sm">Mise à jour disponible</p>
-            <p class="text-xs">Une nouvelle version est disponible</p>
-        </div>
-        <button onclick="this.parentElement.remove()" class="text-white hover:text-gray-200">
-            <i class="fas fa-times"></i>
-        </button>
-    `;
-    document.body.appendChild(updateContainer);
-
-    setTimeout(() => {
-        updateContainer.remove();
-    }, 6000);
-}
-
-// Demander les permissions de notification
-async function requestNotificationPermission() {
-    if (!("Notification" in window)) {
-        console.log("[PWA] Les notifications ne sont pas supportées");
-        return false;
-    }
-
-    if (Notification.permission === "granted") {
-        console.log("[PWA] Les notifications sont déjà autorisées");
-        return true;
-    }
-
-    if (Notification.permission !== "denied") {
-        try {
-            const permission = await Notification.requestPermission();
-            if (permission === "granted") {
-                console.log("[PWA] Notifications autorisées");
-                return true;
-            }
-        } catch (error) {
-            console.error(
-                "[PWA] Erreur lors de la demande de notification:",
-                error,
-            );
-        }
-    }
-
-    return false;
-}
-
-// S'abonner aux notifications push
-async function subscribeToPushNotifications() {
-    if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-        console.log("[PWA] Les notifications push ne sont pas supportées");
-        return false;
-    }
-
-    try {
-        const registration = await navigator.serviceWorker.ready;
-        const subscription = await registration.pushManager.getSubscription();
-
-        if (subscription) {
-            console.log("[PWA] Déjà abonné aux notifications push");
-            return true;
-        }
-
-        // Demander l'autorisation
-        const permission = await requestNotificationPermission();
-        if (!permission) {
-            console.log("[PWA] Autorisation de notification refusée");
-            return false;
-        }
-
-        // S'abonner (note: nécessite un serveur avec support push)
-        console.log("[PWA] Prêt à s'abonner aux notifications push");
-        return true;
-    } catch (error) {
-        console.error(
-            "[PWA] Erreur lors de l'abonnement aux notifications:",
-            error,
-        );
-        return false;
-    }
-}
-
-// Afficher l'état PWA
-function logPWAStatus() {
-    console.group("[PWA] État");
-    console.log("Service Worker supporté:", "serviceWorker" in navigator);
-    console.log("Cache API supportée:", "caches" in window);
-    console.log("Notifications supportées:", "Notification" in window);
-    console.log("Push notifications supportées:", "PushManager" in window);
-    console.log("Connexion Online:", navigator.onLine);
-    console.log("App installée:", isAppInstalled);
-    console.groupEnd();
-}
-
-// Initialiser au chargement de la page
+// ============================================================
+// 8. Init
+// ============================================================
 document.addEventListener("DOMContentLoaded", () => {
-    console.log("[PWA] DOM chargé");
-    logPWAStatus();
-
-    // Configurer le bouton de notification si disponible
-    const notificationBtn = document.getElementById("enable-notifications-btn");
-    if (notificationBtn) {
-        notificationBtn.addEventListener("click", subscribeToPushNotifications);
-    }
+    registerSW();
+    initNetworkStatus();
+    initIosPrompt();
 });
 
-// Écouter les changements de connexion
-window.addEventListener("online", () => {
-    console.log("[PWA] Connexion rétablie");
-    showConnectionStatus(true);
-});
-
-window.addEventListener("offline", () => {
-    console.log("[PWA] Connexion perdue - Mode hors ligne activé");
-    showConnectionStatus(false);
-});
-
-// Afficher le statut de connexion
-function showConnectionStatus(isOnline) {
-    const statusContainer = document.getElementById("connection-status");
-    if (!statusContainer) return;
-
-    if (isOnline) {
-        statusContainer.classList.add("hidden");
-    } else {
-        statusContainer.innerHTML = `
-            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex items-center space-x-2">
-                <i class="fas fa-wifi-slash text-yellow-600"></i>
-                <span class="text-sm text-yellow-800">Mode hors ligne - Certaines fonctionnalités sont limitées</span>
-            </div>
-        `;
-        statusContainer.classList.remove("hidden");
-    }
-}
-
-// Exporter les fonctions pour utilisation
+// ============================================================
+// API publique (utilisée dans le Blade : onclick="PWA.dismiss()")
+// ============================================================
 window.PWA = {
-    install: installApp,
-    dismiss: dismissInstallPrompt,
-    requestNotifications: requestNotificationPermission,
-    subscribeToPush: subscribeToPushNotifications,
-    status: logPWAStatus,
+    dismiss: dismissBanner,
+    install: triggerInstall,
+    status() {
+        console.group("[PWA] État");
+        console.log("SW supporté:", "serviceWorker" in navigator);
+        console.log(
+            "Installé (localStorage):",
+            !!localStorage.getItem(STORAGE_KEYS.installed),
+        );
+        console.log(
+            "Refusé cette session:",
+            !!sessionStorage.getItem(STORAGE_KEYS.dismissed),
+        );
+        console.log("Online:", navigator.onLine);
+        console.groupEnd();
+    },
 };
 
-console.log("[PWA] Initialisé avec succès");
+console.log(
+    "[PWA] Prêt — appelez PWA.status() dans la console pour l'état complet",
+);

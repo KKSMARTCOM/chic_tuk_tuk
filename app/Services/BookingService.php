@@ -12,8 +12,8 @@ use function Symfony\Component\Clock\now;
 
 class BookingService
 {
-    protected $pricingService;
-    protected $commissionService;
+    protected PricingService $pricingService;
+    protected CommissionService $commissionService;
 
     public function __construct(PricingService $pricingService, CommissionService $commissionService)
     {
@@ -47,7 +47,7 @@ class BookingService
 
         // Calcul de la date du prochain passage du cron pour les courses récurrentes
         $firstNextDay  = getNextAllowedDay(Carbon::parse($data['pickup_date']), $data['week_days'] ?? 'lun_dim');
-        $nextRecurringDate = $isRecurring && $firstNextDay ? $firstNextDay->copy()->setTime(1, 0) : null;
+        $nextRecurringDate = $isRecurring && $firstNextDay ? $firstNextDay->copy()->subDay()->setTime(1, 0) : null;
 
         $endDate = null;
         if ($isRecurring && isset($data['week_days'])) {
@@ -248,9 +248,7 @@ class BookingService
 
             // ❌ Fenêtre de blocage ±2h
             if ($driver->hasConflictWithinTwoHours($pickup)) {
-                throw new \Exception(
-                    'Vous avez déjà une course dans une plage de 2 heures autour de cet horaire.'
-                );
+                throw new \Exception('Vous avez déjà une course dans une plage de 2 heures autour de cet horaire.');
             }
 
             $updateData = [
@@ -628,7 +626,7 @@ class BookingService
             if ($isRecurring) {
                 // Prochain jour autorisé après J1 → heure du cron
                 $firstNext         = getNextAllowedDay(Carbon::parse($pickupDate), $weekDays);
-                $nextRecurringDate = $firstNext?->copy()->setTime(1, 0);
+                $nextRecurringDate = $firstNext?->copy()->subDay()->setTime(1, 0);
 
                 // Date de fin selon jours ouvrés
                 $subscriptionEndDate = calculateEndDate($pickupDate, $days, $weekDays);
@@ -802,7 +800,6 @@ class BookingService
             }
 
             // Créer la nouvelle course pour le jour suivant
-            //$currentPickup = Carbon::parse($booking->pickup_date)->setTimeFromTimeString($booking->pickup_time);
             $nextAllowedDay = $booking->next_recurring_date ? Carbon::parse($booking->next_recurring_date)->startOfDay() : getNextAllowedDay(Carbon::parse($booking->pickup_date), $booking->week_days ?? 'lun_dim');
             if (!$nextAllowedDay) continue;
 
@@ -811,15 +808,13 @@ class BookingService
 
             // Prochain passage du cron = jour suivant autorisé à 1h
             $nextAllowedForCron = getNextAllowedDay($nextAllowedDay, $booking->week_days ?? 'lun_dim');
-            $nextRecurring = $newRemaining > 0 && $nextAllowedForCron ? $nextAllowedForCron->copy()->setTime(1, 0) : null;
+            $nextRecurring = $newRemaining > 0 && $nextAllowedForCron ? $nextAllowedForCron->copy()->subDay()->setTime(1, 0) : null;
 
             // Si plus de jours restants, pas de next_recurring_date
             if ($newRemaining <= 0) {
                 $nextRecurring = null;
             }
 
-            //$parentId = $booking->parent_booking_id ?? $booking->id;
-            //$rootBooking = Booking::find($parentId);
             $subDriverId = $booking->subscription_driver_id;
 
             // --- Course ALLER ---
