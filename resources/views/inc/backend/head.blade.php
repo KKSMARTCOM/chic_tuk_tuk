@@ -9,11 +9,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="ChicTukTuk">
 
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="/manifest.json">
-    <link rel="icon" type="image/png" href="/favicon.ico">
-    <link rel="apple-touch-icon" href="/images/pwa-icons/icon-192x192.png">
-
     <title>Dashboard Admin - ChicTukTuk</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -24,6 +19,11 @@
 
     <!-- DATATABLES CSS -->
     <link rel="stylesheet" href="{{ asset('assets/css/datatables.min.css') }}" />
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" href="/favicon.ico">
+    <link rel="apple-touch-icon" href="/images/pwa-icons/icon-192x192.png">
 
     <!-- PWA Script -->
     <script defer src="/js/pwa.js"></script>
