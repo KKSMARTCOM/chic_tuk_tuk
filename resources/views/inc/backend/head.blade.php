@@ -8,6 +8,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="ChicTukTuk">
+    <meta name="firebase-vapid-key" content="OiGtZgfWDwEf3gwPn0Ktd0JJlMwhikgv65TYHcEQ9OM">
 
     <title>Dashboard Admin - ChicTukTuk</title>
 
@@ -36,11 +37,13 @@
         import {
             getAnalytics
         } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-analytics.js";
+        import {
+            getMessaging,
+            getToken,
+            onMessage
+        } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-messaging.js";
         // TODO: Add SDKs for Firebase products that you want to use
-        // https://firebase.google.com/docs/web/setup#available-libraries
 
-        // Your web app's Firebase configuration
-        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
         const firebaseConfig = {
             apiKey: "AIzaSyBTZv_e9MowlNpQLI40NmxYVCwD_rnyQ60",
             authDomain: "chictuktuk.firebaseapp.com",
@@ -54,5 +57,10 @@
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const analytics = getAnalytics(app);
+        const messaging = getMessaging(app);
+
+        window.firebaseMessaging = messaging;
+        window.firebaseGetToken = getToken;
+        window.firebaseOnMessage = onMessage;
     </script>
 </head>

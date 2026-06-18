@@ -5,6 +5,7 @@ use App\Http\Controllers\Web\AuthController;
 use App\Http\Controllers\Web\BookingController;
 use App\Http\Controllers\Web\SettingsController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\Web\FcmController;
 use App\Http\Controllers\Web\PageController;
 use Illuminate\Support\Facades\Route;
 
@@ -22,6 +23,8 @@ Route::middleware('guest')->group(function () {
 Route::middleware(['auth:sanctum', 'role:admin,driver,client'])->group(function () {
     Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/bookings/histories', [PageController::class, 'historiesBookings'])->name('bookings.histories');
+
+    Route::post('/fcm/token', [FcmController::class, 'store'])->middleware('auth:sanctum');
 
     // Notifications
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');

@@ -116,6 +116,12 @@ class BookingService
             ]);
         }
 
+        app(FcmNotificationService::class)->sendToDrivers(
+            'Nouvelle réservation disponible',
+            "Trajet : {$booking->from_location} → {$booking->to_location}",
+            ['url' => route('driver.bookings.available')]
+        );
+
         return $booking;
     }
 
@@ -800,7 +806,7 @@ class BookingService
             }
 
             // Créer la nouvelle course pour le jour suivant
-            $nextAllowedDay = $booking->next_recurring_date ? Carbon::parse($booking->next_recurring_date)->startOfDay() : getNextAllowedDay(Carbon::parse($booking->pickup_date), $booking->week_days ?? 'lun_dim');
+            $nextAllowedDay = $booking->next_recurring_date ? Carbon::parse($booking->next_recurring_date)->addDay()->startOfDay() : getNextAllowedDay(Carbon::parse($booking->pickup_date), $booking->week_days ?? 'lun_dim');
             if (!$nextAllowedDay) continue;
 
             $newPickupDate  = $nextAllowedDay->copy()->setTimeFromTimeString($booking->pickup_time);
@@ -846,6 +852,7 @@ class BookingService
                 'parent_booking_id'      => $booking->id,
                 'subscription_driver_id' => $subDriverId,
                 'next_recurring_date'    => null,
+                'client_name'            => $booking->client_name,
             ]);
 
             // --- Course RETOUR (si aller-retour) ---
@@ -879,6 +886,7 @@ class BookingService
                     'is_recurring'           => false,
                     'parent_booking_id'      => $booking->id,
                     'subscription_driver_id' => $subDriverId,
+                    'client_name'            => $booking->client_name,
                 ]);
             }
 
