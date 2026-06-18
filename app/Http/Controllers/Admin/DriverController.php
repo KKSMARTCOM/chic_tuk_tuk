@@ -52,7 +52,14 @@ class DriverController extends Controller
                 'name' => 'required|string|max:255',
                 'email' => 'nullable|email|unique:users,email,NULL,id,profil,driver',
                 'phone' => 'required|string|unique:users,phone,NULL,id,profil,driver',
-                'password' => 'required|string|min:8',
+                'password' => [
+                    'required',
+                    'string',
+                    'min:8',
+                    'regex:/[A-Z]/',
+                    'regex:/[0-9]/',
+                    'regex:/[@$!%*#?&]/',
+                ],
                 'adresse' => 'nullable|string|max:255',
                 'license_number' => 'required|string',
                 'vehicle_number' => 'required|string',
@@ -73,6 +80,7 @@ class DriverController extends Controller
                 'phone.unique' => 'Ce numéro de téléphone est déjà utilisé.',
                 'password.required' => 'Le mot de passe est requis.',
                 'password.min' => 'Le mot de passe doit contenir au moins 8 caractères.',
+                'password.regex' => 'Le mot de passe doit contenir au moins une majuscule, un chiffre et un caractère spécial (@$!%*#?&).',
                 'license_number.required' => 'Le numéro de permis est requis.',
                 //'license_number.unique' => 'Ce numéro de permis est déjà utilisé.',
                 'vehicle_number.required' => 'Le numéro de véhicule est requis.',
@@ -195,7 +203,12 @@ class DriverController extends Controller
     public function updatePassword(Request $request, User $driver)
     {
         $validated = $request->validate([
-            'password' => 'required|string|min:8|confirmed',
+            'password' => 'required|string|min:8|confirmed|regex:/[A-Z]/|regex:/[0-9]/|regex:/[@$!%*#?&]/',
+        ], [
+            'password.required' => 'Le mot de passe est requis.',
+            'password.min' => 'Le mot de passe doit contenir au moins 8 caractères.',
+            'password.regex' => 'Le mot de passe doit contenir au moins une majuscule, un chiffre et un caractère spécial (@$!%*#?&).',
+            'password.confirmed' => 'Les mots de passe ne correspondent pas.',
         ]);
 
         $this->driverService->updateDriverPassword($driver->id, $validated['password']);
