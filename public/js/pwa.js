@@ -249,6 +249,66 @@ function initIosPrompt() {
     }, 4000);
 }
 
+async function initFirebaseMessaging() {
+    if (!window.firebaseMessaging) {
+        console.warn("[FCM] Firebase Messaging non chargé");
+        return;
+    }
+
+    try {
+        const permission = await Notification.requestPermission();
+
+        if (permission !== "granted") {
+            console.log("[FCM] Permission refusée");
+            return;
+        }
+
+        const vapidKey = document.querySelector(
+            'meta[name="firebase-vapid-key"]',
+        ).content;
+
+        const token = await window.firebaseGetToken(window.firebaseMessaging, {
+            vapidKey: vapidKey,
+        });
+
+        if (token) {
+            console.log("[FCM] Token obtenu:", token);
+            await sendTokenToServer(token);
+        }
+
+        // Écouter les messages reçus quand l'app est au premier plan
+        window.firebaseOnMessage(window.firebaseMessaging, (payload) => {
+            console.log("[FCM] Message reçu (foreground):", payload);
+            showToast(
+                "info",
+                payload.notification?.body ?? "Nouvelle notification",
+            );
+
+            // Optionnel : afficher aussi une notification système
+            if (Notification.permission === "granted") {
+                new Notification(payload.notification?.title ?? "ChicTukTuk", {
+                    body: payload.notification?.body,
+                    icon: "/images/pwa-icons/icon-192x192.png",
+                });
+            }
+        });
+    } catch (error) {
+        console.error("[FCM] Erreur:", error);
+    }
+}
+
+async function sendTokenToServer(token) {
+    await fetch("/fcm/token", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
+                .content,
+        },
+        body: JSON.stringify({ token }),
+    });
+}
+
 // ============================================================
 // 8. Init
 // ============================================================
@@ -256,6 +316,7 @@ document.addEventListener("DOMContentLoaded", () => {
     registerSW();
     initNetworkStatus();
     initIosPrompt();
+    initFirebaseMessaging();
 });
 
 // ============================================================
