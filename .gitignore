@@ -21,3 +21,5 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+firebase/*.json
+!firebase/chictuktuk-firebase-adminsdk-fbsvc-dad1fa7fe5.json

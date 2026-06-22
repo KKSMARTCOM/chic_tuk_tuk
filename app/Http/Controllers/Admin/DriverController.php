@@ -52,7 +52,14 @@ class DriverController extends Controller
                 'name' => 'required|string|max:255',
                 'email' => 'nullable|email|unique:users,email,NULL,id,profil,driver',
                 'phone' => 'required|string|unique:users,phone,NULL,id,profil,driver',
-                'password' => 'required|string|min:8',
+                'password' => [
+                    'required',
+                    'string',
+                    'min:8',
+                    'regex:/[A-Z]/',
+                    'regex:/[0-9]/',
+                    'regex:/[@$!%*#?&]/',
+                ],
                 'adresse' => 'nullable|string|max:255',
                 'license_number' => 'required|string',
                 'vehicle_number' => 'required|string',
@@ -73,6 +80,7 @@ class DriverController extends Controller
                 'phone.unique' => 'Ce numéro de téléphone est déjà utilisé.',
                 'password.required' => 'Le mot de passe est requis.',
                 'password.min' => 'Le mot de passe doit contenir au moins 8 caractères.',
+                'password.regex' => 'Le mot de passe doit contenir au moins une majuscule, un chiffre et un caractère spécial (@$!%*#?&).',
                 'license_number.required' => 'Le numéro de permis est requis.',
                 //'license_number.unique' => 'Ce numéro de permis est déjà utilisé.',
                 'vehicle_number.required' => 'Le numéro de véhicule est requis.',
@@ -195,7 +203,12 @@ class DriverController extends Controller
     public function updatePassword(Request $request, User $driver)
     {
         $validated = $request->validate([
-            'password' => 'required|string|min:8|confirmed',
+            'password' => 'required|string|min:8|confirmed|regex:/[A-Z]/|regex:/[0-9]/|regex:/[@$!%*#?&]/',
+        ], [
+            'password.required' => 'Le mot de passe est requis.',
+            'password.min' => 'Le mot de passe doit contenir au moins 8 caractères.',
+            'password.regex' => 'Le mot de passe doit contenir au moins une majuscule, un chiffre et un caractère spécial (@$!%*#?&).',
+            'password.confirmed' => 'Les mots de passe ne correspondent pas.',
         ]);
 
         $this->driverService->updateDriverPassword($driver->id, $validated['password']);
@@ -203,120 +216,94 @@ class DriverController extends Controller
         return redirect()->back()->with('success', 'Mot de passe mis à jour avec succès');
     }
 
-    /*
-    public function export(Request $request)
+    // Export Excel
+    public function export()
     {
-        try {
-            $filters = $request->only(['search', 'is_active', 'is_available']);
-            $fileName = 'Agents_' . now()->format('Y_m_d_His') . '.xlsx';
-
-            return Excel::download(new DriversExport($filters), $fileName);
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Erreur lors de l\'export: ' . $e->getMessage());
-        }
+        $filename = 'agents_' . now()->format('Y-m-d_His') . '.xlsx';
+        return Excel::download(new DriversExport(), $filename);
     }
 
+    // Formulaire d'import
     public function importForm()
     {
-        $stats = $this->driverService->getDriverStats();
-        return view('pages.admin.drivers.import', compact('stats'));
+        return view('pages.admin.drivers.import');
     }
 
+    // Traitement de l'import
     public function import(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|mimes:xlsx,xls,csv',
+            'file' => 'required|file|mimes:xlsx,xls,csv|max:5120', // 5 Mo max
         ], [
-            'file.required' => 'Veuillez sélectionner un fichier',
-            'file.mimes' => 'Le fichier doit être au format Excel ou CSV',
+            'file.required' => 'Veuillez sélectionner un fichier.',
+            'file.mimes'    => 'Le fichier doit être au format Excel (.xlsx, .xls) ou CSV.',
+            'file.max'      => 'Le fichier ne doit pas dépasser 5 Mo.',
         ]);
 
+        $import = new DriversImport();
+
         try {
-            $import = new DriversImport();
-            //Excel::import($import, $request->file('file'));
-
-            $successCount = $import->getSuccessCount();
-            $errors = $import->getErrors();
-
-            if ($errors) {
-                $errorMessage = "Import terminé avec " . $successCount . " Agent(s) importé(s) avec succès. ";
-                $errorMessage .= count($errors) . " ligne(s) ont échoué.";
-
-                return redirect()->route('admin.drivers.index')
-                    ->with('warning', $errorMessage)
-                    ->with('errors', $errors);
-            }
-
-            return redirect()->route('admin.drivers.index')
-                ->with('success', $successCount . ' Agent(s) importé(s) avec succès');
+            Excel::import($import, $request->file('file'));
         } catch (\Exception $e) {
-            return redirect()->back()
-                ->with('error', 'Erreur lors de l\'import: ' . $e->getMessage())
-                ->withInput();
+            return back()->with('error', 'Erreur lors de la lecture du fichier : ' . $e->getMessage());
         }
+
+        $message = "{$import->imported} agent(s) importé(s) avec succès.";
+        if ($import->skipped > 0) {
+            $message .= " {$import->skipped} ligne(s) ignorée(s).";
+        }
+
+        return redirect()
+            ->route('admin.drivers.index')
+            ->with('success', $message)
+            ->with('import_errors', $import->errors);
     }
 
+    // Télécharger le template CSV
     public function downloadTemplate()
     {
-        try {
-            $fileName = 'template_Agents_' . now()->format('Y_m_d_His') . '.xlsx';
+        $filename = 'template_agents.csv';
+        $headers  = [
+            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ];
 
-            // Créer un fichier template
-            $headers = [
-                'Nom',
-                'Email',
-                'Téléphone',
-                'Adresse',
-                'Numéro Permis',
-                'Numéro Véhicule',
-                'Type Véhicule',
-                'Disponible',
-                'Actif',
-            ];
+        $columns = [
+            'nom',
+            'email',
+            'telephone',
+            'mot_de_passe',
+            'n_permis',
+            'n_vehicule',
+            'type_vehicule',
+            'statut_compte',
+            'disponibilite',
+            'total_courses'
+        ];
 
-            return Excel::download(new class implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\WithHeadings, \Maatwebsite\Excel\Concerns\WithStyles {
-                public function array(): array
-                {
-                    return [
-                        ['Jean Dupont', 'jean@example.com', '+22699999999', '123 Rue de la Paix', 'PERM123456', 'VEH001', 'car', 'Oui', 'Oui'],
-                        ['Marie Martin', 'marie@example.com', '+22688888888', '456 Avenue des Champs', 'PERM789012', 'VEH002', 'moto', 'Non', 'Oui'],
-                    ];
-                }
+        // Ligne d'exemple
+        $example = [
+            'Jean Dupont',
+            'jean@exemple.com',
+            '0123456789',
+            'MotDePasse@123',
+            'PERM-001',
+            'VEH-001',
+            'tricycle',
+            'Actif',
+            'Disponible',
+            '0'
+        ];
 
-                public function headings(): array
-                {
-                    return [
-                        'nom',
-                        'email',
-                        'telephone',
-                        'adresse',
-                        'numero_permis',
-                        'numero_vehicule',
-                        'type_vehicule',
-                        'disponible',
-                        'actif',
-                    ];
-                }
+        $callback = function () use ($columns, $example) {
+            $file = fopen('php://output', 'w');
+            // BOM UTF-8 pour Excel
+            fputs($file, "\xEF\xBB\xBF");
+            fputcsv($file, $columns, ';');
+            fputcsv($file, $example, ';');
+            fclose($file);
+        };
 
-                public function styles(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet)
-                {
-                    return [
-                        1 => [
-                            'font' => [
-                                'bold' => true,
-                                'color' => ['rgb' => 'FFFFFF'],
-                            ],
-                            'fill' => [
-                                'fillType' => 'solid',
-                                'startColor' => ['rgb' => '8B5CF6'],
-                            ],
-                        ],
-                    ];
-                }
-            }, $fileName);
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Erreur lors du téléchargement du template: ' . $e->getMessage());
-        }
+        return response()->stream($callback, 200, $headers);
     }
-     */
 }

@@ -30,7 +30,14 @@ class UserController extends Controller
                 'name'     => 'required|string|max:255',
                 'email'    => 'nullable|email|unique:users,email,NULL,id,profil,' . $request->profil,
                 'phone'    => 'required|string|unique:users,phone',
-                'password' => 'required|string|min:8',
+                'password' => [
+                    'required',
+                    'string',
+                    'min:8',
+                    'regex:/[A-Z]/',
+                    'regex:/[0-9]/',
+                    'regex:/[@$!%*#?&]/',
+                ],
                 'profil'   => 'required|in:admin,client',
                 'role'     => 'nullable|exists:roles,name',
                 'adresse'  => 'nullable|string|max:255',
@@ -41,6 +48,7 @@ class UserController extends Controller
                 'phone.required'  => 'Le téléphone est obligatoire.',
                 'phone.unique'    => 'Ce numéro est déjà utilisé.',
                 'password.min'    => 'Le mot de passe doit contenir au moins 8 caractères.',
+                'password.regex'  => 'Le mot de passe doit contenir au moins une majuscule, un chiffre et un caractère spécial (@$!%*#?&).',
                 'profil.in'       => 'Le profil doit être admin ou client.',
             ]);
 
@@ -80,10 +88,11 @@ class UserController extends Controller
     {
         try {
             $request->validate([
-                'password'              => 'required|string|min:8|confirmed',
+                'password'              => 'required|string|min:8|confirmed|regex:/[A-Z]/|regex:/[0-9]/|regex:/[@$!%*#?&]/',
                 'password_confirmation' => 'required',
             ], [
                 'password.min'       => 'Le mot de passe doit contenir au moins 8 caractères.',
+                'password.regex'     => 'Le mot de passe doit contenir au moins une majuscule, un chiffre et un caractère spécial (@$!%*#?&).',
                 'password.confirmed' => 'Les mots de passe ne correspondent pas.',
             ]);
 
