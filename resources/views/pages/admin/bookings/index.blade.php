@@ -83,16 +83,16 @@
                                     {{ formatDateTimeFr($booking->created_at) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                     <span>{{ $booking->booking_number }}</span>
-                                    <div class="flex flex-wrap gap-2 max-w-60 w-full">
+                                    <div class="flex flex-wrap gap-2 max-w-56 w-full">
                                         @if ($booking->is_subscription_parent)
                                             <span
                                                 class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200">
                                                 <i class="fas fa-rotate"></i>
-                                                Abonnement parent · {{ $booking->days }}j
+                                                Abonn. parent · {{ $booking->days }}j
                                             </span>
                                         @elseif ($booking->is_subscription_child)
                                             <span
-                                                class="inline-flex line-clamp-1 items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200">
+                                                class="inline-flex truncate items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200">
                                                 <i class="fas fa-link"></i>
                                                 {{ $booking->subscription_label }}
                                             </span>
@@ -129,12 +129,16 @@
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
                                         <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($booking->client_name ?? ($booking->user?->name ?? 'Client')) }}"
-                                            class="w-8 h-8 rounded-full mr-3">
-                                        <div>
-                                            <div class="text-sm font-medium text-gray-900">
+                                            class="w-8 h-8 rounded-full mr-3 shrink-0">
+
+                                        <div class="flex flex-col flex-1 min-w-0 max-w-[150px]">
+                                            <span class="text-sm font-medium text-gray-900 truncate">
                                                 {{ $booking->client_name ?? ($booking->parentBooking->booking_number ?? ($booking->user?->name ?? 'Client')) }}
-                                            </div>
-                                            <div class="text-sm text-gray-500">{{ $booking->phone }}</div>
+                                            </span>
+
+                                            <span class="text-sm text-gray-500 truncate">
+                                                {{ $booking->phone }}
+                                            </span>
                                         </div>
                                     </div>
                                 </td>
@@ -143,8 +147,9 @@
                                         <div class="flex items-center">
                                             <img src="{{ 'https://ui-avatars.com/api/?name=' . urlencode($booking->driver->user->name ?? 'Agent') }}"
                                                 class="w-8 h-8 rounded-full mr-3">
-                                            <div class="text-sm text-gray-900">{{ $booking->driver->user->name ?? 'N/A' }}
-                                            </div>
+                                            <span
+                                                class="text-sm truncate text-gray-900">{{ $booking->driver->user->name ?? 'N/A' }}
+                                            </span>
                                         </div>
                                         @if (!in_array($booking->status, ['completed', 'cancelled', 'expired']))
                                             <button onclick="confirmRemoveDriver('{{ $booking->id }}')"

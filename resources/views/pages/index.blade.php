@@ -35,9 +35,8 @@
                         <div class="flex justify-start">
                             <a href="https://wa.me/22956141438?text=Bonjour%0AJ'aimerais%20avoir%20plus%20d'informations"
                                 target="_blank" rel="noopener noreferrer"
-                                class="px-6 py-3 rounded-md bg-[#FFB230] font-semibold text-black flex items-center gap-3">
-                                Contactez-nous <img src="{{ asset('assets/images/png/whatsapp.png') }}" alt="whatsapp-icon"
-                                    class="h-5 w-5 object-cover">
+                                class="px-6 py-3 rounded-md bg-[#FFB230] font-semibold text-black flex items-center gap-2">
+                                <i class="fa-brands fa-whatsapp font-bold text-lg block"></i> Contactez-nous
                             </a>
                         </div>
                     </div>

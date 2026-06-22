@@ -240,13 +240,13 @@ class Booking extends Model
     public function getSubscriptionLabelAttribute(): string
     {
         if ($this->is_subscription_parent) {
-            return 'Abonnement parent — ' . $this->booking_number;
+            return 'Abonn. parent — ' . $this->booking_number;
         }
 
         if ($this->is_subscription_child) {
             $parent = $this->parentBooking;
             $index  = $this->subscription_index + 1; // +1 car le parent = J1
-            return "Course {$index} — Abonnement {$parent?->booking_number}";
+            return "Course {$index} — Abonn. {$parent?->booking_number}";
         }
 
         return 'Course unique';

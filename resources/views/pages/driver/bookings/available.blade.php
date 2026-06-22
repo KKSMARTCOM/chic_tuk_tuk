@@ -72,7 +72,7 @@
                             @if ($isChild)
                                 <div class="text-xs text-teal-600 font-medium mb-2 flex items-center gap-1">
                                     <i class="fas fa-link text-teal-400"></i>
-                                    Abonnement {{ $booking->parentBooking?->booking_number }}
+                                    {{ $booking->booking_number }}
                                     @if ($booking->parentBooking?->user)
                                         · {{ $booking->parentBooking->user->name }}
                                     @elseif ($booking->parentBooking?->client_name)

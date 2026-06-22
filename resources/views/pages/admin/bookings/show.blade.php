@@ -39,7 +39,7 @@
                             <span
                                 class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200">
                                 <i class="fas fa-rotate"></i>
-                                Abonnement parent · {{ $booking->days }}j
+                                Abonn parent · {{ $booking->days }}j
                             </span>
                         @elseif ($booking->is_subscription_child)
                             <span
