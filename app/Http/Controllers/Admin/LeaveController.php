@@ -147,13 +147,13 @@ class LeaveController extends Controller
 
         // Check if driver has enough days
         if (!$driver->canRequestLeave($days)) {
-            return redirect()->back()->with('error', 'Le Agent n\'a pas assez de jours de Pause disponibles.');
+            return redirect()->back()->with('error', 'L\'agent n\'a pas assez de jours de Pause disponibles.');
         }
 
         // Check for conflicts
         foreach ($dates as $date) {
             if ($driver->hasLeaveOnDate($date)) {
-                return redirect()->back()->with('error', 'Le Agent a déjà un Pause pour cette date.');
+                return redirect()->back()->with('error', 'L\'agent a déjà un Pause pour cette date.');
             }
         }
 
@@ -166,7 +166,9 @@ class LeaveController extends Controller
         // Add leave dates to driver
         $driver->addLeaveDates($dates);
 
-        return redirect()->back()->with('success', 'Demande de Pause approuvée avec succès.');
+        session()->flash('success', 'Demande de Pause approuvée avec succès.');
+
+        return redirect()->away('https://docs.google.com/forms/d/e/1FAIpQLScDV8HvM0P8JaChAVhqoohp0gioFuW0OFMZRcVyMZRO2B-KbQ/viewform?pli=1&pli=1');
     }
 
     /**
@@ -239,7 +241,7 @@ class LeaveController extends Controller
         }
 
         if (!$driver->canRequestLeaveNow($days)) {
-            return redirect()->back()->with('error', 'Ce conducteur n\'a pas assez de jours de pause disponibles à date.');
+            return redirect()->back()->with('error', 'L\'agent n\'a pas assez de jours de pause disponibles à date.');
         }
 
         // Check for existing approved or pending leaves
@@ -258,13 +260,16 @@ class LeaveController extends Controller
 
         // Add the leave immediately and create an approved record
         $driver->addLeaveDates($dates);
+
         LeaveRequest::create([
             'driver_id' => $driver->id,
             'dates' => $dates,
             'status' => 'approved',
         ]);
 
-        return redirect()->back()->with('success', 'Pause instantanée ajoutée avec succès.');
+        session()->flash('success', 'Pause instantanée ajoutée avec succès.');
+
+        return redirect()->away('https://docs.google.com/forms/d/e/1FAIpQLScDV8HvM0P8JaChAVhqoohp0gioFuW0OFMZRcVyMZRO2B-KbQ/viewform?pli=1&pli=1');
     }
 
     /**
