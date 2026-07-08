@@ -11,12 +11,13 @@
                 class="h-full w-full object-cover" alt="Logo">
         </a>
     </div>
+
     <nav class="mt-6">
         @if (auth()->user()->profil === 'admin')
             <a href="{{ route('admin.dashboard') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition 
             {{ request()->routeIs('admin.dashboard') ? 'bg-green-600 border-l-4 border-white' : '' }}">
-                <i class="fas fa-tachometer-alt mr-3"></i> Dashboard
+                <i class="fas fa-tachometer-alt mr-3"></i> Vue d'ensemble
             </a>
             <a href="{{ route('admin.bookings.index') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition
@@ -75,7 +76,7 @@
             <a href="{{ route('driver.dashboard') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition 
                 {{ request()->routeIs('driver.dashboard') ? 'bg-green-600 border-l-4 border-white' : '' }}">
-                <i class="fas fa-tachometer-alt mr-3"></i> Tableau de bord
+                <i class="fas fa-tachometer-alt mr-3"></i> Vue d'ensemble
             </a>
             <a href="{{ route('driver.bookings.available') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition 
@@ -102,17 +103,40 @@
             </a> --}}
         @endif
 
-        <a href="{{ route('bookings.histories') }}"
-            class="flex items-center px-6 py-3 hover:bg-green-600 transition
-                {{ request()->routeIs('bookings.histories') ? 'bg-green-600 border-l-4 border-white' : '' }}">
-            <i class="fas fa-history mr-3"></i> Historique
-        </a>
+        @if (auth()->user()->profil === 'client')
+            @hasrole('client')
+                <a href="{{ route('client.dashboard') }}"
+                    class="flex items-center px-6 py-3 hover:bg-green-600 transition 
+            {{ request()->routeIs('client.dashboard') ? 'bg-green-600 border-l-4 border-white' : '' }}">
+                    <i class="fas fa-tachometer-alt mr-3"></i> Vue d'ensemble
+                </a>
+            @endhasrole
+            <a href="{{ route('admin.payments.index') }}"
+                class="flex items-center px-6 py-3 hover:bg-green-600 transition
+                {{ request()->routeIs('admin.payments*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
+                <i class="fas fa-money-bill mr-3"></i> Paiements
+            </a>
+            <a href="{{ route('admin.leaves.index') }}"
+                class="flex items-center px-6 py-3 hover:bg-green-600 transition
+            {{ request()->routeIs('admin.leaves*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
+                <i class="fas fa-calendar-alt mr-3"></i> Pauses
+            </a>
+        @endif
 
-        <a href="{{ route('settings.settings') }}"
-            class="flex items-center px-6 py-3 hover:bg-green-600 transition
-                {{ request()->routeIs('settings.settings') || request()->routeIs('profile') ? 'bg-green-600 border-l-4 border-white' : '' }}">
-            <i class="fas fa-cog mr-3"></i> Paramètres
-        </a>
+        @hasanyrole('admin|driver')
+            <a href="{{ route('bookings.histories') }}"
+                class="flex items-center px-6 py-3 hover:bg-green-600 transition
+            {{ request()->routeIs('bookings.histories') ? 'bg-green-600 border-l-4 border-white' : '' }}">
+                <i class="fas fa-history mr-3"></i> Historique
+            </a>
+
+            <a href="{{ route('settings.settings') }}"
+                class="flex items-center px-6 py-3 hover:bg-green-600 transition
+                    {{ request()->routeIs('settings.settings') || request()->routeIs('profile') ? 'bg-green-600 border-l-4 border-white' : '' }}">
+                <i class="fas fa-cog mr-3"></i> Paramètres
+            </a>
+        @endhasanyrole
+
 
         <button onclick="showLogoutModal()"
             class="flex items-center px-6 py-3 hover:bg-green-600 transition mt-auto w-full text-left">

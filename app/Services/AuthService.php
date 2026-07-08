@@ -21,7 +21,7 @@ class AuthService
         $this->checkRateLimit($request);
 
         // 2. Trouver l'utilisateur
-        $user = User::where('email', $credentials['email'])->first();
+        $user = User::where('email', $credentials['email'])->where('profil', $credentials['profil'])->first();
 
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
             $this->incrementLoginAttempts($request, $user ?? null);

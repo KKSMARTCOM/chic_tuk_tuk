@@ -27,6 +27,7 @@ class AuthController extends Controller
     {
         try {
             $credentials = $request->validate([
+                'profil'    => ['required', 'string', 'in:admin,client,driver'],
                 'email'    => ['required', 'email'],
                 'password' => [
                     'required',
@@ -37,6 +38,8 @@ class AuthController extends Controller
                     'regex:/[@$!%*#?&]/',
                 ],
             ], [
+                'profil.required' => 'Le profil est obligatoire.',
+                'profil.in'       => 'Le profil sélectionné est invalide.',
                 'email.required'    => 'L\'adresse email est obligatoire.',
                 'email.email'       => 'L\'adresse email n\'est pas valide.',
                 'password.required' => 'Le mot de passe est obligatoire.',

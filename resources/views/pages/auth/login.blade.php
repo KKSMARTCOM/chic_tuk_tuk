@@ -6,10 +6,46 @@
     <form method="POST" action="{{ route('login.store') }}" class="space-y-4">
         @csrf
 
+        {{-- Sélection du profil --}}
+        <div>
+            <div class="grid grid-cols-3 gap-3">
+                @foreach ([['value' => 'client', 'label' => 'Client', 'icon' => 'fa-user'], ['value' => 'driver', 'label' => 'Agent', 'icon' => 'fa-car'], ['value' => 'admin', 'label' => 'Administrateur', 'icon' => 'fa-user-shield']] as $profil)
+                    <label for="profil_{{ $profil['value'] }}"
+                        class="profil-card cursor-pointer rounded-xl border-2 p-3 flex flex-col items-center gap-2 transition-all duration-200 select-none
+                              {{ old('profil', 'client') == $profil['value'] ? 'border-[#286b41] bg-[#286b41]/10 text-[#286b41]' : 'border-gray-200 bg-white text-gray-500 hover:border-[#286b41]/40' }}">
+
+                        <input type="radio" name="profil" id="profil_{{ $profil['value'] }}" value="{{ $profil['value'] }}"
+                            class="sr-only" {{ old('profil', 'client') == $profil['value'] ? 'checked' : '' }} required>
+
+                        <div
+                            class="w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-200
+                                {{ old('profil', 'client') == $profil['value'] ? 'bg-[#286b41] text-white' : 'bg-gray-100 text-gray-400' }}">
+                            <i class="fas {{ $profil['icon'] }} text-base"></i>
+                        </div>
+
+                        <span class="text-xs font-semibold text-center leading-tight">{{ $profil['label'] }}</span>
+
+                        {{-- Indicateur de sélection --}}
+                        {{-- <div
+                            class="w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors duration-200
+                                {{ old('profil', 'client') == $profil['value'] ? 'border-[#286b41]' : 'border-gray-300' }}">
+                            @if (old('profil', 'client') == $profil['value'])
+                                <div class="w-2 h-2 rounded-full bg-[#286b41]"></div>
+                            @endif
+                        </div> --}}
+                    </label>
+                @endforeach
+            </div>
+
+            @error('profil')
+                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+            @enderror
+        </div>
+
         <div>
             <label for="email" class="block text-lg font-medium text-gray-700">E-mail</label>
-            <input id="email" type="email" name="email" value="{{ old('email') }}" placeholder="Votre adresse mail"
-                required
+            <input id="email" type="email" name="email" value="{{ old('email') }}"
+                placeholder="Votre adresse mail" required
                 class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#286b41]">
             @error('email')
                 <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
@@ -59,4 +95,5 @@
             </div>
         </div>
     </form>
+
 @endsection

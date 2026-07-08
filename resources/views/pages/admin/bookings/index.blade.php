@@ -395,7 +395,7 @@
 
             $("#datatable1").DataTable({
                 order: [
-                    [0, "desc"]
+                    [0, "asc"]
                 ],
                 columnDefs: [{
                     targets: 0,

@@ -2,10 +2,10 @@
 <div id="pwa-install-container" class="fixed top-4 right-4 z-50 hidden max-w-sm animate-in slide-in-from-top">
     <div class="bg-white rounded-lg shadow-lg border border-blue-200 overflow-hidden">
         <!-- Header -->
-        <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-3 flex items-center justify-between">
+        <div class="bg-gradient-to-r from-[#286b41] to-green-700 text-white px-4 py-3 flex items-center justify-between">
             <div class="flex items-center space-x-2">
                 <i class="fas fa-mobile-alt text-lg"></i>
-                <span class="font-semibold">Installer ChicTukTuk</span>
+                <span class="font-semibold">Installer Chic Tuk Tuk</span>
             </div>
             <button onclick="PWA.dismiss()" class="text-white hover:text-blue-100 text-xl leading-none">×</button>
         </div>
@@ -13,11 +13,11 @@
         <!-- Content -->
         <div class="px-4 py-3">
             <p class="text-sm text-gray-700 mb-4">
-                Installez ChicTukTuk sur votre appareil pour un accès rapide et une meilleure expérience hors ligne.
+                Installez Chic Tuk Tuk sur votre appareil pour un accès rapide et une meilleure expérience hors ligne.
             </p>
             <div class="space-y-2">
                 <button id="pwa-install-btn"
-                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 flex items-center justify-center">
+                    class="w-full bg-[#286b41] hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 flex items-center justify-center">
                     <i class="fas fa-download mr-2"></i>
                     Installer
                 </button>

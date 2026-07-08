@@ -88,6 +88,17 @@
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
+
+                <div>
+                    <label for="license_number" class="block text-sm font-medium text-gray-700">Catégorie de permis
+                        <span class="text-red-600">*</span></label>
+                    <input type="text" name="license_number" id="license_number" value="{{ old('license_number') }}"
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('license_number') border-red-500 @enderror"
+                        placeholder="Catégorie de permis">
+                    @error('license_number')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
             </div>
 
             <!-- Informations du Contrat -->
@@ -167,18 +178,6 @@
                 <h4 class="text-lg font-medium text-gray-900 mb-4">Informations du Véhicule</h4>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label for="license_number" class="block text-sm font-medium text-gray-700">Catégorie de permis
-                            <span class="text-red-600">*</span></label>
-                        <input type="text" name="license_number" id="license_number"
-                            value="{{ old('license_number') }}"
-                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('license_number') border-red-500 @enderror"
-                            placeholder="Catégorie de permis">
-                        @error('license_number')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
                     <div>
                         <label for="vehicle_number" class="block text-sm font-medium text-gray-700">Numéro du véhicule
                             <span class="text-red-600">*</span></label>
