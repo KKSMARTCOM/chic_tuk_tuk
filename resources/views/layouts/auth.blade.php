@@ -75,7 +75,40 @@
                 }
             }
         });
+
+        document.querySelectorAll('input[name="profil"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                document.querySelectorAll('.profil-card').forEach(card => {
+                    const input = card.querySelector('input[type="radio"]');
+                    const iconWrap = card.querySelector('.w-10');
+                    const dot = card.querySelector('.w-4');
+                    const isChecked = input.checked;
+
+                    // Card
+                    card.classList.toggle('border-[#286b41]', isChecked);
+                    card.classList.toggle('bg-[#286b41]/10', isChecked);
+                    card.classList.toggle('text-[#286b41]', isChecked);
+                    card.classList.toggle('border-gray-200', !isChecked);
+                    card.classList.toggle('bg-white', !isChecked);
+                    card.classList.toggle('text-gray-500', !isChecked);
+
+                    // Cercle icône
+                    iconWrap.classList.toggle('bg-[#286b41]', isChecked);
+                    iconWrap.classList.toggle('text-white', isChecked);
+                    iconWrap.classList.toggle('bg-gray-100', !isChecked);
+                    iconWrap.classList.toggle('text-gray-400', !isChecked);
+
+                    // Indicateur radio
+                    /* dot.classList.toggle('border-[#286b41]', isChecked);
+                    dot.classList.toggle('border-gray-300', !isChecked);
+                    dot.innerHTML = isChecked ?
+                        '<div class="w-2 h-2 rounded-full bg-[#286b41]"></div>' :
+                        ''; */
+                });
+            });
+        });
     </script>
+
     @stack('scripts')
 </body>
 

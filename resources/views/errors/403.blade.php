@@ -40,15 +40,15 @@
                 </p>
 
                 <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                    <a href="{{ route('login') }}"
+                        class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[#286b41] hover:opacity-90 text-white text-sm font-semibold rounded-lg transition">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Se connecter
+                    </a>
                     <a href="{{ url('/') }}"
                         class="inline-flex items-center justify-center gap-2 px-6 py-2.5 border border-gray-200 text-gray-600 hover:border-gray-300 hover:text-gray-800 text-sm rounded-lg transition">
                         <i class="fas fa-home"></i>
                         Retour à l'accueil
-                    </a>
-                    <a href="javascript:history.back()"
-                        class="inline-flex items-center justify-center gap-2 px-6 py-2.5 border border-gray-200 text-gray-600 hover:border-gray-300 hover:text-gray-800 text-sm rounded-lg transition">
-                        <i class="fas fa-arrow-left"></i>
-                        Page précédente
                     </a>
                 </div>
 

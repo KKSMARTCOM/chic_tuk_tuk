@@ -49,7 +49,7 @@
     <!-- Mes Courses Actives -->
     <div class="bg-white rounded-lg shadow-md mb-8">
         <div class="px-6 py-4 border-b border-gray-200">
-            <h3 class="text-xl font-bold text-gray-800">Mes Courses Actives</h3>
+            <h3 class="text-xl font-bold text-gray-800">Mes Courses Actives Propriétaire</h3>
         </div>
         <div class="p-6">
             <div class="space-y-4">
@@ -217,57 +217,4 @@
             @endif --}}
         </div>
     </div>
-
-    <!-- Modal d'annulation -->
-    <div id="cancelModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-        <div class="bg-white rounded-lg p-8 max-w-md w-full">
-            <h3 class="text-2xl font-bold text-gray-800 mb-4">Annuler la course</h3>
-            <p class="text-gray-600 mb-4">Êtes-vous sûr de vouloir annuler cette course ? Cette action est
-                irréversible.</p>
-            <form id="cancelForm" method="POST">
-                @csrf
-                <textarea name="cancellation_reason" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-lg mb-4"
-                    placeholder="Raison de l'annulation (optionnel)"></textarea>
-                <div class="flex space-x-4">
-                    <button type="button" onclick="closeCancelModal()"
-                        class="flex-1 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition">
-                        Retour
-                    </button>
-                    <button type="submit"
-                        class="flex-1 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
-                        Confirmer l'annulation
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    @push('scripts')
-        <script>
-            function cancelTrip(bookingId) {
-                const modal = document.getElementById('cancelModal');
-                const form = document.getElementById('cancelForm');
-                form.action = `/driver/bookings/${bookingId}/cancel`;
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-            }
-
-            function closeCancelModal() {
-                document.getElementById('cancelModal').classList.add('hidden');
-                document.getElementById('cancelModal').classList.remove('flex');
-            }
-
-            function startTrip(bookingId) {
-                if (confirm('Démarrer cette course ?')) {
-                    fetch(`/driver/bookings/${bookingId}/start`, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                            'Content-Type': 'application/json'
-                        }
-                    }).then(() => location.reload());
-                }
-            }
-        </script>
-    @endpush
 @endsection
