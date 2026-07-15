@@ -22,7 +22,8 @@ class DatabaseSeeder extends Seeder
             ZoneSeeder::class,
             TarificationSeeder::class,
             NotificationSeeder::class,
-            AddMissingPermissionsSeeder::class
+            AddMissingPermissionsSeeder::class,
+            AddOwnerRoleSeeder::class,
         ]);
     }
 }

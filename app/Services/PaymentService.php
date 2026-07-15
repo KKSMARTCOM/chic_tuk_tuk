@@ -35,6 +35,9 @@ class PaymentService
         $payment = Payment::create([
             'driver_id' => $data['driver_id'],
             'amount' => $data['amount'],
+            'vehicle_contract_id' => $data['vehicle_contract_id'] ?? null,
+            'driver_contract_id'  => $data['driver_contract_id']  ?? null,
+            'payment_month'       => $data['payment_month']        ?? null,
             'payment_method' => $data['payment_method'],
             'payment_date' => $data['payment_date'],
             'notes' => $data['notes'] ?? null,

@@ -46,7 +46,7 @@
                                         <h3 class="text-lg font-semibold text-gray-900">{{ $role->label }}</h3>
                                         <p class="text-xs text-gray-900">{{ $role->description }}</p>
                                     </div>
-                                    @if (!in_array($role->name, ['admin', 'driver', 'client']))
+                                    @if (!in_array($role->name, ['admin', 'driver', 'client', 'proprietaire']))
                                         <button type="button"
                                             onclick="openDeleteRoleModal('{{ $role->id }}', '{{ $role->name }}')"
                                             class="text-red-600 hover:text-red-800 transition">

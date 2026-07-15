@@ -41,7 +41,9 @@
                             @if ($user->isAdmin())
                                 Administrateur
                             @elseif ($user->isDriver())
-                                Chauffeur
+                                Agent
+                            @elseif($user->hasRole('proprietaire'))
+                                Propriétaire
                             @else
                                 Client
                             @endif

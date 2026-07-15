@@ -12,6 +12,9 @@ class Payment extends Model
 
     protected $fillable = [
         'driver_id',
+        'vehicle_contract_id',  // nouveau
+        'driver_contract_id',   // nouveau
+        'payment_month',        // nouveau
         'amount',
         'payment_method',
         'payment_date',
@@ -21,11 +24,22 @@ class Payment extends Model
 
     protected $casts = [
         'payment_date' => 'date',
+        'payment_month' => 'date', // nouveau
         'amount' => 'decimal:2',
     ];
 
     public function driver()
     {
         return $this->belongsTo(Driver::class);
+    }
+
+    public function vehicleContract()
+    {
+        return $this->belongsTo(VehicleContract::class);
+    }
+
+    public function driverContract()
+    {
+        return $this->belongsTo(DriverContract::class);
     }
 }

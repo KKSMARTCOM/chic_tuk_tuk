@@ -219,4 +219,28 @@ class Driver extends Model
             ->where('created_at', '<', $nextMonth)
             ->get();
     }
+
+    // Nouvelles relations
+    public function driverContracts()
+    {
+        return $this->hasMany(DriverContract::class);
+    }
+
+    public function activeDriverContract()
+    {
+        return $this->hasOne(DriverContract::class)->where('status', 'active');
+    }
+
+    // currentVehicle via le contrat actif
+    public function currentVehicle()
+    {
+        return $this->hasOneThrough(
+            Vehicle::class,
+            DriverContract::class,
+            'driver_id',
+            'id',
+            'id',
+            'vehicle_id'
+        )->where('driver_contracts.status', 'active');
+    }
 }

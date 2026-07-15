@@ -6,11 +6,19 @@ use App\Http\Controllers\Controller;
 use App\Models\Driver;
 use App\Models\LeaveRequest;
 use App\Models\User;
+use App\Services\VehicleService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
 class LeaveController extends Controller
 {
+    protected $vehicleService;
+
+    public function __construct(VehicleService $vehicleService)
+    {
+        $this->vehicleService = $vehicleService;
+    }
+
     /**
      * Display all drivers with their leave information
      */
@@ -163,6 +171,15 @@ class LeaveController extends Controller
             'rejection_reason' => null,
         ]);
 
+        $activeContract = $driver->activeDriverContract;
+        if ($activeContract) {
+            $this->vehicleService->createAutoAgentPause(
+                $activeContract->vehicle_id,
+                $activeContract->id,
+                $dates
+            );
+        }
+
         // Add leave dates to driver
         $driver->addLeaveDates($dates);
 
@@ -263,9 +280,19 @@ class LeaveController extends Controller
 
         LeaveRequest::create([
             'driver_id' => $driver->id,
+            'driver_contract_id'  => $driver->activeDriverContract?->id,
             'dates' => $dates,
             'status' => 'approved',
         ]);
+
+        $activeContract = $driver->activeDriverContract;
+        if ($activeContract) {
+            $this->vehicleService->createAutoAgentPause(
+                $activeContract->vehicle_id,
+                $activeContract->id,
+                $dates
+            );
+        }
 
         session()->flash('success', 'Pause instantanée ajoutée avec succès.');
 

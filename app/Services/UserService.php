@@ -4,7 +4,10 @@ namespace App\Services;
 
 use App\Models\Role;
 use App\Models\User;
+use App\Models\Vehicle;
+use App\Models\VehicleContract;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -87,43 +90,137 @@ class UserService
 
     public function create(array $data): User
     {
-        $user = User::create([
-            'name'     => $data['name'],
-            'email'    => $data['email'] ?? null,
-            'phone'    => $data['phone'],
-            'password' => Hash::make($data['password']),
-            'profil'   => $data['profil'],
-            'adresse'  => $data['adresse'] ?? null,
-            'is_active' => $data['is_active'] ?? true,
-        ]);
+        return DB::transaction(function () use ($data) {
+            // 1. Créer l'utilisateur
+            $user = User::create([
+                'name'      => $data['name'],
+                'email'     => $data['email'] ?? null,
+                'phone'     => $data['phone'],
+                'password'  => Hash::make($data['password']),
+                'profil'    => $data['profil'],
+                'adresse'   => $data['adresse'] ?? null,
+                'is_active' => $data['is_active'] ?? true,
+            ]);
 
-        // Assigner le rôle Spatie
-        if (!empty($data['role'])) {
-            $user->assignRole($data['role']);
-        } else {
-            $user->assignRole($data['profil']); // rôle par défaut = profil
-        }
+            // 2. Assigner le rôle Spatie
+            $role = !empty($data['role']) ? $data['role'] : $data['profil'];
+            $user->assignRole($role);
 
-        return $user;
+            // 3. Si rôle propriétaire → gérer véhicule + contrat
+            if ($role === 'proprietaire') {
+                $vehicle = null;
+
+                // 3a. Nouveau véhicule à créer
+                if (!empty($data['new_vehicle_number'])) {
+                    $vehicle = Vehicle::create([
+                        'owner_id'       => $user->id,
+                        'vehicle_number' => $data['new_vehicle_number'],
+                        'vehicle_type'   => $data['new_vehicle_type']  ?? 'tricycle',
+                        'color'          => $data['new_vehicle_color'] ?? null,
+                        'notes'          => $data['new_vehicle_notes'] ?? null,
+                        'is_active'      => true,
+                    ]);
+                }
+                // 3b. Véhicule existant sélectionné → changer le propriétaire
+                elseif (!empty($data['vehicle_id'])) {
+                    $vehicle = Vehicle::find($data['vehicle_id']);
+                    $vehicle?->update(['owner_id' => $user->id]);
+                }
+
+                // 4. Créer le contrat proprio-véhicule si montant renseigné
+                if ($vehicle && !empty($data['contract_total_amount'])) {
+                    VehicleContract::create([
+                        'vehicle_id'      => $vehicle->id,
+                        'owner_id'        => $user->id,
+                        'total_amount'    => $data['contract_total_amount'],
+                        'monthly_payment' => $data['contract_monthly_payment'] ?? 0,
+                        'start_date'      => $data['contract_start_date']      ?? now(),
+                        'end_date'        => $data['contract_end_date']         ?? null,
+                        'notes'           => $data['contract_notes']            ?? null,
+                        'status'          => 'active',
+                    ]);
+                }
+            }
+
+            return $user;
+        });
     }
 
     public function update(User $user, array $data): User
     {
-        $user->update([
-            'name'     => $data['name'],
-            'email'    => $data['email'] ?? $user->email,
-            'phone'    => $data['phone'],
-            'profil'   => $data['profil'],
-            'adresse'  => $data['adresse'] ?? $user->adresse,
-            'is_active' => $data['is_active'] ?? $user->is_active,
-        ]);
+        return DB::transaction(function () use ($user, $data) {
+            // 1. Mettre à jour les infos de base
+            $user->update([
+                'name'      => $data['name'],
+                'email'     => $data['email']   ?? $user->email,
+                'phone'     => $data['phone'],
+                'profil'    => $data['profil'],
+                'adresse'   => $data['adresse'] ?? $user->adresse,
+                'is_active' => $data['is_active'] ?? $user->is_active,
+            ]);
 
-        // Mettre à jour le rôle Spatie
-        if (!empty($data['role'])) {
-            $user->syncRoles([$data['role']]);
-        }
+            // 2. Mettre à jour le rôle Spatie
+            if (!empty($data['role'])) {
+                $user->syncRoles([$data['role']]);
+            }
 
-        return $user->refresh();
+            // 3. Si rôle propriétaire → gérer véhicule + contrat éventuel
+            if (($data['role'] ?? '') === 'proprietaire') {
+                $vehicle = null;
+
+                // 3a. Nouveau véhicule à créer
+                if (!empty($data['new_vehicle_number'])) {
+                    $vehicle = Vehicle::create([
+                        'owner_id'       => $user->id,
+                        'vehicle_number' => $data['new_vehicle_number'],
+                        'vehicle_type'   => $data['new_vehicle_type']  ?? 'tricycle',
+                        'color'          => $data['new_vehicle_color'] ?? null,
+                        'is_active'      => true,
+                    ]);
+                }
+                // 3b. Véhicule existant sélectionné
+                elseif (!empty($data['vehicle_id'])) {
+                    $vehicle = Vehicle::find($data['vehicle_id']);
+
+                    // ⚠️ Vérifier qu'il n'a pas déjà un autre propriétaire
+                    if ($vehicle && $vehicle->owner_id && $vehicle->owner_id !== $user->id) {
+                        throw new \Exception(
+                            "Le véhicule {$vehicle->vehicle_number} appartient déjà à un autre propriétaire."
+                        );
+                    }
+
+                    $vehicle?->update(['owner_id' => $user->id]);
+                }
+
+                // 4. Créer le contrat si montant renseigné
+                if ($vehicle && !empty($data['contract_total_amount'])) {
+
+                    // Vérifier qu'il n'a pas déjà un contrat actif
+                    $existingActive = VehicleContract::where('vehicle_id', $vehicle->id)
+                        ->where('status', 'active')
+                        ->first();
+
+                    if ($existingActive) {
+                        throw new \Exception(
+                            "Le véhicule {$vehicle->vehicle_number} a déjà un contrat actif. Clôturez-le avant d'en créer un nouveau."
+                        );
+                    }
+
+                    VehicleContract::create([
+                        'vehicle_id'      => $vehicle->id,
+                        'owner_id'        => $user->id,
+                        'total_amount'    => $data['contract_total_amount'],
+                        'monthly_payment' => $data['contract_monthly_payment'] ?? 0,
+                        'start_date'      => $data['contract_start_date']      ?? now(),
+                        'end_date'        => $data['contract_end_date']         ?? null,
+                        'notes'           => $data['contract_notes']            ?? null,
+                        'status'          => 'active',
+                    ]);
+                }
+            }
+
+            return $user->refresh();
+        });
     }
 
     public function updatePassword(User $user, string $password): void
