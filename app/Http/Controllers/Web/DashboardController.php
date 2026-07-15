@@ -7,6 +7,7 @@ use App\Models\Booking;
 use App\Models\Commission;
 use App\Models\Driver;
 use App\Services\DriverService;
+use App\Services\VehicleContractService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -14,8 +15,10 @@ class DashboardController extends Controller
 {
     protected $driverService;
 
-    public function __construct(DriverService $driverService)
-    {
+    public function __construct(
+        DriverService $driverService,
+        private VehicleContractService $contractService
+    ) {
         $this->driverService = $driverService;
     }
 
@@ -101,5 +104,28 @@ class DashboardController extends Controller
         }
 
         return view('pages.client.dashboard', compact('stats'));
+    }
+
+    public function owner()
+    {
+        $user     = auth()->user();
+        $vehicles = $user->vehicles()->with([
+            'activeVehicleContract',
+            'activeDriverContract.driver.user',
+            'activePause',
+        ])->get();
+
+        $stats = $vehicles->map(function ($vehicle) {
+            $contract = $vehicle->activeVehicleContract;
+            return [
+                'vehicle'      => $vehicle,
+                'contract'     => $contract,
+                'stats'        => $contract ? $this->contractService->getStats($contract) : null,
+                'is_on_pause'  => $vehicle->isOnPause(),
+                'active_driver' => $vehicle->activeDriverContract?->driver?->user,
+            ];
+        });
+
+        return view('pages.owner.dashboard', compact('vehicles', 'stats'));
     }
 }

@@ -4,6 +4,7 @@
 
 use App\Http\Controllers\Admin\BookingController;
 use App\Http\Controllers\Admin\CommissionController;
+use App\Http\Controllers\Admin\DriverContractController;
 use App\Http\Controllers\Admin\DriverController;
 use App\Http\Controllers\Admin\LeaveController;
 use App\Http\Controllers\Admin\PaymentController;
@@ -11,9 +12,11 @@ use App\Http\Controllers\Admin\PricingController;
 use App\Http\Controllers\Admin\PromoCodeController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\PermissionController;
-use App\Http\Controllers\Admin\UserRoleController;
 use App\Http\Controllers\Admin\TouristCircuitController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\VehicleContractController;
+use App\Http\Controllers\Admin\VehicleController;
+use App\Http\Controllers\Admin\VehiclePauseController;
 use App\Http\Controllers\Web\DashboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -88,4 +91,27 @@ Route::middleware(['auth:sanctum'])->prefix('admin')->name('admin.')->group(func
     Route::post('users/{user}/update-password', [UserController::class, 'updatePassword'])->name('users.update-password')->middleware('permission:edit-users');
     Route::post('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status')->middleware('permission:edit-users');
     Route::resource('users', UserController::class)->except(['show', 'create', 'edit'])->middleware('permission:view-users');
+
+    // Véhicules
+    Route::resource('vehicles', VehicleController::class)->middleware('permission:view-vehicles');
+    Route::post('vehicles/{vehicle}/toggle-status', [VehicleController::class, 'toggleStatus'])->name('vehicles.toggle-status')->middleware('permission:edit-vehicles');
+
+    // Contrats véhicule
+    Route::resource('vehicle-contracts', VehicleContractController::class)->middleware('permission:manage-contracts');
+
+    // Contrats agent
+    Route::resource('driver-contracts', DriverContractController::class)->middleware('permission:manage-contracts');
+    Route::post('driver-contracts/{driverContract}/end', [DriverContractController::class, 'end'])->name('driver-contracts.end')->middleware('permission:manage-contracts');
+
+    // Pauses véhicule
+    Route::resource('vehicle-pauses', VehiclePauseController::class)->middleware('permission:manage-vehicle-pauses');
+    Route::post('vehicle-pauses/{vehiclePause}/end', [VehiclePauseController::class, 'end'])->name('vehicle-pauses.end')->middleware('permission:manage-vehicle-pauses');
+
+    // Véhicules d'un propriétaire (AJAX)
+    Route::get('owners/{owner}/vehicles', [VehicleController::class, 'byOwner'])->name('owners.vehicles');
+
+    Route::get('users/{user}/vehicles', [UserController::class, 'vehicles'])->name('users.vehicles');
+
+    // Détacher un véhicule de son propriétaire
+    Route::post('vehicles/{vehicle}/detach-owner', [VehicleController::class, 'detachOwner'])->name('vehicles.detach-owner');
 });

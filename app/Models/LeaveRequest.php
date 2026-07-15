@@ -12,6 +12,7 @@ class LeaveRequest extends Model
 
     protected $fillable = [
         'driver_id',
+        'driver_contract_id', // nouveau
         'dates',
         'status',
         'rejection_reason',
