@@ -177,164 +177,10 @@
     </div>
 
     {{-- ===== MODAL CRÉATION ===== --}}
-    <div id="createModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-30">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                <h3 class="text-lg font-bold text-gray-800">Nouvel Utilisateur</h3>
-                <button onclick="closeCreateModal()" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <form action="{{ route('admin.users.store') }}" method="POST" class="p-6 space-y-4">
-                @csrf
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Nom complet <span
-                                class="text-red-500">*</span></label>
-                        <input type="text" name="name" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                        <input type="email" name="email"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Téléphone <span
-                                class="text-red-500">*</span></label>
-                        <input type="text" name="phone" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Profil <span
-                                class="text-red-500">*</span></label>
-                        <select name="profil" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
-                            <option value="client">Client</option>
-                            <option value="admin">Administrateur</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Rôle</label>
-                        <select name="role"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
-                            <option value="">— Par défaut (profil) —</option>
-                            @foreach ($roles as $role)
-                                <option value="{{ $role->name }}">{{ $role->label ?? $role->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Adresse</label>
-                        <input type="text" name="adresse"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    </div>
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe <span
-                                class="text-red-500">*</span></label>
-                        <div class="flex gap-2">
-                            <input type="text" name="password" id="create_password" required
-                                class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 font-mono">
-                            <button type="button" onclick="generatePassword()"
-                                class="px-3 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition text-sm font-semibold whitespace-nowrap">
-                                <i class="fas fa-refresh mr-1"></i> Générer
-                            </button>
-                        </div>
-                        <p class="text-xs text-gray-400 mt-1">Le mot de passe sera affiché une seule fois — notez-le.</p>
-                    </div>
-                    <div class="md:col-span-2 flex items-center gap-2">
-                        <input type="checkbox" name="is_active" id="create_is_active" value="1" checked
-                            class="w-4 h-4 accent-purple-600">
-                        <label for="create_is_active" class="text-sm text-gray-700">Compte actif</label>
-                    </div>
-                </div>
-                <div class="flex gap-3 pt-2">
-                    <button type="button" onclick="closeCreateModal()"
-                        class="flex-1 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
-                        Annuler
-                    </button>
-                    <button type="submit"
-                        class="flex-1 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-semibold">
-                        Créer
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+    @include('inc.modals.users.add')
 
     {{-- ===== MODAL MODIFICATION ===== --}}
-    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-30">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
-            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                <h3 class="text-lg font-bold text-gray-800">Modifier l'Utilisateur</h3>
-                <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <form id="editForm" method="POST" class="p-6 space-y-4">
-                @csrf
-                @method('PUT')
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Nom complet <span
-                                class="text-red-500">*</span></label>
-                        <input type="text" name="name" id="edit_name" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                        <input type="email" name="email" id="edit_email"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Téléphone <span
-                                class="text-red-500">*</span></label>
-                        <input type="text" name="phone" id="edit_phone" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Profil <span
-                                class="text-red-500">*</span></label>
-                        <select name="profil" id="edit_profil" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
-                            <option value="client">Client</option>
-                            <option value="admin">Administrateur</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Rôle Spatie</label>
-                        <select name="role" id="edit_role"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
-                            <option value="">— Par défaut (profil) —</option>
-                            @foreach ($roles as $role)
-                                <option value="{{ $role->name }}">{{ $role->label ?? $role->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Adresse</label>
-                        <input type="text" name="adresse" id="edit_adresse"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    </div>
-                    <div class="md:col-span-2 flex items-center gap-2">
-                        <input type="checkbox" name="is_active" id="edit_is_active" value="1"
-                            class="w-4 h-4 accent-purple-600">
-                        <label for="edit_is_active" class="text-sm text-gray-700">Compte actif</label>
-                    </div>
-                </div>
-                <div class="flex gap-3 pt-2">
-                    <button type="button" onclick="closeEditModal()"
-                        class="flex-1 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
-                        Annuler
-                    </button>
-                    <button type="submit"
-                        class="flex-1 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-semibold">
-                        Enregistrer
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+    @include('inc.modals.users.edit')
 
     {{-- ===== MODAL MOT DE PASSE ===== --}}
     <div id="passwordModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-30">
@@ -449,8 +295,58 @@
             })
 
             // ===== CRÉATION =====
+            // ── Afficher/masquer la section propriétaire ────────────
+            function onRoleChange(role, ctx) {
+                const section = document.getElementById(`${ctx}_owner_section`);
+                if (section) {
+                    if (role === 'proprietaire') {
+                        section.classList.remove('hidden');
+                    } else {
+                        section.classList.add('hidden');
+                        // Reset les champs si on change de rôle
+                        document.getElementById(`${ctx}_vehicle_id`).value = '';
+                        document.getElementById(`${ctx}_new_vehicle_form`)?.classList.add('hidden');
+                    }
+                }
+            }
+
+            // Si le profil change, reset aussi
+            function onProfilChange(profil, ctx) {
+                const roleSelect = document.getElementById(`${ctx}_role`);
+                if (roleSelect && roleSelect.value === 'proprietaire') {
+                    onRoleChange('', ctx); // masquer si profil change
+                    roleSelect.value = '';
+                }
+            }
+
+            // ── Afficher/masquer le formulaire nouveau véhicule ─────
+            function toggleNewVehicleForm() {
+                const form = document.getElementById('create_new_vehicle_form');
+                const select = document.getElementById('create_vehicle_id');
+                const isShown = !form.classList.contains('hidden');
+
+                form.classList.toggle('hidden', isShown);
+
+                // Si on affiche le formulaire nouveau véhicule,
+                // vider la sélection du véhicule existant
+                if (!isShown) {
+                    select.value = '';
+                    select.disabled = true;
+                } else {
+                    select.disabled = false;
+                    // Vider les champs du nouveau véhicule
+                    document.getElementById('create_new_vehicle_number').value = '';
+                }
+            }
+
             function openCreateModal() {
                 generatePassword();
+
+                // Reset section proprio
+                document.getElementById('create_owner_section')?.classList.add('hidden');
+                document.getElementById('create_new_vehicle_form')?.classList.add('hidden');
+                document.getElementById('create_role').value = '';
+
                 document.getElementById('createModal').classList.remove('hidden');
                 document.getElementById('createModal').classList.add('flex');
             }
@@ -477,13 +373,162 @@
                 document.getElementById('edit_is_active').checked = user.is_active;
 
                 // Rôle Spatie — premier rôle de l'utilisateur
-                const roleSelect = document.getElementById('edit_role');
-                roleSelect.value = userRoles.length > 0 ? userRoles[0] : '';
+                const firstRole = userRoles.length > 0 ? userRoles[0] : '';
+                document.getElementById('edit_role').value = firstRole;
 
                 document.getElementById('editForm').action = `/admin/users/${user.id}`;
 
+                // Reset section proprio
+                resetOwnerSection();
+
+                // Afficher si proprio
+                if (firstRole === 'proprietaire') {
+                    document.getElementById('edit_owner_section').classList.remove('hidden');
+                    loadOwnerVehicles(user.id);
+                }
+
                 document.getElementById('editModal').classList.remove('hidden');
                 document.getElementById('editModal').classList.add('flex');
+            }
+
+            // ── Charger les véhicules actuels du proprio ─────────────
+            async function loadOwnerVehicles(userId) {
+                const container = document.getElementById('edit_current_vehicles');
+                container.innerHTML = '<p class="text-xs text-gray-400 italic">Chargement...</p>';
+
+                try {
+                    const res = await fetch(`/admin/users/${userId}/vehicles`, {
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    });
+                    const data = await res.json();
+
+                    if (!data.length) {
+                        container.innerHTML = '<p class="text-xs text-gray-400 italic">Aucun véhicule associé.</p>';
+                        return;
+                    }
+
+                    container.innerHTML = data.map(v => `
+                <div class="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-${v.vehicle_type === 'moto' ? 'motorcycle' : v.vehicle_type === 'car' ? 'car' : 'truck-pickup'} text-[#286b41]"></i>
+                        <div>
+                            <p class="text-sm font-semibold text-gray-800">${v.vehicle_number}</p>
+                            <p class="text-xs text-gray-500">${v.vehicle_type}${v.color ? ' · ' + v.color : ''}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        ${v.has_active_contract
+                            ? '<span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">Contrat actif</span>'
+                            : '<span class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">Sans contrat</span>'
+                        }
+                        <button type="button"
+                            onclick="confirmDetachVehicle('${v.id}', '${v.vehicle_number}')"
+                            class="text-red-400 hover:text-red-600 ml-1" title="Détacher ce véhicule">
+                            <i class="fas fa-unlink text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+                } catch (e) {
+                    container.innerHTML = '<p class="text-xs text-red-400">Erreur de chargement.</p>';
+                }
+            }
+
+            // ── Détacher un véhicule du propriétaire ─────────────────
+            function confirmDetachVehicle(vehicleId, vehicleNumber) {
+                if (!confirm(
+                        `Détacher le véhicule ${vehicleNumber} de ce propriétaire ?\n\nAttention : si un contrat actif existe, il sera clôturé.`
+                    )) return;
+
+                fetch(`/admin/vehicles/${vehicleId}/detach-owner`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json',
+                        },
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            showAlert('success', data.message ?? 'Véhicule détaché.');
+                            // Recharger la liste des véhicules
+                            const userId = document.getElementById('editForm').action.split('/').at(-1);
+                            loadOwnerVehicles(userId);
+                            // Remettre le véhicule dans le select des disponibles
+                            const select = document.getElementById('edit_vehicle_id');
+                            const opt = new Option(`${data.vehicle.vehicle_number} (${data.vehicle.vehicle_type})`, data
+                                .vehicle.id);
+                            select.appendChild(opt);
+                        } else {
+                            showAlert('error', data.message ?? 'Erreur lors du détachement.');
+                        }
+                    })
+                    .catch(() => showAlert('error', 'Erreur réseau.'));
+            }
+
+            // ── Afficher/masquer formulaire nouveau véhicule ─────────
+            function toggleEditVehicleForm() {
+                const form = document.getElementById('edit_new_vehicle_form');
+                const select = document.getElementById('edit_vehicle_id');
+                const shown = !form.classList.contains('hidden');
+
+                form.classList.toggle('hidden', shown);
+                document.getElementById('edit_contract_section').classList.remove('hidden');
+
+                if (!shown) {
+                    select.value = '';
+                    select.disabled = true;
+                    document.getElementById('edit_new_vehicle_number').value = '';
+                } else {
+                    select.disabled = false;
+                }
+            }
+
+            // Afficher la section contrat quand on choisit un véhicule existant
+            document.getElementById('edit_vehicle_id')?.addEventListener('change', function() {
+                const section = document.getElementById('edit_contract_section');
+                section.classList.toggle('hidden', !this.value);
+            });
+
+            // ── Callbacks rôle/profil ────────────────────────────────
+            function onRoleChange(role, ctx) {
+                const section = document.getElementById(`${ctx}_owner_section`);
+                if (!section) return;
+
+                if (role === 'proprietaire') {
+                    section.classList.remove('hidden');
+                    if (ctx === 'edit') {
+                        const userId = document.getElementById('editForm').action.split('/').at(-1);
+                        loadOwnerVehicles(userId);
+                    }
+                } else {
+                    section.classList.add('hidden');
+                    resetOwnerSection();
+                }
+            }
+
+            function onProfilChange(profil, ctx) {
+                const roleSelect = document.getElementById(`${ctx}_role`);
+                if (roleSelect?.value === 'proprietaire') {
+                    roleSelect.value = '';
+                    onRoleChange('', ctx);
+                }
+            }
+
+            function resetOwnerSection() {
+                document.getElementById('edit_owner_section')?.classList.add('hidden');
+                document.getElementById('edit_new_vehicle_form')?.classList.add('hidden');
+                document.getElementById('edit_contract_section')?.classList.add('hidden');
+                const select = document.getElementById('edit_vehicle_id');
+                if (select) {
+                    select.value = '';
+                    select.disabled = false;
+                }
+                const num = document.getElementById('edit_new_vehicle_number');
+                if (num) num.value = '';
             }
 
             function closeEditModal() {

@@ -100,4 +100,19 @@ class User extends Authenticatable
     {
         return $this->profil === 'client';
     }
+
+    public function vehicles()
+    {
+        return $this->hasMany(Vehicle::class, 'owner_id');
+    }
+
+    public function vehicleContracts()
+    {
+        return $this->hasMany(VehicleContract::class, 'owner_id');
+    }
+
+    public function isOwner(): bool
+    {
+        return $this->hasRole('proprietaire');
+    }
 }

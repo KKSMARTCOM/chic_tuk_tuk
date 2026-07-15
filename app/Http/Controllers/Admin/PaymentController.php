@@ -157,7 +157,7 @@ class PaymentController extends Controller
     /**
      * Afficher les détails de paiement d'un conducteur
      */
-    public function driverPaymentDetails($driverId)
+    public function driverPaymentDetails(string $driverId)
     {
         try {
             $driverStats = $this->paymentService->getDriverPayments($driverId);

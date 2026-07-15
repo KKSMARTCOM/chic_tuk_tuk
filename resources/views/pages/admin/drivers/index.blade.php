@@ -8,8 +8,8 @@
                 <h1 class="text-lg md:text-2xl font-bold text-gray-800">Gestion des Agents</h1>
                 <p class="text-xs md:text-base text-gray-600">Gérez vos Agents et leurs véhicules</p>
             </div>
-            <div class="flex items-center space-x-3">
-                <div class="relative group">
+            <div class="block md:flex items-center space-x-3">
+                <div class="relative group mb-4 md:mb-0">
                     <button
                         class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center">
                         <i class="fas fa-download mr-2"></i> Importer/Exporter
