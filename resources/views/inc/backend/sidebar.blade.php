@@ -29,6 +29,11 @@
             {{ request()->routeIs('admin.drivers*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
                 <i class="fas fa-users mr-3"></i> Agents
             </a>
+            <a href="{{ route('admin.vehicles.index') }}"
+                class="flex items-center px-6 py-3 hover:bg-green-600 transition
+            {{ request()->routeIs('admin.vehicles*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
+                <i class="fas fa-car mr-3"></i> Véhicules
+            </a>
             <a href="{{ route('admin.commissions.index') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition
                 {{ request()->routeIs('admin.commissions*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
@@ -122,6 +127,14 @@
                 <i class="fas fa-calendar-alt mr-3"></i> Pauses
             </a>
         @endif
+
+        @hasrole('proprietaire')
+            <a href="{{ route('owner.vehicles.index') }}"
+                class="flex items-center px-6 py-3 hover:bg-green-600 transition
+                {{ request()->routeIs('owner.vehicles*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
+                <i class="fas fa-car-side mr-3"></i> Mes Véhicules
+            </a>
+        @endhasrole
 
         @hasanyrole('admin|driver')
             <a href="{{ route('bookings.histories') }}"

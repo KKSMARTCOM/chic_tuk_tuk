@@ -95,6 +95,13 @@ Route::middleware(['auth:sanctum'])->prefix('admin')->name('admin.')->group(func
     // Véhicules
     Route::resource('vehicles', VehicleController::class)->middleware('permission:view-vehicles');
     Route::post('vehicles/{vehicle}/toggle-status', [VehicleController::class, 'toggleStatus'])->name('vehicles.toggle-status')->middleware('permission:edit-vehicles');
+    Route::post('vehicles/{vehicle}/add-pause', [VehicleController::class, 'addPause'])->name('vehicles.add-pause')->middleware('permission:manage-vehicle-pauses');
+    Route::post('vehicles/{vehiclePause}/destroy-pause', [VehicleController::class, 'destroyPause'])->name('vehicles.destroy-pause')->middleware('permission:manage-vehicle-pauses');
+    Route::post('vehicles/{vehiclePause}/end-pause', [VehicleController::class, 'endPause'])->name('vehicles.end-pause')->middleware('permission:manage-vehicle-pauses');
+    // Véhicules d'un propriétaire (AJAX)
+    Route::get('owners/{owner}/vehicles', [VehicleController::class, 'byOwner'])->name('owners.vehicles');
+    // Détacher un véhicule de son propriétaire
+    Route::post('vehicles/{vehicle}/detach-owner', [VehicleController::class, 'detachOwner'])->name('vehicles.detach-owner');
 
     // Contrats véhicule
     Route::resource('vehicle-contracts', VehicleContractController::class)->middleware('permission:manage-contracts');
@@ -103,15 +110,5 @@ Route::middleware(['auth:sanctum'])->prefix('admin')->name('admin.')->group(func
     Route::resource('driver-contracts', DriverContractController::class)->middleware('permission:manage-contracts');
     Route::post('driver-contracts/{driverContract}/end', [DriverContractController::class, 'end'])->name('driver-contracts.end')->middleware('permission:manage-contracts');
 
-    // Pauses véhicule
-    Route::resource('vehicle-pauses', VehiclePauseController::class)->middleware('permission:manage-vehicle-pauses');
-    Route::post('vehicle-pauses/{vehiclePause}/end', [VehiclePauseController::class, 'end'])->name('vehicle-pauses.end')->middleware('permission:manage-vehicle-pauses');
-
-    // Véhicules d'un propriétaire (AJAX)
-    Route::get('owners/{owner}/vehicles', [VehicleController::class, 'byOwner'])->name('owners.vehicles');
-
     Route::get('users/{user}/vehicles', [UserController::class, 'vehicles'])->name('users.vehicles');
-
-    // Détacher un véhicule de son propriétaire
-    Route::post('vehicles/{vehicle}/detach-owner', [VehicleController::class, 'detachOwner'])->name('vehicles.detach-owner');
 });

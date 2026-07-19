@@ -42,59 +42,79 @@ class DriverController extends Controller
 
     public function create()
     {
-        return view('pages.admin.drivers.create');
+        $owners = User::whereHas('roles', fn($q) => $q->where('name', 'proprietaire'))
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'phone']);
+
+        return view('pages.admin.drivers.create', compact('owners'));
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate(
-            [
-                'name' => 'required|string|max:255',
-                'email' => 'nullable|email|unique:users,email,NULL,id,profil,driver',
-                'phone' => 'required|string|unique:users,phone,NULL,id,profil,driver',
-                'password' => [
-                    'required',
-                    'string',
-                    'min:8',
-                    'regex:/[A-Z]/',
-                    'regex:/[0-9]/',
-                    'regex:/[@$!%*#?&]/',
-                ],
-                'adresse' => 'nullable|string|max:255',
-                'license_number' => 'required|string',
-                'vehicle_number' => 'required|string',
-                'vehicle_type' => 'required|string|in:moto,tricycle,car',
-                'agent_code' => 'nullable|string|max:255',
-                'agent_id' => 'nullable|string|max:255',
-                'contract_type' => 'nullable|string|max:255',
-                'start_date' => 'nullable|date',
-                'tricycle_owner' => 'nullable|string|max:255',
-                'owner_phone' => 'nullable|string|max:255',
-            ],
-            [
-                'name.required' => 'Le nom est requis.',
-                //'email.required' => 'L\'email est requis.',
-                'email.email' => 'L\'email doit être valide.',
-                'email.unique' => 'Cette adresse e-mail est déjà utilisée.',
-                'phone.required' => 'Le téléphone est requis.',
-                'phone.unique' => 'Ce numéro de téléphone est déjà utilisé.',
-                'password.required' => 'Le mot de passe est requis.',
-                'password.min' => 'Le mot de passe doit contenir au moins 8 caractères.',
-                'password.regex' => 'Le mot de passe doit contenir au moins une majuscule, un chiffre et un caractère spécial (@$!%*#?&).',
-                'license_number.required' => 'Le numéro de permis est requis.',
-                //'license_number.unique' => 'Ce numéro de permis est déjà utilisé.',
-                'vehicle_number.required' => 'Le numéro de véhicule est requis.',
-                'vehicle_type.required' => 'Le type de véhicule est requis.',
-                'vehicle_type.in' => 'Le type de véhicule sélectionné est invalide.',
-                'start_date.date' => 'La date de début doit être une date valide.',
-            ]
-        );
+        $mode = $request->input('_owner_mode', 'existing');
+
+        // ── Règles communes ──────────────────────────────────────
+        $rules = [
+            'name'            => 'required|string|max:255',
+            'email'           => 'nullable|email|unique:users,email',
+            'phone'           => 'required|string|unique:users,phone',
+            'password'        => ['required', 'string', 'min:8', 'regex:/[A-Z]/', 'regex:/[0-9]/', 'regex:/[@$!%*#?&]/'],
+            'adresse'         => 'nullable|string|max:255',
+            'license_number'  => 'required|string',
+            'agent_code'      => 'nullable|string|max:255',
+            'agent_id'        => 'nullable|string|max:255',
+            'contract_months' => 'nullable|integer|in:24,30,36',
+            'start_date'      => 'nullable|date',
+        ];
+
+        // ── Règles spécifiques au mode ───────────────────────────
+        if ($mode === 'existing') {
+            $rules['owner_id']   = 'required|exists:users,id';
+            $rules['vehicle_id'] = 'required|exists:vehicles,id';
+        } else {
+            $rules['new_owner_name']           = 'required|string|max:255';
+            $rules['new_owner_phone']          = 'required|string|unique:users,phone';
+            $rules['new_owner_email']          = 'nullable|email|unique:users,email';
+            $rules['new_owner_password']       = ['required', 'string', 'min:8', 'regex:/[A-Z]/', 'regex:/[0-9]/', 'regex:/[@$!%*#?&]/',];
+            $rules['new_vehicle_number']       = 'required|string|unique:vehicles,vehicle_number';
+            $rules['new_vehicle_type']         = 'required|in:moto,tricycle,car';
+            //$rules['new_vehicle_color']        = 'nullable|string|max:100';
+            $rules['contract_total_amount']    = 'nullable|numeric|min:1';
+            $rules['contract_monthly_payment'] = 'nullable|numeric|min:0';
+            $rules['contract_start_date']      = 'nullable|date';
+            $rules['contract_end_date']        = 'nullable|date|after:contract_start_date';
+        }
+
+        $messages = [
+            'name.required'           => 'Le nom est requis.',
+            'phone.required'          => 'Le téléphone est requis.',
+            'phone.unique'            => 'Ce numéro de téléphone est déjà utilisé.',
+            'password.min'            => 'Le mot de passe doit contenir au moins 8 caractères.',
+            'password.regex'          => 'Le mot de passe doit contenir une majuscule, un chiffre et un caractère spécial.',
+            'license_number.required' => 'La catégorie de permis est requise.',
+            'owner_id.required'       => 'Le propriétaire est requis.',
+            'vehicle_id.required'     => 'Le véhicule est requis.',
+            'new_owner_name.required' => 'Le nom du propriétaire est requis.',
+            'new_owner_phone.required' => 'Le téléphone du propriétaire est requis.',
+            'new_owner_phone.unique'  => 'Ce numéro de téléphone est déjà utilisé.',
+            'new_owner_email.unique'  => 'Cette adresse e-mail est déjà utilisée.',
+            'new_owner_password.min'  => 'Le mot de passe du propriétaire doit contenir au moins 8 caractères.',
+            'new_owner_password.regex' => 'Le mot de passe du propriétaire doit contenir une majuscule, un chiffre et un caractère spécial.',
+            'new_vehicle_number.required' => 'Le numéro d\'immatriculation est requis.',
+            'new_vehicle_number.unique'   => 'Ce numéro de véhicule existe déjà.',
+        ];
+
+        $validated = $request->validate($rules, $messages);
 
         try {
-            $this->driverService->createDriver($validated);
+            $data = array_merge($validated, ['_owner_mode' => $mode]);
+
+            $this->driverService->createDriver($data);
 
             return redirect()->route('admin.drivers.index')->with('success', 'Agent créé avec succès');
         } catch (\Exception $e) {
+            dd($e->getMessage());
             return redirect()->back()->withInput()->with('error', $e->getMessage());
         }
     }
@@ -108,7 +128,11 @@ class DriverController extends Controller
 
             $commissionStats = $this->commissionService->getDriverCommissions($driver->driver->id);
 
-            return view('pages.admin.drivers.show', compact('driverData', 'bookingStats', 'commissionStats'));
+            $owners   = User::whereHas('roles', fn($q) => $q->where('name', 'proprietaire'))
+                ->orderBy('name')
+                ->get(['id', 'name', 'phone']);
+
+            return view('pages.admin.drivers.show', compact('driverData', 'bookingStats', 'commissionStats', 'owners'));
         } catch (\Exception $e) {
             return redirect()->back()->withInput()->with('error', $e->getMessage());
         }
@@ -117,9 +141,14 @@ class DriverController extends Controller
     public function edit(User $driver)
     {
         try {
-            $driver->load('driver');
+            $driver->load(['driver.activeDriverContract.vehicle.owner', 'driver.activeDriverContract.vehicleContract']);
 
-            return view('pages.admin.drivers.edit', compact('driver'));
+            $owners = User::whereHas('roles', fn($q) => $q->where('name', 'proprietaire'))
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name', 'phone']);
+
+            return view('pages.admin.drivers.edit', compact('driver', 'owners'));
         } catch (\Exception $e) {
             return redirect()->back()->withInput()->with('error', $e->getMessage());
         }
@@ -127,36 +156,78 @@ class DriverController extends Controller
 
     public function update(Request $request, User $driver)
     {
-        $validated = $request->validate(
-            [
-                'name' => 'required|string|max:255',
-                'email' => 'nullable|email|unique:users,email,' . $driver->id . ',id,profil,driver',
-                'phone' => 'required|string|unique:users,phone,' . $driver->id . ',id,profil,driver',
-                'is_active' => 'boolean',
-                'adresse' => 'nullable|string|max:255',
-                'license_number' => 'required|string|',
-                'vehicle_number' => 'required|string',
-                'vehicle_type' => 'required|string',
-                'is_available' => 'boolean',
-                'agent_code' => 'nullable|string|max:255',
-                'agent_id' => 'nullable|string|max:255',
-                'contract_type' => 'nullable|string|max:255',
-                'start_date' => 'nullable|date',
-                'tricycle_owner' => 'nullable|string|max:255',
-                'owner_phone' => 'nullable|string|max:255',
-            ],
-            [
-                'email.unique' => 'Cette adresse e-mail est déjà utilisée.',
-                'phone.unique' => 'Ce numéro de téléphone est déjà utilisé.',
-                //'license_number.unique' => 'Ce numéro de permis est déjà utilisé.',
-                'start_date.date' => 'La date de début doit être une date valide.',
-            ]
-        );
+        $hasActiveContract = $driver->driver?->activeDriverContract !== null;
+        $mode = $request->input('_owner_mode', 'existing');
 
-        $this->driverService->updateDriver($driver->id, $validated);
+        // ── Règles communes ──────────────────────────────────────
+        $rules = [
+            'name'           => 'required|string|max:255',
+            'email'          => 'nullable|email|unique:users,email,' . $driver->id,
+            'phone'          => 'required|string|unique:users,phone,' . $driver->id,
+            'is_active'      => 'nullable|boolean',
+            'adresse'        => 'nullable|string|max:255',
+            'license_number' => 'required|string',
+            'is_available'   => 'nullable|boolean',
+            'agent_code'     => 'nullable|string|max:255',
+            'agent_id'       => 'nullable|string|max:255',
+        ];
 
-        return redirect()->route('admin.drivers.show', $driver)
-            ->with('success', 'Agent mis à jour avec succès');
+        // ── Règles du nouveau contrat (si pas de contrat actif) ─
+        if (!$hasActiveContract) {
+            if ($mode === 'existing') {
+                $rules['owner_id']        = 'required|exists:users,id';
+                $rules['vehicle_id']      = 'required|exists:vehicles,id';
+                $rules['contract_months'] = 'required|integer|in:24,30,36';
+                $rules['start_date']      = 'required|date';
+            } else {
+                $rules['new_owner_name']           = 'required|string|max:255';
+                $rules['new_owner_phone']          = 'required|string|unique:users,phone';
+                $rules['new_owner_email']          = 'nullable|email|unique:users,email';
+                $rules['new_owner_password']       = ['required', 'string', 'min:8', 'regex:/[A-Z]/', 'regex:/[0-9]/', 'regex:/[@$!%*#?&]/'];
+                $rules['new_vehicle_number']       = 'required|string|unique:vehicles,vehicle_number';
+                $rules['new_vehicle_type']         = 'required|in:moto,tricycle,car';
+                $rules['contract_months']          = 'required|integer|in:24,30,36';
+                $rules['start_date']               = 'required|date';
+                $rules['contract_total_amount']    = 'nullable|numeric|min:1';
+                $rules['contract_monthly_payment'] = 'nullable|numeric|min:0';
+                $rules['contract_start_date']      = 'nullable|date';
+                $rules['contract_end_date']        = 'nullable|date|after:contract_start_date';
+            }
+        }
+
+        $messages = [
+            'phone.unique'               => 'Ce numéro de téléphone est déjà utilisé.',
+            'email.unique'               => 'Cet email est déjà utilisé.',
+            'license_number.required'    => 'La catégorie de permis est requise.',
+            'owner_id.required'          => 'Le propriétaire est requis.',
+            'vehicle_id.required'        => 'Le véhicule est requis.',
+            'contract_months.required'   => 'La durée du contrat est requise.',
+            'start_date.required'        => 'La date de début est requise.',
+            'new_owner_name.required'    => 'Le nom du propriétaire est requis.',
+            'new_owner_phone.required'   => 'Le téléphone du propriétaire est requis.',
+            'new_owner_phone.unique'     => 'Ce numéro est déjà utilisé.',
+            'new_owner_password.required' => 'Le mot de passe du propriétaire est requis.',
+            'new_owner_password.min'      => 'Le mot de passe du propriétaire doit contenir au moins 8 caractères.',
+            'new_owner_password.regex'    => 'Le mot de passe du propriétaire doit contenir une majuscule, un chiffre et un caractère spécial.',
+            'new_vehicle_number.required' => 'Le numéro d\'immatriculation est requis.',
+            'new_vehicle_number.unique'  => 'Ce numéro de véhicule existe déjà.',
+        ];
+
+        $validated = $request->validate($rules, $messages);
+
+        try {
+            $data = array_merge($validated, [
+                '_owner_mode'       => $mode,
+                '_has_active_contract' => $hasActiveContract,
+            ]);
+
+            $this->driverService->updateDriver($driver->id, $data);
+
+            return redirect()->route('admin.drivers.show', $driver)
+                ->with('success', 'Agent mis à jour avec succès.');
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput()->with('error', $e->getMessage());
+        }
     }
 
     public function destroy(User $driver)

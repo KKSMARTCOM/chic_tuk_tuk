@@ -18,7 +18,7 @@
         @include('inc.backend.sidebar')
 
         <!-- Main Content -->
-        <main class="md:ml-64 h-full overflow-y-auto">
+        <main class="md:ml-64 min-h-full overflow-y-auto">
             <!-- Header -->
             @include('inc.backend.header')
 

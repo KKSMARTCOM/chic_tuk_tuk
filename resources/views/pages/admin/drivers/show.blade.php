@@ -1,520 +1,353 @@
 @extends('layouts.app')
 
+@php
+    $driver = $driverData;
+    $driverProfile = $driver->driver;
+    $activeContract = $driverProfile?->activeDriverContract?->load(['vehicle.owner', 'vehicleContract']);
+    $currentVehicle = $activeContract?->vehicle;
+    $currentOwner = $currentVehicle?->owner;
+
+    // Contrat modifiable = actif + aucune pause ni paiement liés
+    $contractEditable =
+        $activeContract &&
+        $activeContract->leaveRequests()->count() === 0 &&
+        $activeContract->payments()->count() === 0;
+@endphp
+
 @section('content')
-    <!-- Header -->
-    <div class="bg-white rounded-lg shadow-md mb-8">
-        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+
+    {{-- Header --}}
+    <div class="bg-white rounded-lg shadow-md mb-6">
+        <div class="px-6 py-4 border-b border-gray-200 flex flex-wrap items-center justify-between gap-3">
             <div>
-                <h1 class="text-lg md:text-2xl font-bold text-gray-800">Détails de l'Agent</h1>
-                <p class="text-sm md:text-base text-gray-600">{{ $driverData->name }}</p>
+                <h1 class="text-lg md:text-2xl font-bold text-gray-800">{{ $driver->name }}</h1>
+                <p class="text-sm text-gray-500 mt-0.5 flex items-center gap-2">
+                    <span
+                        class="px-2 py-0.5 rounded-full text-xs font-semibold {{ $driver->is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                        {{ $driver->is_active ? 'Actif' : 'Inactif' }}
+                    </span>
+                    <span
+                        class="px-2 py-0.5 rounded-full text-xs font-semibold {{ $driverProfile?->is_available ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600' }}">
+                        {{ $driverProfile?->is_available ? 'Disponible' : 'Indisponible' }}
+                    </span>
+                    @if ($driverProfile?->agent_code)
+                        <span class="text-gray-400 text-xs">Code : {{ $driverProfile->agent_code }}</span>
+                    @endif
+                </p>
             </div>
-            <div class="block md:flex gap-3">
-                <a href="{{ route('admin.drivers.edit', $driverData) }}"
-                    class="bg-purple-600 block text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
-                    <i class="fas fa-edit mr-2"></i> Modifier
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ route('admin.drivers.edit', $driver) }}"
+                    class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm font-semibold">
+                    <i class="fas fa-edit mr-1"></i> Modifier
                 </a>
                 <a href="{{ route('admin.drivers.index') }}"
-                    class="bg-gray-600 block mt-2 md:mt-0 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition">
-                    <i class="fas fa-arrow-left mr-2"></i> Retour
+                    class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm font-semibold">
+                    <i class="fas fa-arrow-left mr-1"></i> Retour
                 </a>
             </div>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Informations principales -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        {{-- ── Colonne principale ── --}}
         <div class="lg:col-span-2 space-y-6">
-            <!-- Statistiques des courses -->
+
+            {{-- Stats courses --}}
             <div class="bg-white rounded-lg shadow-md">
                 <div class="px-6 py-4 border-b border-gray-200">
-                    <h3 class="text-lg font-semibold text-gray-800">Statistiques des Courses</h3>
+                    <h3 class="text-base font-bold text-gray-800">Statistiques des courses</h3>
                 </div>
-                <div class="px-6 py-4">
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div class="text-center p-4 bg-blue-50 rounded-lg">
-                            <div class="text-2xl font-bold text-blue-600">{{ $bookingStats['total'] }}</div>
-                            <div class="text-sm text-gray-600">Total</div>
-                        </div>
-                        <div class="text-center p-4 bg-green-50 rounded-lg">
-                            <div class="text-2xl font-bold text-green-600">{{ $bookingStats['completed'] }}</div>
-                            <div class="text-sm text-gray-600">Terminées</div>
-                        </div>
-                        <div class="text-center p-4 bg-yellow-50 rounded-lg">
-                            <div class="text-2xl font-bold text-yellow-600">{{ $bookingStats['confirmed'] }}</div>
-                            <div class="text-sm text-gray-600">Confirmées</div>
-                        </div>
-                        <div class="text-center p-4 bg-red-50 rounded-lg">
-                            <div class="text-2xl font-bold text-red-600">{{ $bookingStats['cancelled'] }}</div>
-                            <div class="text-sm text-gray-600">Annulées</div>
-                        </div>
+                <div class="px-6 py-5">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                        @foreach ([['label' => 'Total', 'value' => $bookingStats['total'], 'color' => 'blue'], ['label' => 'Terminées', 'value' => $bookingStats['completed'], 'color' => 'green'], ['label' => 'Confirmées', 'value' => $bookingStats['confirmed'], 'color' => 'yellow'], ['label' => 'Annulées', 'value' => $bookingStats['cancelled'], 'color' => 'red']] as $s)
+                            <div class="text-center p-3 bg-{{ $s['color'] }}-50 rounded-lg">
+                                <div class="text-2xl font-bold text-{{ $s['color'] }}-600">{{ $s['value'] }}</div>
+                                <div class="text-xs text-gray-600">{{ $s['label'] }}</div>
+                            </div>
+                        @endforeach
                     </div>
-
-                    <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="text-center p-4 bg-purple-50 rounded-lg">
-                            <div class="text-2xl font-bold text-purple-600">
-                                {{ number_format($bookingStats['total_minutes'], 2) }}</div>
-                            <div class="text-sm text-gray-600">Minutes conduites</div>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="text-center p-3 bg-purple-50 rounded-lg">
+                            <div class="text-xl font-bold text-purple-600">
+                                {{ number_format($bookingStats['total_minutes']) }}</div>
+                            <div class="text-xs text-gray-600">Min. conduites</div>
                         </div>
-                        <div class="text-center p-4 bg-indigo-50 rounded-lg">
-                            <div class="text-2xl font-bold text-indigo-600">
+                        <div class="text-center p-3 bg-indigo-50 rounded-lg">
+                            <div class="text-xl font-bold text-indigo-600">
                                 {{ number_format($bookingStats['average_rating'], 1) }}</div>
-                            <div class="text-sm text-gray-600">Note moyenne</div>
+                            <div class="text-xs text-gray-600">Note moyenne</div>
                         </div>
-                        <div class="text-center p-4 bg-orange-50 rounded-lg">
-                            <div class="text-2xl font-bold text-orange-600">{{ $bookingStats['in_progress'] }}</div>
-                            <div class="text-sm text-gray-600">En cours</div>
+                        <div class="text-center p-3 bg-orange-50 rounded-lg">
+                            <div class="text-xl font-bold text-orange-600">{{ $bookingStats['in_progress'] }}</div>
+                            <div class="text-xs text-gray-600">En cours</div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Statistiques des Commissions -->
+            {{-- Stats commissions --}}
             <div class="bg-white rounded-lg shadow-md">
                 <div class="px-6 py-4 border-b border-gray-200">
-                    <h3 class="text-lg font-semibold text-gray-800">Statistiques des Commissions</h3>
+                    <h3 class="text-base font-bold text-gray-800">Commissions</h3>
                 </div>
-                <div class="px-6 py-4">
+                <div class="px-6 py-5">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div class="text-center p-4 bg-yellow-50 rounded-lg">
-                            <div class="text-2xl font-bold text-yellow-600">
+                            <div class="text-xl font-bold text-yellow-600">
                                 {{ number_format($commissionStats['driver_earning'], 0, ',', ' ') }}</div>
-                            <div class="text-sm text-gray-600">Revenue Total Agent (FCFA)</div>
+                            <div class="text-xs text-gray-600">Revenu total agent (FCFA)</div>
+                        </div>
+                        <div class="text-center p-4 bg-red-50 rounded-lg">
+                            <div class="text-xl font-bold text-red-600">
+                                {{ number_format($commissionStats['unpaid_revenue'], 0, ',', ' ') }}</div>
+                            <div class="text-xs text-gray-600">Commission due (FCFA)</div>
                         </div>
                         <div class="text-center p-4 bg-green-50 rounded-lg">
-                            <div class="text-2xl font-bold text-green-600">
-                                {{ number_format($commissionStats['unpaid_revenue'], 0, ',', ' ') }}</div>
-                            <div class="text-sm text-gray-600">Commission Due (FCFA)</div>
-                        </div>
-                        <div class="text-center p-4 bg-blue-50 rounded-lg">
-                            <div class="text-2xl font-bold text-blue-600">
+                            <div class="text-xl font-bold text-green-600">
                                 {{ number_format($commissionStats['paid_revenue'], 0, ',', ' ') }}</div>
-                            <div class="text-sm text-gray-600">Commission Payée (FCFA)</div>
+                            <div class="text-xs text-gray-600">Commission payée (FCFA)</div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Dernières courses -->
+            {{-- Contrat véhicule actif --}}
             <div class="bg-white rounded-lg shadow-md">
-                <div class="px-6 py-4 border-b border-gray-200">
-                    <h3 class="text-lg font-semibold text-gray-800">Dernières Courses</h3>
+                <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                    <h3 class="text-base font-bold text-gray-800">Contrat véhicule actif</h3>
+                    <div class="flex gap-2">
+                        @if ($activeContract)
+                            @if ($contractEditable)
+                                <button onclick="openEditContractModal()"
+                                    class="text-xs px-3 py-1.5 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-lg font-semibold transition">
+                                    <i class="fas fa-edit mr-1"></i> Modifier
+                                </button>
+                            @endif
+                            <button onclick="openEndContractModal()"
+                                class="text-xs px-3 py-1.5 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg font-semibold transition">
+                                <i class="fas fa-stop mr-1"></i> Terminer
+                            </button>
+                        @else
+                            <a href="{{ route('admin.drivers.edit', $driver) }}"
+                                class="text-xs px-3 py-1.5 bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-lg font-semibold transition">
+                                <i class="fas fa-plus mr-1"></i> Assigner un véhicule
+                            </a>
+                        @endif
+                    </div>
+                </div>
+                <div class="px-6 py-5">
+                    @if ($activeContract && $currentVehicle)
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                            {{-- Véhicule --}}
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <p class="text-xs text-gray-500 mb-1">Véhicule</p>
+                                <p class="font-bold text-gray-800">{{ $currentVehicle->vehicle_number }}</p>
+                                <p class="text-xs text-gray-500">
+                                    {{ ucfirst($currentVehicle->vehicle_type) }}{{ $currentVehicle->color ? ' · ' . $currentVehicle->color : '' }}
+                                </p>
+                                <a href="{{ route('admin.vehicles.show', $currentVehicle) }}"
+                                    class="text-xs text-blue-600 hover:underline mt-1 block">Voir la fiche →</a>
+                            </div>
+                            {{-- Propriétaire --}}
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <p class="text-xs text-gray-500 mb-1">Propriétaire</p>
+                                <p class="font-bold text-gray-800">{{ $currentOwner?->name ?? '—' }}</p>
+                                <p class="text-xs text-gray-500">{{ $currentOwner?->phone }}</p>
+                            </div>
+                            {{-- Contrat agent --}}
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <p class="text-xs text-gray-500 mb-1">Durée contrat agent</p>
+                                <p class="font-bold text-gray-800">{{ $activeContract->contract_months }} mois</p>
+                                <p class="text-xs text-gray-500">Depuis le
+                                    {{ $activeContract->start_date->format('d/m/Y') }}</p>
+                                <p class="text-xs text-gray-400">{{ $activeContract->months_elapsed }} mois écoulés</p>
+                            </div>
+                        </div>
+
+                        {{-- Pauses --}}
+                        @php
+                            $usedLeave = $activeContract->used_leave_days;
+                            $accruedLeave = $activeContract->accrued_leave_days;
+                            $surplus = max(0, $usedLeave - $accruedLeave);
+                        @endphp
+                        <div class="mt-4 grid grid-cols-3 gap-3">
+                            <div class="text-center p-3 bg-blue-50 rounded-lg">
+                                <div class="text-lg font-bold text-blue-600">{{ $accruedLeave }}</div>
+                                <div class="text-xs text-gray-500">Pauses acquises</div>
+                            </div>
+                            <div class="text-center p-3 bg-emerald-50 rounded-lg">
+                                <div class="text-lg font-bold text-emerald-600">{{ $usedLeave }}</div>
+                                <div class="text-xs text-gray-500">Pauses utilisées</div>
+                            </div>
+                            <div class="text-center p-3 {{ $surplus > 0 ? 'bg-orange-50' : 'bg-gray-50' }} rounded-lg">
+                                <div class="text-lg font-bold {{ $surplus > 0 ? 'text-orange-600' : 'text-gray-600' }}">
+                                    {{ $surplus > 0 ? '+' . $surplus . ' surplus' : max(0, $accruedLeave - $usedLeave) . ' dispo' }}
+                                </div>
+                                <div class="text-xs text-gray-500">Solde pauses</div>
+                            </div>
+                        </div>
+
+                        @if (!$contractEditable)
+                            <div
+                                class="mt-3 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2.5 text-xs text-amber-700">
+                                <i class="fas fa-lock mr-1"></i>
+                                Ce contrat ne peut plus être modifié directement car il a des pauses ou paiements liés.
+                                Pour changer de véhicule, terminez ce contrat et créez-en un nouveau.
+                            </div>
+                        @endif
+                    @else
+                        <div class="py-8 text-center text-gray-400">
+                            <i class="fas fa-file-contract text-4xl mb-3"></i>
+                            <p class="text-sm">Aucun contrat véhicule actif.</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Dernières courses --}}
+            <div class="bg-white rounded-lg shadow-md">
+                <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                    <h3 class="text-base font-bold text-gray-800">Dernières courses</h3>
+                    <a href="{{ route('admin.bookings.index', ['driver' => $driver->id]) }}"
+                        class="text-xs text-purple-600 hover:underline">Voir tout →</a>
                 </div>
                 <div class="px-6 py-4">
-                    @if ($driverData->driver && $driverData->driver->bookings->count() > 0)
-                        <div class="space-y-4">
-                            @foreach ($driverData->driver->bookings->take(5) as $booking)
+                    @if ($driverProfile && $driverProfile->bookings->count() > 0)
+                        <div class="space-y-3">
+                            @foreach ($driverProfile->bookings->take(5) as $booking)
                                 <div
-                                    class="block md:flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                                    <div class="block md:flex items-center space-x-4">
-                                        <div class="flex-shrink-0 mb-4 md:mb-0">
-                                            <span
-                                                class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ bookingStatusBadge($booking->status) }}">
-                                                {{ bookingStatusLabel($booking->status) }}
-                                            </span>
-                                        </div>
+                                    class="flex items-start justify-between p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition">
+                                    <div class="flex items-start gap-3">
+                                        <span
+                                            class="px-2 py-0.5 text-xs rounded-full font-semibold {{ bookingStatusBadge($booking->status) }} flex-shrink-0 mt-0.5">
+                                            {{ bookingStatusLabel($booking->status) }}
+                                        </span>
                                         <div>
-                                            <p class="text-sm font-medium text-gray-900">
-                                                {{ $booking->from_location ?? 'N/A' }} <br>
-                                                → {{ $booking->to_location ?? 'N/A' }}
+                                            <p class="text-sm text-gray-800">
+                                                {{ Str::limit($booking->from_location, 25) }}
+                                                → {{ Str::limit($booking->to_location, 25) }}
                                             </p>
-                                            <p class="text-sm text-gray-500">
-                                                {{ formatDateTimeFr($booking->pickup_date_time) }}
-                                            </p>
+                                            <p class="text-xs text-gray-400">
+                                                {{ formatDateTimeFr($booking->pickup_date_time) }}</p>
                                         </div>
                                     </div>
-                                    <div class="text-right">
-                                        <p class="text-sm font-medium text-gray-900">Revenue :
+                                    <div class="text-right flex-shrink-0">
+                                        <p class="text-xs font-semibold text-gray-700">
                                             {{ number_format($booking->driver_earning, 0, ',', ' ') }} FCFA</p>
-                                        <p class="text-sm font-medium text-gray-900">Commission :
+                                        <p class="text-xs text-gray-400">com.
                                             {{ number_format($booking->commission, 0, ',', ' ') }} FCFA</p>
-                                        <p class="text-sm text-gray-500">{{ $booking->passengers }} passager(s)</p>
                                     </div>
                                 </div>
                             @endforeach
                         </div>
                     @else
-                        <p class="text-gray-500 text-center py-8">Aucune course trouvée pour ce Agent.</p>
+                        <p class="text-sm text-gray-400 text-center py-6">Aucune course trouvée.</p>
                     @endif
                 </div>
             </div>
 
-            <!-- Informations du Agent -->
+            {{-- Informations personnelles --}}
             <div class="bg-white rounded-lg shadow-md">
                 <div class="px-6 py-4 border-b border-gray-200">
-                    <h3 class="text-lg font-semibold text-gray-800">Informations Personnelles</h3>
+                    <h3 class="text-base font-bold text-gray-800">Informations personnelles</h3>
                 </div>
-                <div class="px-6 py-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="px-6 py-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    @foreach ([['label' => 'Nom complet', 'value' => $driver->name], ['label' => 'Email', 'value' => $driver->email ?? 'N/A'], ['label' => 'Téléphone', 'value' => $driver->phone], ['label' => 'Adresse', 'value' => $driver->adresse ?? 'N/A'], ['label' => 'Catégorie de permis', 'value' => $driverProfile?->license_number ?? 'N/A'], ['label' => 'Membre depuis', 'value' => formatDateFr($driver->created_at)]] as $info)
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Nom complet</label>
-                            <p class="mt-1 text-sm text-gray-900">{{ $driverData->name }}</p>
+                            <p class="text-xs text-gray-500">{{ $info['label'] }}</p>
+                            <p class="text-sm font-semibold text-gray-800 mt-0.5">{{ $info['value'] }}</p>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Email</label>
-                            <p class="mt-1 text-sm text-gray-900">{{ $driverData->email ?? 'N/A' }}</p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Téléphone</label>
-                            <p class="mt-1 text-sm text-gray-900">{{ $driverData->phone }}</p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Statut du compte</label>
-                            <span
-                                class="mt-1 px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $driverData->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                {{ $driverData->is_active ? 'Actif' : 'Inactif' }}
-                            </span>
-                        </div>
-                    </div>
+                    @endforeach
                 </div>
             </div>
 
-            <!-- Informations du Contrat -->
-            <div class="bg-white rounded-lg shadow-md">
-                <div class="px-6 py-4 border-b border-gray-200">
-                    <h3 class="text-lg font-semibold text-gray-800">Informations du Contrat</h3>
-                </div>
-                <div class="px-6 py-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Code Agent</label>
-                            <p class="mt-1 text-sm text-gray-900">{{ $driverData->driver->agent_code ?? 'N/A' }}</p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">ID Agent</label>
-                            <p class="mt-1 text-sm text-gray-900">{{ $driverData->driver->agent_id ?? 'N/A' }}</p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Type de Contrat</label>
-                            <p class="mt-1 text-sm text-gray-900">
-                                {{ $driverData->driver->contract_type ? $driverData->driver->contract_type . ' mois' : 'N/A' }}
-                            </p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Date de Début</label>
-                            <p class="mt-1 text-sm text-gray-900">
-                                {{ $driverData->driver->start_date ? formatDateFr($driverData->driver->start_date) : 'N/A' }}
-                            </p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Nom complet propriétaire</label>
-                            <p class="mt-1 text-sm text-gray-900">
-                                {{ $driverData->driver->tricycle_owner ?? 'N/A' }}
-                            </p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Numéro propriétaire</label>
-                            <p class="mt-1 text-sm text-gray-900">
-                                {{ $driverData->driver->owner_phone ?? 'N/A' }}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Informations du véhicule -->
-            <div class="bg-white rounded-lg shadow-md">
-                <div class="px-6 py-4 border-b border-gray-200">
-                    <h3 class="text-lg font-semibold text-gray-800">Informations du Véhicule</h3>
-                </div>
-                <div class="px-6 py-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Catégorie du permis</label>
-                            <p class="mt-1 text-sm text-gray-900">{{ $driverData->driver->license_number ?? 'N/A' }}</p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Numéro du véhicule</label>
-                            <p class="mt-1 text-sm text-gray-900">{{ $driverData->driver->vehicle_number ?? 'N/A' }}</p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Type de véhicule</label>
-                            <p class="mt-1 text-sm text-gray-900">
-                                {{ vehiculeType($driverData->driver->vehicle_type) ?? 'N/A' }}</p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Disponibilité</label>
-                            <span
-                                class="mt-1 px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $driverData->driver->is_available ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' }}">
-                                {{ $driverData->driver->is_available ? 'Disponible' : 'Indisponible' }}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
 
-        <!-- Actions et informations supplémentaires -->
+        {{-- ── Colonne droite ── --}}
         <div class="space-y-6">
-            <!-- Actions rapides -->
+
+            {{-- Actions --}}
             <div class="bg-white rounded-lg shadow-md">
                 <div class="px-6 py-4 border-b border-gray-200">
-                    <h3 class="text-lg font-semibold text-gray-800">Actions</h3>
+                    <h3 class="text-base font-bold text-gray-800">Actions</h3>
                 </div>
-                <div class="px-6 py-4 space-y-3">
+                <div class="px-6 py-5 space-y-2">
                     <button onclick="openLeaveModal()"
-                        class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
-                        <i class="fas fa-calendar mr-2"></i>
-                        Ajouter une pause
+                        class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-semibold">
+                        <i class="fas fa-calendar-minus mr-2"></i> Ajouter une pause
                     </button>
-
-                    <button onclick="openPaymentModal('{{ $driverData->id }}')"
-                        class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
-                        <i class="fas fa-money-bill mr-2"></i>
-                        Ajouter un paiement
+                    <button onclick="openPaymentModal()"
+                        class="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition text-sm font-semibold">
+                        <i class="fas fa-money-bill mr-2"></i> Enregistrer un paiement
                     </button>
-
-                    <a href="{{ route('admin.payments.driver-details', $driverData->driver->id) }}"
-                        class="w-full text-center block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
+                    <a href="{{ route('admin.payments.driver-details', $driverProfile->id) }}"
+                        class="block w-full text-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition text-sm font-semibold">
                         <i class="fas fa-chart-line mr-2"></i> Voir les paiements
                     </a>
-
                     <button
-                        onclick="openAvailabilityModal('{{ $driverData->id }}', {{ $driverData->driver->is_available ? 'false' : 'true' }}, '{{ $driverData->name }}', '{{ $driverData->driver->is_available ? 'indisponible' : 'disponible' }}')"
-                        class="w-full {{ $driverData->driver->is_available ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700' }} text-white px-4 py-2 rounded-lg transition">
-                        <i class="fas {{ $driverData->driver->is_available ? 'fa-pause' : 'fa-play' }} mr-2"></i>
-                        {{ $driverData->driver->is_available ? 'Marquer indisponible' : 'Marquer disponible' }}
+                        onclick="openAvailabilityModal('{{ $driver->id }}', {{ $driverProfile?->is_available ? 'false' : 'true' }}, '{{ $driver->name }}', '{{ $driverProfile?->is_available ? 'indisponible' : 'disponible' }}')"
+                        class="w-full px-4 py-2 {{ $driverProfile?->is_available ? 'bg-orange-100 text-orange-700 hover:bg-orange-200' : 'bg-green-100 text-green-700 hover:bg-green-200' }} rounded-lg transition text-sm font-semibold">
+                        <i class="fas {{ $driverProfile?->is_available ? 'fa-pause' : 'fa-play' }} mr-2"></i>
+                        {{ $driverProfile?->is_available ? 'Marquer indisponible' : 'Marquer disponible' }}
                     </button>
-
                     <button
-                        onclick="openStatusModal('{{ $driverData->id }}', {{ $driverData->is_active ? 'false' : 'true' }}, '{{ $driverData->name }}', '{{ $driverData->is_active ? 'désactiver' : 'activer' }}')"
-                        class="w-full {{ $driverData->is_active ? 'text-red-600 border border-red-600 hover:text-red-700' : 'text-green-600 border border-green-700 hover:text-green-700' }} px-4 py-2 rounded-lg transition">
-                        <i class="fas {{ $driverData->is_active ? 'fa-user-times' : 'fa-user-check' }} mr-2"></i>
-                        {{ $driverData->is_active ? 'Désactiver le compte' : 'Activer le compte' }}
+                        onclick="openStatusModal('{{ $driver->id }}', {{ $driver->is_active ? 'false' : 'true' }}, '{{ $driver->name }}', '{{ $driver->is_active ? 'désactiver' : 'activer' }}')"
+                        class="w-full px-4 py-2 border {{ $driver->is_active ? 'border-red-300 text-red-600 hover:bg-red-50' : 'border-green-300 text-green-600 hover:bg-green-50' }} rounded-lg transition text-sm font-semibold">
+                        <i class="fas {{ $driver->is_active ? 'fa-user-times' : 'fa-user-check' }} mr-2"></i>
+                        {{ $driver->is_active ? 'Désactiver le compte' : 'Activer le compte' }}
                     </button>
                 </div>
             </div>
 
-            <!-- Informations système -->
+            {{-- Infos contrat agent --}}
             <div class="bg-white rounded-lg shadow-md">
                 <div class="px-6 py-4 border-b border-gray-200">
-                    <h3 class="text-lg font-semibold text-gray-800">Informations Système</h3>
+                    <h3 class="text-base font-bold text-gray-800">Infos contrat</h3>
                 </div>
-                <div class="px-6 py-4">
-                    <div class="space-y-3">
-                        <div class="flex items-start">
-                            <div class="flex-shrink-0">
-                                <i class="fas fa-calendar-plus text-purple-500"></i>
-                            </div>
-                            <div class="ml-3">
-                                <p class="text-sm font-medium text-gray-900">Membre depuis</p>
-                                <p class="text-sm text-gray-500">{{ formatDateFr($driverData->created_at) }}</p>
-                            </div>
+                <div class="px-6 py-5 space-y-3 text-sm">
+                    @foreach ([['label' => 'Code Agent', 'value' => $driverProfile?->agent_code ?? 'N/A'], ['label' => 'ID Agent', 'value' => $driverProfile?->agent_id ?? 'N/A']] as $info)
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">{{ $info['label'] }}</span>
+                            <span class="font-semibold text-gray-800">{{ $info['value'] }}</span>
                         </div>
-                        @if ($driverData->updated_at != $driverData->created_at)
-                            <div class="flex items-start">
-                                <div class="flex-shrink-0">
-                                    <i class="fas fa-edit text-blue-500"></i>
-                                </div>
-                                <div class="ml-3">
-                                    <p class="text-sm font-medium text-gray-900">Dernière modification</p>
-                                    <p class="text-sm text-gray-500">{{ formatDateTimeFr($driverData->updated_at) }}
-                                    </p>
-                                </div>
-                            </div>
-                        @endif
-                    </div>
+                    @endforeach
+                    @if ($activeContract)
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Durée contrat</span>
+                            <span class="font-semibold text-gray-800">{{ $activeContract->contract_months }} mois</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Début contrat</span>
+                            <span
+                                class="font-semibold text-gray-800">{{ $activeContract->start_date->format('d/m/Y') }}</span>
+                        </div>
+                    @endif
                 </div>
             </div>
+
         </div>
     </div>
 
-    <!-- Modal de confirmation - Disponibilité -->
-    <div id="availabilityModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center px-4 z-20">
-        <div class="bg-white rounded-lg p-8 max-w-md w-full">
-            <h3 class="text-2xl font-bold text-gray-800 mb-4">Confirmer l'action</h3>
-            <p class="text-gray-600 mb-6" id="availabilityMessage"></p>
-            <input type="hidden" id="availabilityDriverId" value="">
-            <input type="hidden" id="availabilityNewStatus" value="">
-            <div class="flex space-x-4">
-                <button type="button" onclick="closeAvailabilityModal()"
-                    class="flex-1 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition">
-                    Annuler
-                </button>
-                <button type="button" onclick="confirmToggleAvailability()"
-                    class="flex-1 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
-                    Confirmer
-                </button>
-            </div>
-        </div>
-    </div>
+    {{-- ===== MODALS ===== --}}
 
-    <!-- Modal de confirmation - Statut -->
-    <div id="statusModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center px-4 z-20">
-        <div class="bg-white rounded-lg p-8 max-w-md w-full">
-            <h3 class="text-2xl font-bold text-gray-800 mb-4">Confirmer l'action</h3>
-            <p class="text-gray-600 mb-6" id="statusMessage"></p>
-            <input type="hidden" id="statusDriverId" value="">
-            <input type="hidden" id="statusNewStatus" value="">
-            <div class="flex space-x-4">
-                <button type="button" onclick="closeStatusModal()"
-                    class="flex-1 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition">
-                    Annuler
-                </button>
-                <button type="button" onclick="confirmToggleStatus()"
-                    class="flex-1 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
-                    Confirmer
-                </button>
-            </div>
-        </div>
-    </div>
+    {{-- Modal modifier contrat (si sans historique) --}}
+    @include('inc.modals.drivers.edit-contract')
 
-    <!-- Modal d'ajout de pause -->
-    <div id="leaveModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center px-4 z-20">
-        <div class="bg-white rounded-lg p-8 max-w-xl w-full">
-            <h2 class="text-xl font-semibold text-indigo-900 mb-4">Ajouter une Pause instantanée</h2>
-            <form action="{{ route('admin.leaves.add-instant', $driverData->driver->id) }}" method="POST"
-                id="addInstantLeaveForm">
-                @csrf
-                <div class="space-y-4">
-                    <!-- Date Selection -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-3">
-                            Sélectionnez les dates (mois courant)
-                        </label>
-                        <div class="mb-4">
-                            <input type="date" id="adminLeaveDate"
-                                class="border border-gray-300 rounded-lg px-4 py-2 w-full"
-                                min="{{ now()->toDateString() }}" max="{{ now()->endOfMonth()->toDateString() }}"
-                                title="Les dates doivent être dans le mois courant">
-                            <button type="button" onclick="adminAddDate()"
-                                class="mt-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 w-full font-medium">
-                                + Ajouter une date
-                            </button>
-                        </div>
+    {{-- Modal terminer contrat --}}
+    @include('inc.modals.drivers.end-contract')
 
-                        <!-- Selected Dates Display -->
-                        <div id="adminSelectedDatesContainer" class="space-y-2">
-                            <p class="text-xs text-gray-500 font-semibold uppercase">Dates sélectionnées:</p>
-                            <div id="adminSelectedDates"
-                                class="flex flex-wrap gap-2 min-h-12 p-3 bg-white rounded-lg border-2 border-dashed border-indigo-300">
-                                <p class="text-gray-400 text-sm w-full text-center py-2">Aucune date sélectionnée</p>
-                            </div>
-                        </div>
+    {{-- Modal pause agent --}}
+    @include('inc.modals.drivers.leave')
 
-                        <!-- Hidden inputs for form submission -->
-                        <div id="adminDatesInputs"></div>
-                        <p id="adminDateError" class="text-sm text-red-600 mt-2 hidden"></p>
-                    </div>
+    {{-- Modal paiement --}}
+    @include('inc.modals.drivers.payment')
 
-                    <!-- Validation Info -->
-                    <div class="p-3 bg-indigo-100 border border-indigo-300 rounded text-sm text-indigo-800 flex flex-col">
-                        <span>ℹ️ Les jours doivent être consécutifs.</span>
-                        <span>ℹ️ L'agent dispose de
-                            <strong>{{ $driverData->driver->available_leave_days }}</strong> jour(s) disponible(s).</span>
-                    </div>
+    {{-- Modals confirmation disponibilité --}}
+    @include('inc.modals.drivers.availability')
 
-                    <!-- Action Buttons -->
-                    <div class="flex gap-3 pt-2">
-                        <button type="submit" id="adminSubmitBtn"
-                            class="flex-1 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-medium transition disabled:bg-gray-300"
-                            disabled>
-                            Ajouter la Pause
-                        </button>
-                        <button type="button" onclick="adminClearDates()"
-                            class="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-700 font-medium transition">
-                            Réinitialiser
-                        </button>
-                        <button type="button" onclick="closeLeaveModal()"
-                            class="flex-1 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-700 font-medium transition">
-                            Annuler
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal d'ajout de paiement -->
-    <div id="paymentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center px-4 z-20">
-        <div class="bg-white rounded-lg p-8 max-w-xl w-full">
-            <h3 class="text-2xl font-bold text-gray-800 mb-4">Confirmer l'action</h3>
-            <form action="{{ route('admin.payments.store') }}" method="POST">
-                @csrf
-
-                <!-- Agent -->
-                <input type="hidden" value="{{ $driverData->driver->id }}" name="driver_id">
-
-                <!-- Montant -->
-                <div class="mb-6">
-                    <label class="block text-gray-700 text-sm font-semibold mb-2">Montant (FCFA) <span
-                            class="text-red-600">*</span></label>
-                    <input type="number" name="amount" step="0.01" min="0" required placeholder="0.00"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 @error('amount') border-red-500 @enderror"
-                        value="{{ old('amount') }}">
-                    @error('amount')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <!-- Moyen de Paiement -->
-                <div class="mb-6">
-                    <label class="block text-gray-700 text-sm font-semibold mb-2">Moyen de Paiement <span
-                            class="text-red-600">*</span></label>
-                    <select name="payment_method" required
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 @error('payment_method') border-red-500 @enderror">
-                        <option value="">-- Sélectionner --</option>
-                        <option value="cash" {{ old('payment_method') == 'cash' ? 'selected' : '' }}>Espèces</option>
-                        <option value="bank_transfer" {{ old('payment_method') == 'bank_transfer' ? 'selected' : '' }}>
-                            Virement
-                            Bancaire</option>
-                        <option value="check" {{ old('payment_method') == 'check' ? 'selected' : '' }}>Chèque</option>
-                        <option value="mobile_money" {{ old('payment_method') == 'mobile_money' ? 'selected' : '' }}>
-                            Mobile
-                            Money</option>
-                        <option value="other" {{ old('payment_method') == 'other' ? 'selected' : '' }}>Autre</option>
-                    </select>
-                    @error('payment_method')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <!-- Date de Paiement -->
-                <div class="mb-6">
-                    <label class="block text-gray-700 text-sm font-semibold mb-2">Date de Paiement <span
-                            class="text-red-600">*</span></label>
-                    <input type="date" name="payment_date" required
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 @error('payment_date') border-red-500 @enderror"
-                        value="{{ old('payment_date', now()->format('Y-m-d')) }}">
-                    @error('payment_date')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <!-- Numéro de Référence -->
-                {{-- <div class="mb-6">
-                    <label class="block text-gray-700 text-sm font-semibold mb-2">Numéro de Référence</label>
-                    <input type="text" name="reference_number" placeholder="Numéro de reçu ou référence"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 @error('reference_number') border-red-500 @enderror"
-                        value="{{ old('reference_number') }}">
-                    @error('reference_number')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
-                </div> --}}
-
-                <!-- Notes -->
-                <div class="mb-6">
-                    <label class="block text-gray-700 text-sm font-semibold mb-2">Notes</label>
-                    <textarea name="notes" rows="4" placeholder="Notes supplémentaires..."
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 @error('notes') border-red-500 @enderror">{{ old('notes') }}</textarea>
-                    @error('notes')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <!-- Buttons -->
-                <div class="flex gap-4">
-                    <button type="submit"
-                        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg">
-                        <i class="fas fa-save mr-2"></i> Enregistrer
-                    </button>
-                    <button type="button" onclick="closePaymentModal()"
-                        class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg text-center">
-                        <i class="fas fa-times mr-2"></i> Annuler
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+    {{-- Modals confirmation statut --}}
+    @include('inc.modals.drivers.statut')
 
     @push('scripts')
         <script>
@@ -525,213 +358,166 @@
                 }
             });
 
-            //Availability actions managements
-            function openAvailabilityModal(driverId, newStatus, driverName, action) {
-                const message = `Êtes-vous sûr de vouloir marquer ${driverName} comme ${action} ?`;
-                document.getElementById('availabilityMessage').textContent = message;
-                document.getElementById('availabilityDriverId').value = driverId;
-                document.getElementById('availabilityNewStatus').value = newStatus;
-                document.getElementById('availabilityModal').classList.remove('hidden');
-                document.getElementById('availabilityModal').classList.add('flex');
+            // Contrat
+            function openEditContractModal() {
+                document.getElementById('editContractModal')?.classList.replace('hidden', 'flex');
+            }
+
+            function closeEditContractModal() {
+                document.getElementById('editContractModal')?.classList.replace('flex', 'hidden');
+            }
+
+            function openEndContractModal() {
+                document.getElementById('endContractModal')?.classList.replace('hidden', 'flex');
+            }
+
+            function closeEndContractModal() {
+                document.getElementById('endContractModal')?.classList.replace('flex', 'hidden');
+            }
+
+            // Pause / Paiement
+            function openLeaveModal() {
+                document.getElementById('leaveModal').classList.replace('hidden', 'flex');
+            }
+
+            function closeLeaveModal() {
+                document.getElementById('leaveModal').classList.replace('flex', 'hidden');
+            }
+
+            function openPaymentModal() {
+                document.getElementById('paymentModal').classList.replace('hidden', 'flex');
+            }
+
+            function closePaymentModal() {
+                document.getElementById('paymentModal').classList.replace('flex', 'hidden');
+            }
+
+            // Disponibilité
+            function openAvailabilityModal(id, status, name, action) {
+                document.getElementById('availabilityMessage').textContent = `Marquer ${name} comme ${action} ?`;
+                document.getElementById('availabilityDriverId').value = id;
+                document.getElementById('availabilityNewStatus').value = status;
+                document.getElementById('availabilityModal').classList.replace('hidden', 'flex');
             }
 
             function closeAvailabilityModal() {
-                document.getElementById('availabilityModal').classList.add('hidden');
-                document.getElementById('availabilityModal').classList.remove('flex');
+                document.getElementById('availabilityModal').classList.replace('flex', 'hidden');
             }
 
             function confirmToggleAvailability() {
-                const driverId = document.getElementById('availabilityDriverId').value;
-                const newStatus = document.getElementById('availabilityNewStatus').value === 'true' ? 1 : 0;
-
-                console.log(newStatus);
-
-                $.ajax({
-                    url: `/admin/drivers/${driverId}/toggle-availability`,
-                    method: 'POST',
-                    data: {
-                        is_available: newStatus
-                    },
-                    success: function(data) {
-                        if (data && data.success) {
+                const id = document.getElementById('availabilityDriverId').value;
+                const status = document.getElementById('availabilityNewStatus').value === 'true' ? 1 : 0;
+                $.post(`/admin/drivers/${id}/toggle-availability`, {
+                        is_available: status
+                    })
+                    .done(d => {
+                        if (d.success) {
                             closeAvailabilityModal();
-                            showAlert('success', 'Disponibilité mise à jour avec succès');
+                            showAlert('success', d.message);
                             setTimeout(() => location.reload(), 1500);
-                        } else {
-                            showAlert('error', "Erreur lors de la mise à jour: " + (data.message ||
-                                'Erreur inconnue'));
                         }
-                    },
-                    error: function(xhr) {
-                        console.error('Erreur mise à jour disponibilité:', xhr.status, xhr.responseText);
-                        showAlert('error', "Erreur lors de la mise à jour de la disponibilité");
-                    }
-                });
+                    })
+                    .fail(xhr => showAlert('error', xhr.responseJSON?.message ?? 'Erreur'));
             }
 
-            //Status actions managements
-            function openStatusModal(driverId, newStatus, driverName, action) {
-                const message = `Êtes-vous sûr de vouloir ${action} le compte de ${driverName} ?`;
-                document.getElementById('statusMessage').textContent = message;
-                document.getElementById('statusDriverId').value = driverId;
-                document.getElementById('statusNewStatus').value = newStatus;
-                document.getElementById('statusModal').classList.remove('hidden');
-                document.getElementById('statusModal').classList.add('flex');
+            // Statut
+            function openStatusModal(id, status, name, action) {
+                document.getElementById('statusMessage').textContent =
+                    `${action.charAt(0).toUpperCase() + action.slice(1)} le compte de ${name} ?`;
+                document.getElementById('statusDriverId').value = id;
+                document.getElementById('statusNewStatus').value = status;
+                document.getElementById('statusModal').classList.replace('hidden', 'flex');
             }
 
             function closeStatusModal() {
-                document.getElementById('statusModal').classList.add('hidden');
-                document.getElementById('statusModal').classList.remove('flex');
+                document.getElementById('statusModal').classList.replace('flex', 'hidden');
             }
 
             function confirmToggleStatus() {
-                const driverId = document.getElementById('statusDriverId').value;
-                const newStatus = document.getElementById('statusNewStatus').value === 'true' ? 1 : 0;
-
-                $.ajax({
-                    url: `/admin/drivers/${driverId}/toggle-status`,
-                    method: 'POST',
-                    data: {
-                        is_active: newStatus
-                    },
-                    success: function(data) {
-                        if (data && data.success) {
+                const id = document.getElementById('statusDriverId').value;
+                const status = document.getElementById('statusNewStatus').value === 'true' ? 1 : 0;
+                $.post(`/admin/drivers/${id}/toggle-status`, {
+                        is_active: status
+                    })
+                    .done(d => {
+                        if (d.success) {
                             closeStatusModal();
-                            showAlert('success', 'Statut du compte mis à jour avec succès');
+                            showAlert('success', d.message);
                             setTimeout(() => location.reload(), 1500);
-                        } else {
-                            showAlert('error', "Erreur lors de la mise à jour: " + (data.message ||
-                                'Erreur inconnue'));
                         }
-                    },
-                    error: function(xhr) {
-                        console.error('Erreur mise à jour statut:', xhr.status, xhr.responseText);
-                        showAlert('error', "Erreur lors de la mise à jour du statut du compte");
-                    }
-                });
+                    })
+                    .fail(xhr => showAlert('error', xhr.responseJSON?.message ?? 'Erreur'));
             }
 
-            //Open leave form modal
-            function openLeaveModal() {
-                document.getElementById('leaveModal').classList.remove('hidden');
-                document.getElementById('leaveModal').classList.add('flex');
-            }
-
-            //Close leave form modal
-            function closeLeaveModal() {
-                document.getElementById('leaveModal').classList.add('hidden');
-                document.getElementById('leaveModal').classList.remove('flex');
-            }
-
-            // Admin instant leave form functions
+            // Pauses
             let adminSelectedDates = [];
-            const adminMaxDays = {{ $driverData->driver->available_leave_days }};
-
-            function adminSetError(message) {
-                const error = document.getElementById('adminDateError');
-                error.textContent = message;
-                error.classList.remove('hidden');
-            }
-
-            function adminClearError() {
-                const error = document.getElementById('adminDateError');
-                error.textContent = '';
-                error.classList.add('hidden');
-            }
+            const adminMaxDays = {{ $driverProfile?->available_leave_days ?? 0 }};
 
             function adminAddDate() {
-                adminClearError();
-                const dateInput = document.getElementById('adminLeaveDate');
-                const date = dateInput.value;
+                const input = document.getElementById('adminLeaveDate');
+                const date = input.value;
+                const err = document.getElementById('adminDateError');
+                err.classList.add('hidden');
 
                 if (!date) {
-                    adminSetError('Veuillez sélectionner une date.');
+                    err.textContent = 'Sélectionnez une date.';
+                    err.classList.remove('hidden');
                     return;
                 }
-
                 if (adminSelectedDates.includes(date)) {
-                    adminSetError('Cette date est déjà sélectionnée.');
-                    return;
-                }
-
-                if (adminSelectedDates.length >= adminMaxDays) {
-                    adminSetError(`Vous ne pouvez ajouter que ${adminMaxDays} jour(s) maximum.`);
+                    err.textContent = 'Date déjà ajoutée.';
+                    err.classList.remove('hidden');
                     return;
                 }
 
                 adminSelectedDates.push(date);
                 adminSelectedDates.sort();
-                adminUpdateDisplay();
-                dateInput.value = '';
-                dateInput.focus();
+                adminRenderDates();
+                input.value = '';
             }
 
             function adminRemoveDate(date) {
                 adminSelectedDates = adminSelectedDates.filter(d => d !== date);
-                adminUpdateDisplay();
-            }
-
-            function adminUpdateDisplay() {
-                const container = document.getElementById('adminSelectedDates');
-                const inputsContainer = document.getElementById('adminDatesInputs');
-                const submitBtn = document.getElementById('adminSubmitBtn');
-
-                if (adminSelectedDates.length === 0) {
-                    container.innerHTML =
-                        '<p class="text-gray-400 text-sm w-full text-center py-2">Aucune date sélectionnée</p>';
-                    inputsContainer.innerHTML = '';
-                    submitBtn.disabled = true;
-                    return;
-                }
-
-                container.innerHTML = adminSelectedDates.map(date => {
-                    const dateObj = new Date(date + 'T00:00:00');
-                    const dayName = dateObj.toLocaleDateString('fr-FR', {
-                        weekday: 'short'
-                    });
-                    return `
-                        <div class="inline-flex items-center bg-indigo-100 text-indigo-800 px-3 py-2 rounded-lg text-sm font-medium">
-                            ${dateObj.toLocaleDateString('fr-FR')} (${dayName})
-                            <button type="button" onclick="adminRemoveDate('${date}')" class="ml-2 hover:text-indigo-600 font-bold">
-                                ✕
-                            </button>
-                        </div>
-                    `;
-                }).join('');
-
-                inputsContainer.innerHTML = adminSelectedDates.map(date => `
-                    <input type="hidden" name="dates[]" value="${date}">
-                `).join('');
-
-                submitBtn.disabled = false;
+                adminRenderDates();
             }
 
             function adminClearDates() {
                 adminSelectedDates = [];
                 document.getElementById('adminLeaveDate').value = '';
-                adminClearError();
-                adminUpdateDisplay();
+                adminRenderDates();
             }
 
-            // Allow Enter key to add date
-            document.getElementById('adminLeaveDate').addEventListener('keypress', function(e) {
+            function adminRenderDates() {
+                const container = document.getElementById('adminSelectedDates');
+                const inputs = document.getElementById('adminDatesInputs');
+                const btn = document.getElementById('adminSubmitBtn');
+
+                if (!adminSelectedDates.length) {
+                    container.innerHTML = '<p class="text-gray-400 text-sm w-full text-center">Aucune date sélectionnée</p>';
+                    inputs.innerHTML = '';
+                    btn.disabled = true;
+                    return;
+                }
+                container.innerHTML = adminSelectedDates.map(d => {
+                    const label = new Date(d + 'T00:00:00').toLocaleDateString('fr-FR', {
+                        weekday: 'short',
+                        day: '2-digit',
+                        month: '2-digit'
+                    });
+                    return `<span class="inline-flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                ${label}
+                <button type="button" onclick="adminRemoveDate('${d}')" class="ml-2 font-bold hover:text-blue-600">✕</button>
+            </span>`;
+                }).join('');
+                inputs.innerHTML = adminSelectedDates.map(d => `<input type="hidden" name="dates[]" value="${d}">`).join('');
+                btn.disabled = false;
+            }
+            document.getElementById('adminLeaveDate')?.addEventListener('keypress', e => {
                 if (e.key === 'Enter') {
                     adminAddDate();
                     e.preventDefault();
                 }
             });
-
-            //Open payment form modal
-            function openPaymentModal() {
-                document.getElementById('paymentModal').classList.remove('hidden');
-                document.getElementById('paymentModal').classList.add('flex');
-            }
-
-            //Close payment form modal
-            function closePaymentModal() {
-                document.getElementById('paymentModal').classList.add('hidden');
-                document.getElementById('paymentModal').classList.remove('flex');
-            }
         </script>
     @endpush
 @endsection

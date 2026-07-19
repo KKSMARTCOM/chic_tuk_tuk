@@ -7,11 +7,12 @@ use App\Models\Driver;
 use App\Models\DriverContract;
 use App\Models\Vehicle;
 use App\Services\DriverContractService;
+use App\Services\DriverService;
 use Illuminate\Http\Request;
 
 class DriverContractController extends Controller
 {
-    public function __construct(private DriverContractService $contractService) {}
+    public function __construct(private DriverContractService $contractService, private DriverService $driverService) {}
 
     public function index()
     {
@@ -54,6 +55,15 @@ class DriverContractController extends Controller
 
         // Récupérer le contrat véhicule actif
         $vehicle = Vehicle::findOrFail($validated['vehicle_id']);
+        $driver  = Driver::findOrFail($validated['driver_id']);
+
+        // ✅ Mêmes règles métier
+        try {
+            $this->driverService->validateVehicleAssignment($vehicle, $driver->id);
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
         $vehicleContract = $vehicle->activeVehicleContract;
 
         if (!$vehicleContract) {

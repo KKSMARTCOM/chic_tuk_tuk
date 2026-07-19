@@ -186,10 +186,11 @@
                                     <div class="text-sm text-gray-500">{{ $driver->phone ?? 'N/A' }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">{{ $driver->driver->vehicle_number ?? 'N/A' }}
+                                    <div class="text-sm text-gray-900">
+                                        {{ $driver->driver->currentVehicle->vehicle_number ?? 'N/A' }}
                                     </div>
                                     <div class="text-sm text-gray-500">
-                                        {{ vehiculeType($driver->driver->vehicle_type) ?? 'N/A' }}</div>
+                                        {{ vehiculeType($driver->driver->currentVehicle?->vehicle_type) ?? 'N/A' }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex flex-col space-y-1">
