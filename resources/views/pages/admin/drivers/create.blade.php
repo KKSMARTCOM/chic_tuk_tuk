@@ -191,9 +191,9 @@
                         <div id="owner-vehicles-wrap" class="{{ old('owner_id') ? '' : 'hidden' }}">
                             <label class="block text-sm font-medium text-gray-700">Véhicule <span
                                     class="text-red-600">*</span></label>
-                            <div class="flex gap-2 mt-1">
+                            <div class="flex flex-wrap gap-2 mt-1">
                                 <select name="vehicle_id" id="vehicle_id_select"
-                                    class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('vehicle_id') border-red-500 @enderror">
+                                    class="flex-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('vehicle_id') border-red-500 @enderror">
                                     <option value="">— Sélectionnez d'abord un propriétaire —</option>
                                 </select>
                                 <button type="button" id="btn-add-vehicle" onclick="toggleAddVehicleInline()" disabled
@@ -481,7 +481,6 @@
                 const ownerId = document.getElementById('owner_id_select').value;
                 const number = document.getElementById('inline_vehicle_number').value.trim();
                 const type = document.getElementById('inline_vehicle_type').value;
-                const color = document.getElementById('inline_vehicle_color').value.trim();
 
                 if (!number) {
                     showAlert('error', 'Le numéro d\'immatriculation est obligatoire.');
@@ -499,7 +498,6 @@
                         owner_id: ownerId,
                         vehicle_number: number,
                         vehicle_type: type,
-                        color
                     }),
                 });
                 const data = await res.json();

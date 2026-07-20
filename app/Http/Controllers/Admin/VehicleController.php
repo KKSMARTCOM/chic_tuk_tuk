@@ -76,10 +76,10 @@ class VehicleController extends Controller
         try {
             $data = array_merge($validated, ['_owner_mode' => $mode]);
 
-            $this->vehicleService->create($data);
+            $vehicle = $this->vehicleService->create($data);
 
             if ($request->wantsJson()) {
-                return response()->json(['success' => true, 'message' => 'Véhicule créé avec succès.']);
+                return response()->json(['success' => true, 'vehicle' => $vehicle, 'message' => 'Véhicule créé avec succès.']);
             }
 
             return redirect()->route('admin.vehicles.index')->with('success', 'Véhicule créé avec succès.');

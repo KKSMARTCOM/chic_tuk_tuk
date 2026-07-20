@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\DriverContract;
+use App\Models\Vehicle;
 use App\Models\VehiclePause;
 
 class DriverContractService
@@ -27,6 +28,17 @@ class DriverContractService
             'contract_months'     => $data['contract_months'],
             'status'              => 'active',
         ]);
+    }
+
+    public function update(DriverContract $contract, array $data, Vehicle $vehicle): DriverContract
+    {
+        $contract->update([
+            'vehicle_id'      => $vehicle->id,
+            'start_date'      => $data['start_date'],
+            'contract_months' => $data['contract_months'],
+        ]);
+
+        return $contract->refresh();
     }
 
     public function end(DriverContract $contract, array $data): DriverContract
@@ -68,5 +80,58 @@ class DriverContractService
             'months_elapsed'      => $contract->months_elapsed,
             'total_paid'          => $contract->total_paid,
         ];
+    }
+
+    public function validateVehicleAssignment(Vehicle $vehicle, ?string $excludeDriverId = null, ?string $excludeContractId = null): void
+    {
+        // ── Règle 1 : véhicule déjà pris par un autre agent ─────
+        $vehicleQuery = DriverContract::where('vehicle_id', $vehicle->id)
+            ->where('status', 'active');
+
+        if ($excludeDriverId) {
+            $vehicleQuery->where('driver_id', '!=', $excludeDriverId);
+        }
+
+        // Exclure le contrat qu'on est en train de modifier
+        if ($excludeContractId) {
+            $vehicleQuery->where('id', '!=', $excludeContractId);
+        }
+
+        if ($vehicleQuery->exists()) {
+            throw new \Exception(
+                "Le véhicule {$vehicle->vehicle_number} est déjà assigné à un autre agent actif."
+            );
+        }
+
+        // ── Règle 2 : un agent par véhicule du propriétaire ─────
+        $owner = $vehicle->owner;
+
+        if (!$owner) return;
+
+        $ownerVehicleIds = $owner->vehicles()
+            ->where('is_active', true)
+            ->pluck('id');
+
+        $activeAgentsQuery = DriverContract::whereIn('vehicle_id', $ownerVehicleIds)
+            ->where('status', 'active');
+
+        if ($excludeDriverId) {
+            $activeAgentsQuery->where('driver_id', '!=', $excludeDriverId);
+        }
+
+        // Exclure le contrat en cours de modification du comptage
+        if ($excludeContractId) {
+            $activeAgentsQuery->where('id', '!=', $excludeContractId);
+        }
+
+        $activeAgentsCount  = $activeAgentsQuery->count();
+        $ownerVehiclesCount = $ownerVehicleIds->count();
+
+        if ($activeAgentsCount >= $ownerVehiclesCount) {
+            throw new \Exception(
+                "Le propriétaire {$owner->name} n'a pas d'autre véhicule disponible. "
+                    . "Il possède {$ownerVehiclesCount} véhicule(s) et a déjà {$activeAgentsCount} agent(s) actif(s)."
+            );
+        }
     }
 }

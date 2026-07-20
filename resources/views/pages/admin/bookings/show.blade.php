@@ -1,5 +1,26 @@
 @extends('layouts.app')
 
+@php
+    $isParent = $booking->is_subscription_parent;
+    $isChild = $booking->is_subscription_child;
+    $isUnique = !$isParent && !$isChild;
+    // Abonnement parent encore actif (des jours restants même si J1 complété)
+    $isActiveSubscription =
+        $isParent && $booking->remaining_days > 0 && !in_array($booking->status, ['cancelled', 'expired']);
+    // Peut-on annuler ?
+    $canCancel =
+        // Course unique ou enfant non terminée
+        (($isUnique || $isChild) && $booking->canBeCancelled()) ||
+        // Abonnement parent avec jours restants
+        $isActiveSubscription;
+    // Peut-on assigner ?
+    $canAssign = !$booking->driver_id && in_array($booking->status, ['pending']) && !$isChild;
+    // Peut-on retirer l'agent ?
+$canRemoveDriver = $booking->driver_id && !in_array($booking->status, ['completed', 'cancelled', 'expired']);
+// Peut-on supprimer ?
+$canDelete = in_array($booking->status, ['cancelled', 'expired']);
+@endphp
+
 @section('content')
     <!-- Header -->
     <div class="bg-white rounded-lg shadow-md mb-8">
@@ -339,29 +360,34 @@
                     <h3 class="text-lg font-semibold text-gray-800">Actions</h3>
                 </div>
                 <div class="px-6 py-4 space-y-3">
-                    @if (!$booking->driver && in_array($booking->status, ['pending']))
+                    {{-- Assigner un agent --}}
+                    @if ($canAssign)
                         <button onclick="assignDriver('{{ $booking->id }}')"
                             class="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
                             <i class="fas fa-user-plus mr-2"></i> Assigner un Agent
                         </button>
-                    @elseif(!in_array($booking->status, ['completed', 'cancelled', 'expired']))
+                    @endif
+                    {{-- Retirer l'agent --}}
+                    @if ($canRemoveDriver)
                         <button onclick="confirmRemoveDriver('{{ $booking->id }}')"
-                            class="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">
+                            class="w-full bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition">
                             <i class="fas fa-user-times mr-2"></i> Retirer le Agent
                         </button>
                     @endif
-
-                    @if (in_array($booking->status, ['cancelled', 'expired']))
-                        <button onclick="openDeleteModal('{{ $booking->id }}')"
-                            class="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">
-                            <i class="fas fa-user-times mr-2"></i> Supprimer la réservation
+                    {{-- Annuler --}}
+                    @if ($canCancel)
+                        <button
+                            onclick="openCancelModal('{{ $booking->id }}', '{{ $isParent ? 'subscription' : 'booking' }}')"
+                            class="w-full text-red-600 border border-red-600 px-4 py-2 rounded-lg hover:bg-red-50 transition">
+                            <i class="fas fa-times mr-2"></i>
+                            {{ $isParent ? "Annuler l'abonnement" : 'Annuler la course' }}
                         </button>
                     @endif
-
-                    @if (in_array($booking->status, ['pending', 'confirmed']))
-                        <button onclick="openCancelModal('{{ $booking->id }}')"
-                            class="w-full text-red-600 border border-red-600 px-4 py-2 rounded-lg hover:text-red-700 hover:border-red-700 transition">
-                            <i class="fas fa-times mr-2"></i> Annuler la course
+                    {{-- Supprimer --}}
+                    @if ($canDelete)
+                        <button onclick="openDeleteModal('{{ $booking->id }}')"
+                            class="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">
+                            <i class="fas fa-trash mr-2"></i> Supprimer
                         </button>
                     @endif
                 </div>
@@ -401,103 +427,16 @@
     </div>
 
     <!-- Modal pour assigner un Agent -->
-    <div id="assignDriverModal"
-        class="fixed px-4 inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden items-center justify-center z-10">
-        <div class="relative mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div class="mt-3">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Assigner un Agent</h3>
-                <input type="hidden" id="currentBookingId" value="">
-                <div class="mb-4">
-                    <label for="driverSelect" class="block text-sm font-medium text-gray-700 mb-2">
-                        Sélectionnez un Agent disponible
-                    </label>
-                    <select id="driverSelect"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">Chargement...</option>
-                    </select>
-                </div>
-                <div class="flex justify-end space-x-3">
-                    <button onclick="closeModal()"
-                        class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition">
-                        Annuler
-                    </button>
-                    <button onclick="confirmAssign()"
-                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
-                        Assigner
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+    @include('inc.modals.bookings.assign-driver')
 
     <!-- Modal de retrait -->
-    <div id="removeDriverModal" class="fixed px-4 inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-10">
-        <div class="bg-white rounded-lg p-8 max-w-md w-full">
-            <h3 class="text-2xl font-bold text-gray-800 mb-4">Retirer le Agent</h3>
-            <p class="text-gray-600 mb-4">Êtes-vous sûr de vouloir retirer le Agent de cette course ? Cette action est
-                irréversible.</p>
-            <input type="hidden" id="removeBookingId" value="">
-            <div class="flex justify-end space-x-3">
-                <button type="button" onclick="closeModal()"
-                    class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition">
-                    Annuler
-                </button>
-                <button type="button" onclick="removeDriver()"
-                    class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
-                    Retirer
-                </button>
-            </div>
-        </div>
-    </div>
+    @include('inc.modals.bookings.remove-driver')
 
     <!-- Modal d'annulation -->
-    <div id="cancelModal" class="fixed px-4 inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-10">
-        <div class="bg-white rounded-lg p-8 max-w-md w-full">
-            <h3 class="text-2xl font-bold text-gray-800 mb-4">Annuler la course</h3>
-            <p class="text-gray-600 mb-4">Êtes-vous sûr de vouloir annuler cette course ? Cette action est
-                irréversible.</p>
-            <form id="cancelForm" method="POST" action="">
-                @csrf
-                <input type="hidden" name="status" value="cancelled">
-                <textarea name="cancellation_reason" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-lg mb-4"
-                    placeholder="Raison de l'annulation (optionnel)"></textarea>
-                <div class="flex space-x-4">
-                    <button type="button" onclick="closeCancelModal()"
-                        class="flex-1 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition">
-                        Retour
-                    </button>
-                    <button type="submit"
-                        class="flex-1 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
-                        Confirmer l'annulation
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+    @include('inc.modals.bookings.cancel')
 
     <!-- Modal de suppression -->
-    <div id="deleteModal" class="fixed px-4 inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-10">
-        <div class="bg-white rounded-lg p-8 max-w-md w-full">
-            <h3 class="text-2xl font-bold text-gray-800 mb-4">Supprimer la course</h3>
-            <p class="text-gray-600 mb-4">Êtes-vous sûr de vouloir supprimer cette course ? Cette action est
-                irréversible.</p>
-            <form id="deleteForm" method="POST" action="">
-                @csrf
-                @method('DELETE')
-                <input type="hidden" name="status" value="">
-                <div class="flex space-x-4">
-                    <button type="button" onclick="closeDeleteModal()"
-                        class="flex-1 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition">
-                        Retour
-                    </button>
-                    <button type="submit"
-                        class="flex-1 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
-                        Supprimer
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+    @include('inc.modals.bookings.delete')
 
     @push('scripts')
         <script>
@@ -636,7 +575,21 @@
                 });
             }
 
-            function openCancelModal(bookingId) {
+            function openCancelModal(bookingId, type) {
+                const title = document.getElementById('cancelModalTitle');
+                const desc = document.getElementById('cancelModalDesc');
+                const warning = document.getElementById('cancelSubscriptionWarning');
+
+                if (type === 'subscription') {
+                    title.textContent = "Annuler l'abonnement";
+                    desc.textContent = "Le client ne souhaite plus continuer cet abonnement.";
+                    warning.classList.remove('hidden');
+                } else {
+                    title.textContent = "Annuler la course";
+                    desc.textContent = "Êtes-vous sûr de vouloir annuler cette course ? Cette action est irréversible.";
+                    warning.classList.add('hidden');
+                }
+
                 $('#cancelForm').attr('action', `/admin/bookings/${bookingId}/update-status`);
                 $('#cancelModal').removeClass('hidden').addClass('flex');
             }
@@ -644,6 +597,7 @@
             function closeCancelModal() {
                 $('#cancelModal').addClass('hidden').removeClass('flex');
                 $('#cancelForm')[0].reset();
+                document.getElementById('cancelSubscriptionWarning').classList.add('hidden');
             }
 
             // Gestionnaire pour la soumission du formulaire d'annulation

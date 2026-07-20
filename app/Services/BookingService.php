@@ -571,185 +571,199 @@ class BookingService
 
     public function update(Booking $booking, array $data)
     {
-        // Mise à jour partielle
-        if (!empty($data['_partial'])) {
-            unset($data['_partial']);
+        return DB::transaction(function () use ($booking, $data) {
 
-            // Retrait : vérifier si c'est un abonnement parent avec enfants
-            if (array_key_exists('driver_id', $data) && is_null($data['driver_id']) && $booking->is_recurring) {
-                $hasChildren = Booking::where('parent_booking_id', $booking->id)->exists();
-                if ($hasChildren) {
-                    throw new \Exception(
-                        'Des courses enfants existent déjà. Vous ne pouvez pas retirer l\'agent de l\'abonnement parent.'
-                    );
+            // Mise à jour partielle
+            if (!empty($data['_partial'])) {
+                unset($data['_partial']);
+
+                // Retrait : vérifier si c'est un abonnement parent avec enfants
+                if (array_key_exists('driver_id', $data) && is_null($data['driver_id']) && $booking->is_recurring) {
+                    $hasChildren = Booking::where('parent_booking_id', $booking->id)->exists();
+                    if ($hasChildren) {
+                        throw new \Exception(
+                            'Des courses enfants existent déjà. Vous ne pouvez pas retirer l\'agent de l\'abonnement parent.'
+                        );
+                    }
+                    // Retirer aussi le titulaire si pas d'enfants
+                    $data['subscription_driver_id'] = null;
                 }
-                // Retirer aussi le titulaire si pas d'enfants
-                $data['subscription_driver_id'] = null;
+
+                if ($booking->is_subscription_parent) {
+                    Booking::where('parent_booking_id', $booking->id)
+                        ->whereIn('status', ['pending', 'confirmed'])
+                        ->update([
+                            'status'              => 'cancelled',
+                            'cancelled_at'        => now(),
+                            'cancellation_reason' => $validated['cancellation_reason'] ?? 'Abonnement annulé',
+                        ]);
+                }
+
+                $booking->update($data);
+
+                return $booking->refresh();
             }
 
-            $booking->update($data);
-            return $booking->refresh();
-        }
+            // Recalcul distance & prix
+            $distance = $booking->distance;
+            $basePrice = $booking->base_price;
 
-        // Recalcul distance & prix
-        $distance = $booking->distance;
-        $basePrice = $booking->base_price;
+            $fromChanged = isset($data['from_lng']) && (float) $data['from_lng'] !== (float) $booking->from_lng;
+            $toChanged   = isset($data['to_lng'])   && (float) $data['to_lng']   !== (float) $booking->to_lng;
 
-        $fromChanged = isset($data['from_lng']) && (float) $data['from_lng'] !== (float) $booking->from_lng;
-        $toChanged   = isset($data['to_lng'])   && (float) $data['to_lng']   !== (float) $booking->to_lng;
+            if ($fromChanged || $toChanged) {
+                $distance = $this->pricingService->getDistance($data['from_lng'], $data['from_lat'], $data['to_lng'], $data['to_lat']);
 
-        if ($fromChanged || $toChanged) {
-            $distance = $this->pricingService->getDistance($data['from_lng'], $data['from_lat'], $data['to_lng'], $data['to_lat']);
+                if ($distance === null) {
+                    throw new \Exception('Erreur lors du calcul de l\'itinéraire.');
+                }
 
-            if ($distance === null) {
-                throw new \Exception('Erreur lors du calcul de l\'itinéraire.');
+                $basePrice = $this->pricingService->getPrice($distance);
+            } elseif (isset($data['base_price'])) {
+                $basePrice = (float) $data['base_price'];
             }
 
-            $basePrice = $this->pricingService->getPrice($distance);
-        } elseif (isset($data['base_price'])) {
-            $basePrice = (float) $data['base_price'];
-        }
+            // Recalcul total si prix modifié manuellement ou trajet changé
+            $isRound    = (bool) ($data['round_trip'] ?? $booking->round_trip ?? false);
+            $days       = (int)  ($data['days']       ?? $booking->days       ?? 1);
+            $weekDays   = $data['week_days'] ?? $booking->week_days ?? 'lun_dim';
+            $tripPrice  = $isRound ? $basePrice * 2 : $basePrice;
+            $totalPrice = $days > 1 ? $tripPrice * $days : $tripPrice;
 
-        // Recalcul total si prix modifié manuellement ou trajet changé
-        $isRound    = (bool) ($data['round_trip'] ?? $booking->round_trip ?? false);
-        $days       = (int)  ($data['days']       ?? $booking->days       ?? 1);
-        $weekDays   = $data['week_days'] ?? $booking->week_days ?? 'lun_dim';
-        $tripPrice  = $isRound ? $basePrice * 2 : $basePrice;
-        $totalPrice = $days > 1 ? $tripPrice * $days : $tripPrice;
+            // Recalcul récurrence
+            $isRecurring = $booking->is_recurring;
+            $nextRecurringDate = $booking->next_recurring_date;
+            $subscriptionEndDate  = $booking->subscription_end_date;
 
-        // Recalcul récurrence
-        $isRecurring = $booking->is_recurring;
-        $nextRecurringDate = $booking->next_recurring_date;
-        $subscriptionEndDate  = $booking->subscription_end_date;
+            $daysChanged = isset($data['days']) && (int) $data['days'] !== (int) $booking->days;
+            $dateChanged = isset($data['pickup_date']) && $data['pickup_date'] !== $booking->pickup_date->toDateString();
+            $weekChanged = isset($data['week_days'])   && $data['week_days']     !== $booking->week_days;
 
-        $daysChanged = isset($data['days']) && (int) $data['days'] !== (int) $booking->days;
-        $dateChanged = isset($data['pickup_date']) && $data['pickup_date'] !== $booking->pickup_date->toDateString();
-        $weekChanged = isset($data['week_days'])   && $data['week_days']     !== $booking->week_days;
+            if ($daysChanged || $dateChanged || $weekChanged) {
+                $isRecurring = ($days > 1);
+                $pickupDate  = $data['pickup_date'] instanceof Carbon ? $data['pickup_date']->toDateString() : ($data['pickup_date'] ?? $booking->pickup_date->toDateString());
+                if ($isRecurring) {
+                    // Prochain jour autorisé après J1 → heure du cron
+                    $firstNext         = getNextAllowedDay(Carbon::parse($pickupDate), $weekDays);
+                    $nextRecurringDate = $firstNext?->copy()->subDay()->setTime(1, 0);
 
-        if ($daysChanged || $dateChanged || $weekChanged) {
-            $isRecurring = ($days > 1);
-            $pickupDate  = $data['pickup_date'] instanceof Carbon ? $data['pickup_date']->toDateString() : ($data['pickup_date'] ?? $booking->pickup_date->toDateString());
-            if ($isRecurring) {
-                // Prochain jour autorisé après J1 → heure du cron
-                $firstNext         = getNextAllowedDay(Carbon::parse($pickupDate), $weekDays);
-                $nextRecurringDate = $firstNext?->copy()->subDay()->setTime(1, 0);
-
-                // Date de fin selon jours ouvrés
-                $subscriptionEndDate = calculateEndDate($pickupDate, $days, $weekDays);
-            } else {
-                $nextRecurringDate   = null;
-                $subscriptionEndDate = null;
+                    // Date de fin selon jours ouvrés
+                    $subscriptionEndDate = calculateEndDate($pickupDate, $days, $weekDays);
+                } else {
+                    $nextRecurringDate   = null;
+                    $subscriptionEndDate = null;
+                }
             }
-        }
 
-        // Capturer AVANT la mise à jour
-        $wasRoundTrip = (bool) $booking->round_trip;
+            // Capturer AVANT la mise à jour
+            $wasRoundTrip = (bool) $booking->round_trip;
 
-        // Mise à jour
-        $booking->update(
-            [
-                'user_id'             => $data['user_id'] ?? $booking->user_id,
-                'client_name'         => isset($data['client_name']) && !empty($data['client_name']) ? $data['client_name'] : ($booking->client_name ?? 'Client'),
-                'from_location'       => $data['from_location'] ?? $booking->from_location,
-                'to_location'         => $data['to_location'] ?? $booking->to_location,
-                'from_lng'            => $data['from_lng'] ?? $booking->from_lng,
-                'from_lat'            => $data['from_lat'] ?? $booking->from_lat,
-                'to_lng'              => $data['to_lng'] ?? $booking->to_lng,
-                'to_lat'              => $data['to_lat'] ?? $booking->to_lat,
-                'phone'               => $data['phone'] ?? $booking->phone,
-                'days'                => $days,
-                'remaining_days'      => $days,
-                'week_days'           => $data['week_days'] ?? $booking->week_days,
-                'round_trip'          => $isRound,
-                'return_time'         => $isRound ? ($data['return_time'] ?? $booking->return_time) : null,
-                'pickup_date'         => $data['pickup_date'] ?? $booking->pickup_date,
-                'pickup_time'         => $data['pickup_time'] ?? $booking->pickup_time,
-                'status'              => $data['status'] ?? $booking->status,
-                'special_requests'    => $data['special_requests'] ?? $booking->special_requests,
-                'distance'            => $distance,
-                'base_price'          => $basePrice,
-                'total_price'         => $totalPrice,
-                'is_recurring'        => $isRecurring,
-                'next_recurring_date' => $nextRecurringDate,
-                'subscription_end_date' => $subscriptionEndDate,
-            ]
-        );
+            // Mise à jour
+            $booking->update(
+                [
+                    'user_id'             => $data['user_id'] ?? $booking->user_id,
+                    'client_name'         => isset($data['client_name']) && !empty($data['client_name']) ? $data['client_name'] : ($booking->client_name ?? 'Client'),
+                    'from_location'       => $data['from_location'] ?? $booking->from_location,
+                    'to_location'         => $data['to_location'] ?? $booking->to_location,
+                    'from_lng'            => $data['from_lng'] ?? $booking->from_lng,
+                    'from_lat'            => $data['from_lat'] ?? $booking->from_lat,
+                    'to_lng'              => $data['to_lng'] ?? $booking->to_lng,
+                    'to_lat'              => $data['to_lat'] ?? $booking->to_lat,
+                    'phone'               => $data['phone'] ?? $booking->phone,
+                    'days'                => $days,
+                    'remaining_days'      => $days,
+                    'week_days'           => $data['week_days'] ?? $booking->week_days,
+                    'round_trip'          => $isRound,
+                    'return_time'         => $isRound ? ($data['return_time'] ?? $booking->return_time) : null,
+                    'pickup_date'         => $data['pickup_date'] ?? $booking->pickup_date,
+                    'pickup_time'         => $data['pickup_time'] ?? $booking->pickup_time,
+                    'status'              => $data['status'] ?? $booking->status,
+                    'special_requests'    => $data['special_requests'] ?? $booking->special_requests,
+                    'distance'            => $distance,
+                    'base_price'          => $basePrice,
+                    'total_price'         => $totalPrice,
+                    'is_recurring'        => $isRecurring,
+                    'next_recurring_date' => $nextRecurringDate,
+                    'subscription_end_date' => $subscriptionEndDate,
+                ]
+            );
 
-        // Cas désactivation aller-retour : était true, devient false
-        if ($wasRoundTrip && !$isRound) {
-            Booking::where('parent_booking_id', $booking->id)
-                ->where('trip_type', 'return')
-                ->delete();
-        }
-
-        // Cas mise à jour ou activation aller-retour
-        if ($isRound) {
-            $hasChildrenGo = Booking::where('parent_booking_id', $booking->id)
-                ->where('trip_type', 'go')
-                ->exists();
-
-            if (!$hasChildrenGo) {
-                $returnBooking = Booking::where('parent_booking_id', $booking->id)
+            // Cas désactivation aller-retour : était true, devient false
+            if ($wasRoundTrip && !$isRound) {
+                Booking::where('parent_booking_id', $booking->id)
                     ->where('trip_type', 'return')
-                    ->first();
+                    ->delete();
+            }
 
-                if ($returnBooking) {
-                    // Mise à jour de la course retour existante
-                    $returnBooking->update([
-                        'from_location'         => $data['to_location']   ?? $booking->to_location,
-                        'to_location'           => $data['from_location'] ?? $booking->from_location,
-                        'from_lng'              => $data['to_lng']        ?? $booking->to_lng,
-                        'from_lat'              => $data['to_lat']        ?? $booking->to_lat,
-                        'to_lng'                => $data['from_lng']      ?? $booking->from_lng,
-                        'to_lat'                => $data['from_lat']      ?? $booking->from_lat,
-                        'pickup_date'           => $data['pickup_date']   ?? $booking->pickup_date,
-                        'pickup_time'           => $data['return_time']   ?? $returnBooking->pickup_time,
-                        'phone'                 => $data['phone']         ?? $booking->phone,
-                        'days'                  => $days,
-                        'remaining_days'        => $days,
-                        'week_days'             => $data['week_days']     ?? $booking->week_days,
-                        'distance'              => $distance,
-                        'base_price'            => $basePrice,
-                        'total_price'           => $totalPrice,
-                        'special_requests'      => $data['special_requests'] ?? $booking->special_requests,
-                        'client_name'           => $data['client_name']   ?? $booking->client_name,
-                        'subscription_end_date' => $subscriptionEndDate,
-                        'round_trip'            => true,
-                    ]);
-                } elseif (!$wasRoundTrip && isset($data['return_time'])) {
-                    // Aller-retour nouvellement activé → créer la course retour
-                    Booking::create([
-                        'from_location'          => $data['to_location']   ?? $booking->to_location,
-                        'to_location'            => $data['from_location'] ?? $booking->from_location,
-                        'from_lng'               => $data['to_lng']        ?? $booking->to_lng,
-                        'from_lat'               => $data['to_lat']        ?? $booking->to_lat,
-                        'to_lng'                 => $data['from_lng']      ?? $booking->from_lng,
-                        'to_lat'                 => $data['from_lat']      ?? $booking->from_lat,
-                        'distance'               => $distance,
-                        'phone'                  => $data['phone']         ?? $booking->phone,
-                        'days'                   => $days,
-                        'remaining_days'         => $days,
-                        'week_days'              => $weekDays,
-                        'round_trip'             => true,
-                        'return_time'            => null,
-                        'trip_type'              => 'return',
-                        'pickup_date'            => $data['pickup_date']   ?? $booking->pickup_date,
-                        'pickup_time'            => $data['return_time'],
-                        'special_requests'       => $data['special_requests'] ?? $booking->special_requests,
-                        'base_price'             => $basePrice,
-                        'total_price'            => $totalPrice,
-                        'status'                 => 'pending',
-                        'is_recurring'           => false,
-                        'parent_booking_id'      => $booking->id,
-                        'subscription_driver_id' => null,
-                        'client_name'            => $data['client_name']   ?? $booking->client_name,
-                        'subscription_end_date'  => $subscriptionEndDate,
-                    ]);
+            // Cas mise à jour ou activation aller-retour
+            if ($isRound) {
+                $hasChildrenGo = Booking::where('parent_booking_id', $booking->id)
+                    ->where('trip_type', 'go')
+                    ->exists();
+
+                if (!$hasChildrenGo) {
+                    $returnBooking = Booking::where('parent_booking_id', $booking->id)
+                        ->where('trip_type', 'return')
+                        ->first();
+
+                    if ($returnBooking) {
+                        // Mise à jour de la course retour existante
+                        $returnBooking->update([
+                            'from_location'         => $data['to_location']   ?? $booking->to_location,
+                            'to_location'           => $data['from_location'] ?? $booking->from_location,
+                            'from_lng'              => $data['to_lng']        ?? $booking->to_lng,
+                            'from_lat'              => $data['to_lat']        ?? $booking->to_lat,
+                            'to_lng'                => $data['from_lng']      ?? $booking->from_lng,
+                            'to_lat'                => $data['from_lat']      ?? $booking->from_lat,
+                            'pickup_date'           => $data['pickup_date']   ?? $booking->pickup_date,
+                            'pickup_time'           => $data['return_time']   ?? $returnBooking->pickup_time,
+                            'phone'                 => $data['phone']         ?? $booking->phone,
+                            'days'                  => $days,
+                            'remaining_days'        => $days,
+                            'week_days'             => $data['week_days']     ?? $booking->week_days,
+                            'distance'              => $distance,
+                            'base_price'            => $basePrice,
+                            'total_price'           => $totalPrice,
+                            'special_requests'      => $data['special_requests'] ?? $booking->special_requests,
+                            'client_name'           => $data['client_name']   ?? $booking->client_name,
+                            'subscription_end_date' => $subscriptionEndDate,
+                            'round_trip'            => true,
+                        ]);
+                    } elseif (!$wasRoundTrip && isset($data['return_time'])) {
+                        // Aller-retour nouvellement activé → créer la course retour
+                        Booking::create([
+                            'from_location'          => $data['to_location']   ?? $booking->to_location,
+                            'to_location'            => $data['from_location'] ?? $booking->from_location,
+                            'from_lng'               => $data['to_lng']        ?? $booking->to_lng,
+                            'from_lat'               => $data['to_lat']        ?? $booking->to_lat,
+                            'to_lng'                 => $data['from_lng']      ?? $booking->from_lng,
+                            'to_lat'                 => $data['from_lat']      ?? $booking->from_lat,
+                            'distance'               => $distance,
+                            'phone'                  => $data['phone']         ?? $booking->phone,
+                            'days'                   => $days,
+                            'remaining_days'         => $days,
+                            'week_days'              => $weekDays,
+                            'round_trip'             => true,
+                            'return_time'            => null,
+                            'trip_type'              => 'return',
+                            'pickup_date'            => $data['pickup_date']   ?? $booking->pickup_date,
+                            'pickup_time'            => $data['return_time'],
+                            'special_requests'       => $data['special_requests'] ?? $booking->special_requests,
+                            'base_price'             => $basePrice,
+                            'total_price'            => $totalPrice,
+                            'status'                 => 'pending',
+                            'is_recurring'           => false,
+                            'parent_booking_id'      => $booking->id,
+                            'subscription_driver_id' => null,
+                            'client_name'            => $data['client_name']   ?? $booking->client_name,
+                            'subscription_end_date'  => $subscriptionEndDate,
+                        ]);
+                    }
                 }
             }
-        }
 
-        return $booking->refresh();
+            return $booking->refresh();
+        });
     }
 
     public function delete(string $bookingId)

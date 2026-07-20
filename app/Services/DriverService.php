@@ -15,10 +15,12 @@ use Illuminate\Testing\Fluent\Concerns\Has;
 class DriverService
 {
     protected BookingService $bookingService;
+    protected DriverContractService $driverContractService;
 
-    public function __construct(BookingService $bookingService)
+    public function __construct(BookingService $bookingService, DriverContractService $driverContractService)
     {
         $this->bookingService = $bookingService;
+        $this->driverContractService = $driverContractService;
     }
 
     public function getAllDrivers($filters = [])
@@ -150,7 +152,7 @@ class DriverService
                 }
 
                 // ✅ Validation des règles métier
-                $this->validateVehicleAssignment($vehicle);
+                $this->driverContractService->validateVehicleAssignment($vehicle);
             } else {
                 // Nouveau propriétaire + nouveau véhicule
 
@@ -249,7 +251,7 @@ class DriverService
                     }
 
                     // ✅ Validation des règles métier
-                    $this->validateVehicleAssignment($vehicle);
+                    $this->driverContractService->validateVehicleAssignment($vehicle);
                 } else {
                     // Créer le propriétaire
                     $ownerRole = \Spatie\Permission\Models\Role::firstOrCreate(
@@ -409,54 +411,5 @@ class DriverService
         }
 
         return $query->latest()->get();
-    }
-
-    public function validateVehicleAssignment(Vehicle $vehicle, ?string $excludeDriverId = null): void
-    {
-        // ── Règle 1 : véhicule déjà pris ────────────────────────
-        $vehicleQuery = DriverContract::where('vehicle_id', $vehicle->id)
-            ->where('status', 'active');
-
-        if ($excludeDriverId) {
-            $vehicleQuery->where('driver_id', '!=', $excludeDriverId);
-        }
-
-        if ($vehicleQuery->exists()) {
-            throw new \Exception(
-                "Le véhicule {$vehicle->vehicle_number} est déjà assigné à un autre agent actif."
-            );
-        }
-
-        // ── Règle 2 : un agent par véhicule du propriétaire ─────
-        $owner = $vehicle->owner;
-
-        if (!$owner) {
-            return; // Pas de propriétaire connu, on laisse passer
-        }
-
-        // Nombre de véhicules actifs du propriétaire
-        $ownerVehicleIds = $owner->vehicles()
-            ->where('is_active', true)
-            ->pluck('id');
-
-        // Nombre d'agents actifs sur les véhicules de ce propriétaire
-        $activeAgentsQuery = DriverContract::whereIn('vehicle_id', $ownerVehicleIds)
-            ->where('status', 'active');
-
-        if ($excludeDriverId) {
-            $activeAgentsQuery->where('driver_id', '!=', $excludeDriverId);
-        }
-
-        $activeAgentsCount  = $activeAgentsQuery->count();
-        $ownerVehiclesCount = $ownerVehicleIds->count();
-
-        // S'il y a déjà autant d'agents actifs que de véhicules,
-        // le propriétaire n'a plus de véhicule libre
-        if ($activeAgentsCount >= $ownerVehiclesCount) {
-            throw new \Exception(
-                "Le propriétaire {$owner->name} n'a pas d'autre véhicule disponible. "
-                    . "Il possède {$ownerVehiclesCount} véhicule(s) et a déjà {$activeAgentsCount} agent(s) actif(s)."
-            );
-        }
     }
 }

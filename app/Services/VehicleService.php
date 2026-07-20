@@ -67,18 +67,18 @@ class VehicleService
             ]);
 
             // 3. Créer le contrat si montant renseigné
-            if (!empty($data['contract_total_amount'])) {
-                VehicleContract::create([
-                    'vehicle_id'      => $vehicle->id,
-                    'owner_id'        => $ownerId,
-                    'total_amount'    => $data['contract_total_amount'],
-                    'monthly_payment' => $data['contract_monthly_payment'] ?? 0,
-                    'start_date'      => $data['contract_start_date']      ?? now(),
-                    'end_date'        => $data['contract_end_date']         ?? null,
-                    'notes'           => $data['contract_notes']            ?? null,
-                    'status'          => 'active',
-                ]);
-            }
+            VehicleContract::create([
+                'vehicle_id'      => $vehicle->id,
+                'owner_id'        => $ownerId,
+                'total_amount'    => $data['contract_total_amount'] ?? 0,
+                'monthly_payment' => $data['contract_monthly_payment'] ?? 0,
+                'start_date'      => $data['contract_start_date']      ?? now(),
+                'end_date'        => $data['contract_end_date']         ?? null,
+                'notes'           => $data['contract_notes']            ?? null,
+                'status'          => 'active',
+            ]);
+            /* if (!empty($data['contract_total_amount'])) {
+            } */
 
             return $vehicle;
         });

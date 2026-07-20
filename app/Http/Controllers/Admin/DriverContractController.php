@@ -12,7 +12,9 @@ use Illuminate\Http\Request;
 
 class DriverContractController extends Controller
 {
-    public function __construct(private DriverContractService $contractService, private DriverService $driverService) {}
+    public function __construct(
+        private DriverContractService $contractService,
+    ) {}
 
     public function index()
     {
@@ -59,7 +61,7 @@ class DriverContractController extends Controller
 
         // ✅ Mêmes règles métier
         try {
-            $this->driverService->validateVehicleAssignment($vehicle, $driver->id);
+            $this->contractService->validateVehicleAssignment($vehicle, $driver->id);
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
         }
@@ -95,6 +97,48 @@ class DriverContractController extends Controller
         $stats = $this->contractService->getStats($driverContract);
 
         return view('pages.admin.driver-contracts.show', compact('driverContract', 'stats'));
+    }
+
+    public function update(Request $request, DriverContract $driverContract)
+    {
+        $validated = $request->validate([
+            'vehicle_id'      => 'required|exists:vehicles,id',
+            'start_date'      => 'required|date',
+            'contract_months' => 'required|integer|in:24,30,36',
+        ], [
+            'vehicle_id.required'      => 'Le véhicule est obligatoire.',
+            'start_date.required'      => 'La date de début est obligatoire.',
+            'contract_months.required' => 'La durée du contrat est obligatoire.',
+        ]);
+
+        $vehicle = Vehicle::findOrFail($validated['vehicle_id']);
+        $driver  = $driverContract->driver;
+
+        // Valider uniquement si le véhicule a changé
+        // Si c'est le même véhicule → pas besoin de vérifier les conflits
+        $vehicleChanged = $driverContract->vehicle_id !== $vehicle->id;
+
+        if ($vehicleChanged) {
+            try {
+                // On exclut le driver courant pour la règle 1 (véhicule déjà pris)
+                // On exclut le contrat courant pour la règle 2 (comptage des agents)
+                $this->contractService->validateVehicleAssignment(
+                    $vehicle,
+                    $driver->id,
+                    $driverContract->id  // ← exclure le contrat en cours de modification
+                );
+            } catch (\Exception $e) {
+                return back()->with('error', $e->getMessage());
+            }
+        }
+
+        try {
+            $this->contractService->update($driverContract, $validated, $vehicle);
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->back()->with('success', 'Contrat agent mis à jour avec succès.');
     }
 
     // Terminer un contrat agent

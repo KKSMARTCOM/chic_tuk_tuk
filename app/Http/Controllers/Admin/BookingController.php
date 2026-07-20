@@ -236,7 +236,7 @@ class BookingController extends Controller
             $updateData = ['_partial'  => true, 'status' => $validated['status']];
 
             if ($validated['status'] === 'cancelled') {
-                if (in_array($booking->status, ['completed', 'in_progress'])) {
+                if (in_array($booking->status, ['in_progress'])) {
                     throw new \Exception('Impossible d\'annuler la réservation.');
                 }
 
