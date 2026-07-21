@@ -186,10 +186,10 @@
                                     <div class="text-sm text-gray-500">{{ $driver->phone ?? 'N/A' }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">{{ $driver->driver->vehicle_number ?? 'N/A' }}
+                                    <div class="text-sm text-gray-900">{{ $driver->driver?->vehicle_number ?? 'N/A' }}
                                     </div>
                                     <div class="text-sm text-gray-500">
-                                        {{ vehiculeType($driver->driver->vehicle_type) ?? 'N/A' }}</div>
+                                        {{ vehiculeType($driver->driver?->vehicle_type) ?? 'N/A' }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex flex-col space-y-1">
@@ -198,8 +198,8 @@
                                             {{ $driver->is_active ? 'Actif' : 'Inactif' }}
                                         </span>
                                         <span
-                                            class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $driver->driver->is_available ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' }}">
-                                            {{ $driver->driver->is_available ? 'Disponible' : 'Indisponible' }}
+                                            class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $driver->driver?->is_available ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' }}">
+                                            {{ $driver->driver?->is_available ? 'Disponible' : 'Indisponible' }}
                                         </span>
                                     </div>
                                 </td>

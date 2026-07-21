@@ -87,7 +87,7 @@ Route::middleware(['auth:sanctum'])->prefix('admin')->name('admin.')->group(func
     Route::resource('permissions', PermissionController::class)->middleware('permission:view-permissions');
 
     // User Roles Management
-    Route::get('users/generate-password', [UserController::class, 'generatePassword'])->name('users.generate-password')->middleware('permission:create-users');
+    Route::get('users/generate-password', [UserController::class, 'generatePassword'])->name('users.generate-password');
     Route::post('users/{user}/update-password', [UserController::class, 'updatePassword'])->name('users.update-password')->middleware('permission:edit-users');
     Route::post('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status')->middleware('permission:edit-users');
     Route::resource('users', UserController::class)->except(['show', 'create', 'edit'])->middleware('permission:view-users');
