@@ -11,6 +11,7 @@ use App\Models\Zone;
 use App\Services\BookingService;
 use App\Services\PricingService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class BookingController extends Controller
 {
@@ -115,6 +116,7 @@ class BookingController extends Controller
 
             return redirect()->route('admin.bookings.show', $booking)->with('success', 'Réservation créée avec succès');
         } catch (\Exception $e) {
+            Log::error('Erreur lors de la création de la réservation: ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()->withErrors(['error' => 'Une erreur est survenue: ' . $e->getMessage()])->withInput();
         }
     }
@@ -171,6 +173,7 @@ class BookingController extends Controller
 
             return back()->with('success', 'Agent assigné avec succès');
         } catch (\Exception $e) {
+            Log::error('Erreur lors de l\'assignation du Agent: ' . $e->getMessage(), ['exception' => $e]);
             if ($request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => 'Erreur lors de l\'assignation du Agent: ' . $e->getMessage()], 400);
             }
@@ -212,6 +215,7 @@ class BookingController extends Controller
 
             return back()->with('success', 'Agent retiré avec succès');
         } catch (\Exception $e) {
+            Log::error('Erreur lors du retrait du Agent: ' . $e->getMessage(), ['exception' => $e]);
             if (request()->wantsJson()) {
                 return response()->json(['success' => false, 'message' => 'Erreur lors du retrait du Agent: ' . $e->getMessage()], 400);
             }
@@ -254,6 +258,7 @@ class BookingController extends Controller
 
             return back()->with('success', 'Statut mis à jour avec succès');
         } catch (\Exception $e) {
+            Log::error('Erreur lors de la mise à jour du statut: ' . $e->getMessage(), ['exception' => $e]);
             if ($request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => 'Erreur lors de la mise à jour du statut: ' . $e->getMessage()], 400);
             }
@@ -341,6 +346,7 @@ class BookingController extends Controller
 
             return redirect()->route('admin.bookings.show', $booking)->with('success', 'Réservation mise à jour avec succès');
         } catch (\Exception $e) {
+            Log::error('Erreur lors de la mise à jour de la réservation: ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()->withErrors(['error' => 'Une erreur est survenue: ' . $e->getMessage()])->withInput();
         }
     }
@@ -351,6 +357,7 @@ class BookingController extends Controller
             $this->bookingService->delete($bookingId);
             return redirect()->route('admin.bookings.index')->with('success', 'La course a été supprimée avec succès.');
         } catch (\Exception $e) {
+            Log::error('Erreur lors de la suppression de la réservation: ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()->with('error', $e->getMessage());
         }
     }

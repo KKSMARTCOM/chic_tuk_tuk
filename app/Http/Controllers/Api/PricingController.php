@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Services\PricingService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class PricingController extends Controller
 {
@@ -20,6 +21,7 @@ class PricingController extends Controller
         try {
             $distance = $this->pricingService->getDistance($request->fromLng, $request->fromLat, $request->toLng, $request->toLat);
         } catch (\Exception $e) {
+            Log::error('Erreur lors du calcul du prix : ' . $e->getMessage(), ['exception' => $e]);
             return response()->json(['error' => $e->getMessage()], 404);
         }
 

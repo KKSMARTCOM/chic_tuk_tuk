@@ -7,6 +7,7 @@ use App\Models\Vehicle;
 use App\Models\VehicleContract;
 use App\Services\VehicleContractService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class VehicleContractController extends Controller
 {
@@ -112,6 +113,7 @@ class VehicleContractController extends Controller
             return redirect()->route('admin.vehicle-contracts.index')
                 ->with('success', 'Contrat supprimé avec succès.');
         } catch (\Exception $e) {
+            Log::error('Erreur lors de la suppression du contrat véhicule : ' . $e->getMessage(), ['exception' => $e]);
             return back()->with('error', 'Impossible de supprimer ce contrat : ' . $e->getMessage());
         }
     }

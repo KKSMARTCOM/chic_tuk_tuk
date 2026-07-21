@@ -37,24 +37,7 @@ class VehicleService
             $mode = $data['_owner_mode'] ?? 'existing';
 
             // 1. Résoudre le propriétaire
-            if ($mode === 'existing') {
-                $ownerId = $data['owner_id'];
-            } else {
-                $ownerRole = Role::firstOrCreate(
-                    ['name' => 'proprietaire', 'guard_name' => 'web'],
-                    ['label' => 'Propriétaire']
-                );
-                $owner = User::create([
-                    'name'      => $data['new_owner_name'],
-                    'phone'     => $data['new_owner_phone'],
-                    'email'     => $data['new_owner_email'] ?? null,
-                    'password'  => Hash::make($data['new_owner_password']),
-                    'profil'    => 'client',
-                    'is_active' => true,
-                ]);
-                $owner->assignRole($ownerRole);
-                $ownerId = $owner->id;
-            }
+            $ownerId = $this->resolveOwner($mode, $data);
 
             // 2. Créer le véhicule
             $vehicle = Vehicle::create([
@@ -77,8 +60,6 @@ class VehicleService
                 'notes'           => $data['contract_notes']            ?? null,
                 'status'          => 'active',
             ]);
-            /* if (!empty($data['contract_total_amount'])) {
-            } */
 
             return $vehicle;
         });
@@ -87,68 +68,66 @@ class VehicleService
     public function update(Vehicle $vehicle, array $data): Vehicle
     {
         return DB::transaction(function () use ($data, $vehicle) {
+            $mode              = $data['_owner_mode'] ?? 'existing';
+            $hasActiveContract = $data['has_active_contract'] ?? false;
+            $existingContractId = $data['existing_contract_id'] ?? null;
 
             // Résoudre le propriétaire
-            if ($data['_owner_mode'] === 'existing') {
+            if ($mode === 'existing') {
                 $newOwnerId = $data['owner_id'];
 
-                // Si changement de proprio et véhicule a un contrat actif → clôturer
+                // Changement de proprio → clôturer le contrat actif
                 if ($vehicle->owner_id !== $newOwnerId && $vehicle->activeVehicleContract) {
-                    $vehicle->activeVehicleContract->update([
-                        'status'   => 'cancelled',
-                        'end_date' => now()->toDateString(),
-                        'notes'    => ($vehicle->activeVehicleContract->notes ? $vehicle->activeVehicleContract->notes . "\n" : '')
-                            . 'Contrat clôturé — changement de propriétaire.',
-                    ]);
+                    $this->cancelActiveContract($vehicle->activeVehicleContract, 'Changement de propriétaire.');
+                    $hasActiveContract  = false;
+                    $existingContractId = null;
                 }
             } else {
-                $ownerRole = Role::firstOrCreate(
-                    ['name' => 'proprietaire', 'guard_name' => 'web'],
-                    ['label' => 'Propriétaire']
-                );
-                $owner = User::create([
-                    'name'      => $data['new_owner_name'],
-                    'phone'     => $data['new_owner_phone'],
-                    'email'     => $data['new_owner_email'] ?? null,
-                    'password'  => Hash::make($data['new_owner_password']),
-                    'profil'    => 'client',
-                    'is_active' => true,
-                ]);
-                $owner->assignRole($ownerRole);
-                $newOwnerId = $owner->id;
+                $newOwnerId = $this->resolveOwner($mode, $data);
 
-                // Clôturer contrat actif si changement de proprio
+                // Nouveau proprio → toujours clôturer l'éventuel contrat actif
                 if ($vehicle->activeVehicleContract) {
-                    $vehicle->activeVehicleContract->update([
-                        'status'   => 'cancelled',
-                        'end_date' => now()->toDateString(),
-                        'notes'    => ($vehicle->activeVehicleContract->notes ? $vehicle->activeVehicleContract->notes . "\n" : '')
-                            . 'Contrat clôturé — changement de propriétaire.',
-                    ]);
+                    $this->cancelActiveContract($vehicle->activeVehicleContract, 'Changement de propriétaire.');
+                    $hasActiveContract  = false;
+                    $existingContractId = null;
                 }
             }
 
-            // Mettre à jour le véhicule
+            // 2. Mettre à jour le véhicule
             $vehicle->update([
                 'owner_id'       => $newOwnerId,
                 'vehicle_number' => $data['vehicle_number'],
                 'vehicle_type'   => $data['vehicle_type'],
-                'color'          => $data['color'] ?? $vehicle->color,
                 'notes'          => $data['notes'] ?? $vehicle->notes,
             ]);
 
-            // Créer le contrat si montant renseigné et pas de contrat actif
-            if (!$data['has_active_contract'] && !empty($data['contract_total_amount'])) {
-                VehicleContract::create([
-                    'vehicle_id'      => $vehicle->id,
-                    'owner_id'        => $newOwnerId,
-                    'total_amount'    => $data['contract_total_amount'],
-                    'monthly_payment' => $data['contract_monthly_payment'] ?? 0,
-                    'start_date'      => $data['contract_start_date']      ?? now(),
-                    'end_date'        => $data['contract_end_date']         ?? null,
-                    'notes'           => $data['contract_notes']            ?? null,
-                    'status'          => 'active',
-                ]);
+            // 3. Gestion du contrat
+            if (!empty($data['contract_total_amount'])) {
+
+                if ($hasActiveContract && $existingContractId) {
+                    // ── Mettre à jour le contrat existant ──────────────
+                    VehicleContract::where('id', $existingContractId)
+                        ->where('vehicle_id', $vehicle->id) // sécurité
+                        ->update([
+                            'total_amount'    => $data['contract_total_amount'],
+                            'monthly_payment' => $data['contract_monthly_payment'] ?? 0,
+                            'start_date'      => $data['contract_start_date']      ?? now(),
+                            'end_date'        => $data['contract_end_date']         ?? null,
+                            'notes'           => $data['contract_notes']            ?? null,
+                        ]);
+                } else {
+                    // ── Créer un nouveau contrat ────────────────────────
+                    VehicleContract::create([
+                        'vehicle_id'      => $vehicle->id,
+                        'owner_id'        => $newOwnerId,
+                        'total_amount'    => $data['contract_total_amount'],
+                        'monthly_payment' => $data['contract_monthly_payment'] ?? 0,
+                        'start_date'      => $data['contract_start_date']      ?? now(),
+                        'end_date'        => $data['contract_end_date']         ?? null,
+                        'notes'           => $data['contract_notes']            ?? null,
+                        'status'          => 'active',
+                    ]);
+                }
             }
 
             return $vehicle->refresh();
@@ -284,5 +263,41 @@ class VehicleService
                 'pauses' => $vehicle->pauses,
             ];
         });
+    }
+
+    // ── Méthodes privées ──────────────────────────────────────────
+
+    private function resolveOwner(string $mode, array $data): string
+    {
+        if ($mode === 'existing') {
+            return $data['owner_id'];
+        }
+
+        $ownerRole = Role::firstOrCreate(
+            ['name' => 'proprietaire', 'guard_name' => 'web'],
+            ['label' => 'Propriétaire']
+        );
+
+        $owner = User::create([
+            'name'      => $data['new_owner_name'],
+            'phone'     => $data['new_owner_phone'],
+            'email'     => $data['new_owner_email']     ?? null,
+            'password'  => Hash::make($data['new_owner_password']),
+            'profil'    => 'client',
+            'is_active' => true,
+        ]);
+
+        $owner->assignRole($ownerRole);
+
+        return $owner->id;
+    }
+
+    private function cancelActiveContract(VehicleContract $contract, string $reason = ''): void
+    {
+        $contract->update([
+            'status'   => 'cancelled',
+            'end_date' => now()->toDateString(),
+            'notes'    => trim(($contract->notes ? $contract->notes . "\n" : '') . $reason),
+        ]);
     }
 }

@@ -10,6 +10,7 @@ use App\Services\CommissionService;
 use App\Services\DriverService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 
 class DriverController extends Controller
@@ -36,6 +37,7 @@ class DriverController extends Controller
 
             return view('pages.admin.drivers.index', compact('drivers', 'stats'));
         } catch (\Exception $e) {
+            Log::error('Erreur lors de l’affichage des agents : ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()->withInput()->with('error', $e->getMessage());
         }
     }
@@ -114,7 +116,7 @@ class DriverController extends Controller
 
             return redirect()->route('admin.drivers.index')->with('success', 'Agent créé avec succès');
         } catch (\Exception $e) {
-            dd($e->getMessage());
+            Log::error('Erreur lors de la création de l’agent : ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()->withInput()->with('error', $e->getMessage());
         }
     }
@@ -134,6 +136,7 @@ class DriverController extends Controller
 
             return view('pages.admin.drivers.show', compact('driverData', 'bookingStats', 'commissionStats', 'owners'));
         } catch (\Exception $e) {
+            Log::error('Erreur lors de l’affichage du profil agent : ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()->withInput()->with('error', $e->getMessage());
         }
     }
@@ -150,6 +153,7 @@ class DriverController extends Controller
 
             return view('pages.admin.drivers.edit', compact('driver', 'owners'));
         } catch (\Exception $e) {
+            Log::error('Erreur lors de l’affichage du formulaire d’édition de l’agent : ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()->withInput()->with('error', $e->getMessage());
         }
     }
@@ -226,6 +230,7 @@ class DriverController extends Controller
             return redirect()->route('admin.drivers.show', $driver)
                 ->with('success', 'Agent mis à jour avec succès.');
         } catch (\Exception $e) {
+            Log::error('Erreur lors de la mise à jour de l’agent : ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()->withInput()->with('error', $e->getMessage());
         }
     }
@@ -238,6 +243,7 @@ class DriverController extends Controller
             return redirect()->route('admin.drivers.index')
                 ->with('success', 'Agent supprimé avec succès');
         } catch (\Exception $e) {
+            Log::error('Erreur lors de la suppression de l’agent : ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()
                 ->with('error', $e->getMessage());
         }
@@ -316,6 +322,7 @@ class DriverController extends Controller
         try {
             Excel::import($import, $request->file('file'));
         } catch (\Exception $e) {
+            Log::error('Erreur lors de l’import des agents : ' . $e->getMessage(), ['exception' => $e]);
             return back()->with('error', 'Erreur lors de la lecture du fichier : ' . $e->getMessage());
         }
 

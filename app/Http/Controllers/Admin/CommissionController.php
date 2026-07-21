@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Commission;
 use App\Services\CommissionService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class CommissionController extends Controller
 {
@@ -25,6 +26,7 @@ class CommissionController extends Controller
 
             return view('pages.admin.commissions.index', compact('commissions', 'stats'));
         } catch (\Exception $e) {
+            Log::error('Erreur lors de l’affichage des commissions : ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()->with('error', $e->getMessage());
         }
     }
@@ -35,6 +37,7 @@ class CommissionController extends Controller
             $commission->load(['driver.user', 'booking']);
             return view('pages.admin.commissions.show', compact('commission'));
         } catch (\Exception $e) {
+            Log::error('Erreur lors de l’affichage de la commission : ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()->with('error', $e->getMessage());
         }
     }

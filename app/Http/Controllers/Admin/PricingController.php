@@ -7,6 +7,7 @@ use App\Models\Pricing;
 use App\Models\Zone;
 use App\Services\PricingService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class PricingController extends Controller
 {
@@ -90,6 +91,7 @@ class PricingController extends Controller
             return redirect()->route('admin.pricing.index')
                 ->with('success', 'Tarif ajouté avec succès');
         } catch (\Exception $e) {
+            Log::error('Erreur lors de l’ajout du tarif : ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'Une erreur s\'est produite lors de l\'ajout du tarif' . $e->getMessage());
@@ -153,6 +155,7 @@ class PricingController extends Controller
             return redirect()->route('admin.pricing.index')
                 ->with('success', 'Tarif modifié avec succès');
         } catch (\Exception $e) {
+            Log::error('Erreur lors de la modification du tarif : ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'Une erreur s\'est produite lors de la modification du tarif' . $e->getMessage());
@@ -167,6 +170,7 @@ class PricingController extends Controller
             return redirect()->route('admin.pricing.index')
                 ->with('success', 'Tarif supprimé avec succès');
         } catch (\Exception $e) {
+            Log::error('Erreur lors de la suppression du tarif : ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()
                 ->with('error', 'Une erreur s\'est produite lors de la suppression du tarif' . $e->getMessage());
         }

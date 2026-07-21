@@ -8,6 +8,7 @@ use App\Models\PromoCode;
 use App\Services\BookingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class BookingController extends Controller
 {
@@ -24,6 +25,7 @@ class BookingController extends Controller
         try {
             $basePrice = $this->pricingService->getPrice($fromZoneId, $toZoneId);
         } catch (\Exception $e) {
+            Log::error('Erreur lors du calcul du prix de réservation : ' . $e->getMessage(), ['exception' => $e]);
             return response()->json(['error' => $e->getMessage()], 404);
         }
 
@@ -123,6 +125,7 @@ class BookingController extends Controller
 
             return redirect()->back()->with('success', 'Réservation créée avec succès!');
         } catch (\Exception $e) {
+            Log::error('Erreur lors de la création de la réservation : ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()->withErrors(['error' => 'Une erreur est survenue. Veuillez réessayer ! ' . $e->getMessage()])->withInput();
         }
     }
@@ -136,6 +139,7 @@ class BookingController extends Controller
 
             return redirect()->route('driver.bookings.accepting')->with('success', 'Réservation acceptée avec succès!');
         } catch (\Exception $e) {
+            Log::error('Erreur lors de l’acceptation de la réservation : ' . $e->getMessage(), ['exception' => $e]);
             return back()->with('error', 'Une erreur est survenue: ' . $e->getMessage());
         }
     }
@@ -149,6 +153,7 @@ class BookingController extends Controller
 
             return back()->with('success', 'Course commencée avec succès.');
         } catch (\Exception $e) {
+            Log::error('Erreur lors du démarrage de la réservation : ' . $e->getMessage(), ['exception' => $e]);
             return back()->with('error', 'Une erreur est survenue: ' . $e->getMessage());
         }
     }
@@ -162,6 +167,7 @@ class BookingController extends Controller
 
             return back()->with('success', 'Course marquée comme terminée.');
         } catch (\Exception $e) {
+            Log::error('Erreur lors de la finalisation de la réservation : ' . $e->getMessage(), ['exception' => $e]);
             return back()->with('error', 'Une erreur est survenue: ' . $e->getMessage());
         }
     }
@@ -182,6 +188,7 @@ class BookingController extends Controller
                 'Réservation annulée avec succès.'
             );
         } catch (\Exception $e) {
+            Log::error('Erreur lors de l’annulation de la réservation : ' . $e->getMessage(), ['exception' => $e]);
             return back()->with('error', $e->getMessage());
         }
     }
@@ -194,6 +201,7 @@ class BookingController extends Controller
 
             return back()->with('success', 'Course révoquée. Elle est maintenant accessible aux autres agents.');
         } catch (\Exception $e) {
+            Log::error('Erreur lors de la révocation de l’abonnement : ' . $e->getMessage(), ['exception' => $e]);
             return back()->with('error', $e->getMessage());
         }
     }

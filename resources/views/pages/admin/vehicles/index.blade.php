@@ -201,7 +201,7 @@
                 generateOwnerPassword();
             });
 
-            // ── Mode propriétaire ────────────────────────────────────
+            // ── Mode propriétaire ────────────────────────────────────────
             document.querySelectorAll('input[name="_owner_mode"]').forEach(r => {
                 r.addEventListener('change', () => switchOwnerMode(r.value));
             });
@@ -217,15 +217,28 @@
                 const isExisting = mode === 'existing';
 
                 document.getElementById('owner-mode-existing-label').className =
-                    `owner-mode-card cursor-pointer rounded-xl border-2 p-3 flex items-center gap-2 transition ${isExisting ? 'border-[#286b41] bg-[#286b41]/10' : 'border-gray-200 bg-white'}`;
+                    `owner-mode-card cursor-pointer rounded-xl border-2 p-3 flex items-center gap-2 transition
+        ${isExisting ? 'border-[#286b41] bg-[#286b41]/10' : 'border-gray-200 bg-white'}`;
+                document.getElementById('icon-existing').className =
+                    `w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0
+        ${isExisting ? 'bg-[#286b41]' : 'bg-gray-100'}`;
+                document.querySelector('#icon-existing i').className =
+                    `fas fa-search text-xs ${isExisting ? 'text-white' : 'text-gray-400'}`;
+
                 document.getElementById('owner-mode-new-label').className =
-                    `owner-mode-card cursor-pointer rounded-xl border-2 p-3 flex items-center gap-2 transition ${!isExisting ? 'border-purple-600 bg-purple-50' : 'border-gray-200 bg-white'}`;
+                    `owner-mode-card cursor-pointer rounded-xl border-2 p-3 flex items-center gap-2 transition
+        ${!isExisting ? 'border-purple-600 bg-purple-50' : 'border-gray-200 bg-white'}`;
+                document.getElementById('icon-new').className =
+                    `w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0
+        ${!isExisting ? 'bg-purple-600' : 'bg-gray-100'}`;
+                document.querySelector('#icon-new i').className =
+                    `fas fa-plus text-xs ${!isExisting ? 'text-white' : 'text-gray-400'}`;
 
                 document.getElementById('section-owner-existing').classList.toggle('hidden', !isExisting);
                 document.getElementById('section-owner-new').classList.toggle('hidden', isExisting);
             }
 
-            // ── Modal Ajout ──────────────────────────────────────────
+            // ── Ouvrir modal ajout ───────────────────────────────────────
             function openAddModal() {
                 const form = document.getElementById('vehicle-form');
                 document.getElementById('modal-title').textContent = 'Ajouter un véhicule';
@@ -233,29 +246,33 @@
                 document.getElementById('method-field').innerHTML = '';
                 form.reset();
 
-                // reset mode proprio
+                // Reset mode proprio
                 document.querySelector('input[name="_owner_mode"][value="existing"]').checked = true;
                 switchOwnerMode('existing');
-                document.getElementById('existing-contract-info').classList.add('hidden');
-                document.getElementById('contract-section').classList.remove('hidden');
+
+                // Reset section contrat → mode ajout simple
+                document.getElementById('existing-contract-summary').classList.add('hidden');
+                document.getElementById('f_existing_contract_id').value = '';
+                document.getElementById('contract-badge').classList.add('hidden');
 
                 document.getElementById('modal-form').classList.remove('hidden');
                 document.getElementById('modal-form').classList.add('flex');
             }
 
-            // ── Modal Modification ───────────────────────────────────
+            // ── Ouvrir modal modification ────────────────────────────────
+            // vehicle doit contenir : id, vehicle_number, vehicle_type, color, notes,
+            //   owner_id, activeContract (null | {id, total_amount, monthly_payment,
+            //   total_paid, remaining_amount, progress_percentage, start_date, end_date, notes})
             function openEditModal(vehicle) {
                 const form = document.getElementById('vehicle-form');
                 document.getElementById('modal-title').textContent = 'Modifier le véhicule';
                 form.action = `/admin/vehicles/${vehicle.id}`;
-
-                // Ajouter PUT
                 document.getElementById('method-field').innerHTML =
                     '<input type="hidden" name="_method" value="PUT">';
 
-                // Remplir les champs
-                document.getElementById('f_vehicle_number').value = vehicle.vehicle_number;
-                document.getElementById('f_vehicle_type').value = vehicle.vehicle_type;
+                // Champs véhicule
+                document.getElementById('f_vehicle_number').value = vehicle.vehicle_number ?? '';
+                document.getElementById('f_vehicle_type').value = vehicle.vehicle_type ?? 'tricycle';
                 document.getElementById('f_notes').value = vehicle.notes ?? '';
                 document.getElementById('f_owner_id').value = vehicle.owner_id ?? '';
 
@@ -263,23 +280,61 @@
                 document.querySelector('input[name="_owner_mode"][value="existing"]').checked = true;
                 switchOwnerMode('existing');
 
-                // Contrat actif existant → afficher l'info
-                if (vehicle.has_active_contract) {
-                    document.getElementById('existing-contract-info').classList.remove('hidden');
-                    document.getElementById('contract-link').href = `/admin/vehicle-contracts?vehicle=${vehicle.id}`;
-                    // Masquer les champs contrat (déjà actif)
-                    ['f_contract_total', 'f_contract_monthly', 'f_contract_start', 'f_contract_end', 'f_contract_notes']
-                    .forEach(id => {
-                        const el = document.getElementById(id);
-                        if (el) el.disabled = true;
-                    });
+                const badge = document.getElementById('contract-badge');
+
+                console.log(vehicle);
+                if (vehicle.active_vehicle_contract) {
+                    const c = vehicle.active_vehicle_contract;
+
+
+                    // Afficher le résumé du contrat actif
+                    const summary = document.getElementById('existing-contract-summary');
+                    summary.classList.remove('hidden');
+
+                    document.getElementById('ec-total').textContent = formatFcfa(c.total_amount);
+                    document.getElementById('ec-monthly').textContent = formatFcfa(c.monthly_payment);
+                    document.getElementById('ec-paid').textContent = formatFcfa(c.total_paid);
+                    document.getElementById('ec-remaining').textContent = c.surplus > 0 ?
+                        '+' + formatFcfa(c.surplus) + ' surplus' :
+                        formatFcfa(c.remaining_amount);
+
+                    const pct = Math.min(100, c.progress_percentage || 0);
+                    document.getElementById('ec-progress-bar').style.width = pct + '%';
+                    document.getElementById('ec-progress-bar').className =
+                        `h-2 rounded-full ${pct >= 100 ? 'bg-orange-500' : 'bg-emerald-500'}`;
+                    document.getElementById('ec-progress-pct').textContent = pct + '%';
+                    document.getElementById('ec-link').href =
+                        `/admin/vehicle-contracts/${c.id}`;
+
+                    // Pré-remplir le formulaire avec les valeurs du contrat existant
+                    document.getElementById('f_existing_contract_id').value = c.id;
+                    document.getElementById('f_contract_total').value = c.total_amount ?? '';
+                    document.getElementById('f_contract_monthly').value = c.monthly_payment ?? '';
+                    document.getElementById('f_contract_start').value = new Date(c.start_date).toISOString().split('T')[0] ??
+                        '';
+                    document.getElementById('f_contract_end').value = c.end_date ?
+                        new Date(c.end_date).toISOString().split('T')[0] :
+                        '';
+                    document.getElementById('f_contract_notes').value = c.notes ?? '';
+
+                    // Badge
+                    badge.textContent = 'Contrat actif';
+                    badge.className = 'text-xs px-2 py-0.5 rounded-full font-semibold bg-emerald-100 text-emerald-700';
+                    badge.classList.remove('hidden');
+
                 } else {
-                    document.getElementById('existing-contract-info').classList.add('hidden');
-                    ['f_contract_total', 'f_contract_monthly', 'f_contract_start', 'f_contract_end', 'f_contract_notes']
-                    .forEach(id => {
-                        const el = document.getElementById(id);
-                        if (el) el.disabled = false;
-                    });
+                    // Pas de contrat → mode ajout
+                    document.getElementById('existing-contract-summary').classList.add('hidden');
+                    document.getElementById('f_existing_contract_id').value = '';
+                    document.getElementById('f_contract_total').value = '';
+                    document.getElementById('f_contract_monthly').value = '';
+                    document.getElementById('f_contract_start').value = '';
+                    document.getElementById('f_contract_end').value = '';
+                    document.getElementById('f_contract_notes').value = '';
+
+                    badge.textContent = 'Aucun contrat';
+                    badge.className = 'text-xs px-2 py-0.5 rounded-full font-semibold bg-gray-100 text-gray-500';
+                    badge.classList.remove('hidden');
                 }
 
                 document.getElementById('modal-form').classList.remove('hidden');
@@ -289,6 +344,18 @@
             function closeFormModal() {
                 document.getElementById('modal-form').classList.add('hidden');
                 document.getElementById('modal-form').classList.remove('flex');
+            }
+
+            // ── Génération mot de passe propriétaire ─────────────────────
+            async function generateOwnerPassword() {
+                const res = await fetch('{{ route('admin.users.generate-password') }}');
+                const data = await res.json();
+                document.getElementById('new_owner_password').value = data.password;
+            }
+
+            // ── Utilitaire ───────────────────────────────────────────────
+            function formatFcfa(n) {
+                return new Intl.NumberFormat('fr-FR').format(Math.round(n || 0)) + ' FCFA';
             }
 
             // ── Modal Pause ──────────────────────────────────────────

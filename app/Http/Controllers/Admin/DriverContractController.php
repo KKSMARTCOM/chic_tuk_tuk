@@ -9,6 +9,7 @@ use App\Models\Vehicle;
 use App\Services\DriverContractService;
 use App\Services\DriverService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class DriverContractController extends Controller
 {
@@ -63,6 +64,7 @@ class DriverContractController extends Controller
         try {
             $this->contractService->validateVehicleAssignment($vehicle, $driver->id);
         } catch (\Exception $e) {
+            Log::error('Erreur lors de la validation du contrat agent : ' . $e->getMessage(), ['exception' => $e]);
             return back()->with('error', $e->getMessage());
         }
 
@@ -128,6 +130,7 @@ class DriverContractController extends Controller
                     $driverContract->id  // ← exclure le contrat en cours de modification
                 );
             } catch (\Exception $e) {
+                Log::error('Erreur lors de la validation du contrat agent : ' . $e->getMessage(), ['exception' => $e]);
                 return back()->with('error', $e->getMessage());
             }
         }
@@ -135,6 +138,7 @@ class DriverContractController extends Controller
         try {
             $this->contractService->update($driverContract, $validated, $vehicle);
         } catch (\Exception $e) {
+            Log::error('Erreur lors de la mise à jour du contrat agent : ' . $e->getMessage(), ['exception' => $e]);
             return back()->with('error', $e->getMessage());
         }
 
@@ -166,6 +170,7 @@ class DriverContractController extends Controller
             return redirect()->route('admin.driver-contracts.index')
                 ->with('success', 'Contrat supprimé.');
         } catch (\Exception $e) {
+            Log::error('Erreur lors de la suppression du contrat agent : ' . $e->getMessage(), ['exception' => $e]);
             return back()->with('error', $e->getMessage());
         }
     }

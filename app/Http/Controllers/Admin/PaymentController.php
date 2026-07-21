@@ -7,6 +7,7 @@ use App\Models\Driver;
 use App\Models\Payment;
 use App\Services\PaymentService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
@@ -30,6 +31,7 @@ class PaymentController extends Controller
 
             return view('pages.admin.payments.index', compact('payments', 'stats', 'drivers'));
         } catch (\Exception $e) {
+            Log::error('Erreur lors de l’affichage des paiements : ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()->with('error', $e->getMessage());
         }
     }
@@ -44,6 +46,7 @@ class PaymentController extends Controller
 
             return view('pages.admin.payments.create', compact('drivers'));
         } catch (\Exception $e) {
+            Log::error('Erreur lors de l’affichage du formulaire de paiement : ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()->with('error', $e->getMessage());
         }
     }
@@ -82,6 +85,7 @@ class PaymentController extends Controller
             return redirect()->route('admin.payments.index')
                 ->with('success', 'Paiement enregistré avec succès');
         } catch (\Exception $e) {
+            Log::error('Erreur lors de la création du paiement : ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()->with('error', $e->getMessage());
         }
     }
@@ -111,6 +115,7 @@ class PaymentController extends Controller
 
             return view('pages.admin.payments.edit', compact('payment', 'drivers'));
         } catch (\Exception $e) {
+            Log::error('Erreur lors de l’affichage du paiement : ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()->with('error', $e->getMessage());
         }
     }
@@ -135,6 +140,7 @@ class PaymentController extends Controller
             return redirect()->route('admin.payments.show', $payment)
                 ->with('success', 'Paiement mis à jour avec succès');
         } catch (\Exception $e) {
+            Log::error('Erreur lors de la mise à jour du paiement : ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()->with('error', $e->getMessage());
         }
     }
@@ -150,6 +156,7 @@ class PaymentController extends Controller
             return redirect()->route('admin.payments.index')
                 ->with('success', 'Paiement supprimé avec succès');
         } catch (\Exception $e) {
+            Log::error('Erreur lors de la suppression du paiement : ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()->with('error', $e->getMessage());
         }
     }
@@ -168,6 +175,7 @@ class PaymentController extends Controller
 
             return view('pages.admin.payments.driver-details', compact('driverStats', 'payments', 'commissions'));
         } catch (\Exception $e) {
+            Log::error('Erreur lors de l’affichage des détails de paiement : ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()->with('error', $e->getMessage());
         }
     }

@@ -8,6 +8,7 @@ use App\Models\Vehicle;
 use App\Models\VehiclePause;
 use App\Services\VehicleService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class VehicleController extends Controller
 {
@@ -53,24 +54,25 @@ class VehicleController extends Controller
         if ($mode === 'existing') {
             $rules['owner_id'] = 'required|exists:users,id';
         } else {
-            $rules['new_owner_name']  = 'required|string|max:255';
-            $rules['new_owner_phone'] = 'required|string|unique:users,phone';
-            $rules['new_owner_email'] = 'nullable|email|unique:users,email';
-            $rules['new_owner_password']       = ['required', 'string', 'min:8', 'regex:/[A-Z]/', 'regex:/[0-9]/', 'regex:/[@$!%*#?&]/'];
+            $rules['new_owner_name']     = 'required|string|max:255';
+            $rules['new_owner_phone']    = 'required|string|unique:users,phone';
+            $rules['new_owner_email']    = 'nullable|email|unique:users,email';
+            $rules['new_owner_password'] = ['required', 'string', 'min:8', 'regex:/[A-Z]/', 'regex:/[0-9]/', 'regex:/[@$!%*#?&]/'];
         }
 
         $validated = $request->validate($rules, [
-            'vehicle_number.required' => 'Le numéro de véhicule est obligatoire.',
-            'vehicle_number.unique'   => 'Ce numéro de véhicule existe déjà.',
-            'vehicle_type.required'   => 'Le type de véhicule est obligatoire.',
-            'owner_id.required'       => 'Le propriétaire est obligatoire.',
-            'new_owner_name.required' => 'Le nom du propriétaire est obligatoire.',
-            'new_owner_phone.required' => 'Le téléphone du propriétaire est obligatoire.',
-            'new_owner_phone.unique'  => 'Ce numéro est déjà utilisé.',
-            'new_owner_email.unique'  => 'Cet email est déjà utilisé.',
-            'new_owner_password.required' => 'Le mot de passe est obligatoire.',
-            'new_owner_password.min' => 'Le mot de passe doit contenir au moins 8 caractères.',
-            'new_owner_password.regex' => 'Le mot de passe doit contenir au moins une lettre majuscule, un chiffre et un caractère spécial.',
+            'vehicle_number.required'      => 'Le numéro de véhicule est obligatoire.',
+            'vehicle_number.unique'        => 'Ce numéro de véhicule existe déjà.',
+            'vehicle_type.required'        => 'Le type de véhicule est obligatoire.',
+            'owner_id.required'            => 'Le propriétaire est obligatoire.',
+            'new_owner_name.required'      => 'Le nom du propriétaire est obligatoire.',
+            'new_owner_phone.required'     => 'Le téléphone du propriétaire est obligatoire.',
+            'new_owner_phone.unique'       => 'Ce numéro est déjà utilisé.',
+            'new_owner_email.unique'       => 'Cet email est déjà utilisé.',
+            'new_owner_password.required'  => 'Le mot de passe est obligatoire.',
+            'new_owner_password.min'       => 'Le mot de passe doit contenir au moins 8 caractères.',
+            'new_owner_password.regex'     => 'Le mot de passe doit contenir une majuscule, un chiffre et un caractère spécial.',
+            'contract_end_date.after'      => 'La date de fin doit être après la date de début.',
         ]);
 
         try {
@@ -84,6 +86,7 @@ class VehicleController extends Controller
 
             return redirect()->route('admin.vehicles.index')->with('success', 'Véhicule créé avec succès.');
         } catch (\Exception $e) {
+            Log::error('Erreur lors de la création du véhicule: ' . $e->getMessage(), ['exception' => $e]);
             if ($request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
             }
@@ -93,14 +96,6 @@ class VehicleController extends Controller
 
     public function show(Vehicle $vehicle)
     {
-        /* $vehicle->load([
-            'owner',
-            'activeVehicleContract',
-            'activeDriverContract.driver.user',
-            'driverContracts.driver.user',
-            'pauses.driverContract.driver.user',
-            'activePause',
-        ]); */
         $vehicle->load([
             'owner',
             'activeVehicleContract.payments',
@@ -128,51 +123,56 @@ class VehicleController extends Controller
 
     public function update(Request $request, Vehicle $vehicle)
     {
-        $mode = $request->input('_owner_mode', 'existing');
-        $hasActiveContract = $vehicle->activeVehicleContract !== null;
+        $mode              = $request->input('_owner_mode', 'existing');
+        $activeContract    = $vehicle->activeVehicleContract;
+        $hasActiveContract = $activeContract !== null;
+        $existingContractId = $request->input('existing_contract_id'); // envoyé par le modal
 
         $rules = [
             'vehicle_number' => 'required|string|unique:vehicles,vehicle_number,' . $vehicle->id,
             'vehicle_type'   => 'required|in:moto,tricycle,car',
-            'color'          => 'nullable|string|max:100',
             'notes'          => 'nullable|string|max:500',
+            // Champs contrat toujours acceptés (création OU mise à jour)
+            'contract_total_amount'    => 'nullable|numeric|min:1',
+            'contract_monthly_payment' => 'nullable|numeric|min:0',
+            'contract_start_date'      => 'nullable|date',
+            'contract_end_date'        => 'nullable|date|after:contract_start_date',
+            'contract_notes'           => 'nullable|string|max:1000',
+            'existing_contract_id'     => 'nullable|exists:vehicle_contracts,id',
         ];
 
         if ($mode === 'existing') {
             $rules['owner_id'] = 'required|exists:users,id';
         } else {
-            $rules['new_owner_name']  = 'required|string|max:255';
-            $rules['new_owner_phone'] = 'required|string|unique:users,phone';
-            $rules['new_owner_email'] = 'nullable|email|unique:users,email';
+            $rules['new_owner_name']     = 'required|string|max:255';
+            $rules['new_owner_phone']    = 'required|string|unique:users,phone';
+            $rules['new_owner_email']    = 'nullable|email|unique:users,email';
             $rules['new_owner_password'] = ['required', 'string', 'min:8', 'regex:/[A-Z]/', 'regex:/[0-9]/', 'regex:/[@$!%*#?&]/'];
         }
 
-        // Contrat uniquement si pas de contrat actif existant
-        if (!$hasActiveContract) {
-            $rules['contract_total_amount']    = 'nullable|numeric|min:1';
-            $rules['contract_monthly_payment'] = 'nullable|numeric|min:0';
-            $rules['contract_start_date']      = 'nullable|date';
-            $rules['contract_end_date']        = 'nullable|date|after:contract_start_date';
-            $rules['contract_notes']           = 'nullable|string|max:1000';
-        }
-
         $validated = $request->validate($rules, [
-            'vehicle_number.unique'   => 'Ce numéro de véhicule existe déjà.',
-            'owner_id.required'       => 'Le propriétaire est obligatoire.',
-            'new_owner_name.required' => 'Le nom du propriétaire est obligatoire.',
-            'new_owner_phone.unique'  => 'Ce numéro est déjà utilisé.',
-            'new_owner_password.required' => 'Le mot de passe est obligatoire.',
-            'new_owner_password.min' => 'Le mot de passe doit contenir au moins 8 caractères.',
-            'new_owner_password.regex' => 'Le mot de passe doit contenir au moins une lettre majuscule, un chiffre et un caractère spécial.',
+            'vehicle_number.unique'        => 'Ce numéro de véhicule existe déjà.',
+            'owner_id.required'            => 'Le propriétaire est obligatoire.',
+            'new_owner_name.required'      => 'Le nom du propriétaire est obligatoire.',
+            'new_owner_phone.unique'       => 'Ce numéro est déjà utilisé.',
+            'new_owner_password.required'  => 'Le mot de passe est obligatoire.',
+            'new_owner_password.min'       => 'Minimum 8 caractères.',
+            'new_owner_password.regex'     => 'Le mot de passe doit contenir une majuscule, un chiffre et un caractère spécial.',
+            'contract_end_date.after'      => 'La date de fin doit être après la date de début.',
         ]);
 
         try {
-            $data = array_merge($validated, ['_owner_mode' => $mode, 'has_active_contract' => $hasActiveContract]);
+            $data = array_merge($validated, [
+                '_owner_mode' => $mode,
+                'has_active_contract' => $hasActiveContract,
+                'existing_contract_id' => $existingContractId,
+            ]);
 
             $this->vehicleService->update($vehicle, $data);
 
             return redirect()->route('admin.vehicles.show', $vehicle)->with('success', 'Véhicule mis à jour avec succès.');
         } catch (\Exception $e) {
+            Log::error('Erreur lors de la mise à jour du véhicule: ' . $e->getMessage(), ['exception' => $e]);
             return back()->withInput()->with('error', $e->getMessage());
         }
     }
@@ -188,6 +188,7 @@ class VehicleController extends Controller
 
             return redirect()->route('admin.vehicles.index')->with('success', 'Véhicule supprimé avec succès.');
         } catch (\Exception $e) {
+            Log::error('Erreur lors de la suppression du véhicule: ' . $e->getMessage(), ['exception' => $e]);
             return back()->with('error', 'Impossible de supprimer ce véhicule : ' . $e->getMessage());
         }
     }
@@ -218,6 +219,7 @@ class VehicleController extends Controller
 
             return redirect()->route('admin.vehicles.index')->with('success', 'Pause véhicule enregistrée avec succès.');
         } catch (\Exception $e) {
+            Log::error('Erreur lors de l\'ajout de la pause: ' . $e->getMessage(), ['exception' => $e]);
             return back()->withInput()->with('error', 'Erreur lors de l\'ajout de la pause : ' . $e->getMessage());
         }
     }
@@ -238,6 +240,7 @@ class VehicleController extends Controller
 
             return back()->with('success', 'Pause terminée avec succès.');
         } catch (\Exception $e) {
+            Log::error('Erreur lors de la fin de la pause: ' . $e->getMessage(), ['exception' => $e]);
             return back()->withInput()->with('error', 'Erreur lors de la fin de la pause : ' . $e->getMessage());
         }
     }
@@ -248,6 +251,7 @@ class VehicleController extends Controller
             $vehiclePause->delete();
             return back()->with('success', 'Pause supprimée avec succès.');
         } catch (\Exception $e) {
+            Log::error('Erreur lors de la suppression de la pause: ' . $e->getMessage(), ['exception' => $e]);
             return back()->with('error', 'Erreur lors de la suppression de la pause : ' . $e->getMessage());
         }
     }
@@ -258,6 +262,7 @@ class VehicleController extends Controller
             $this->vehicleService->toggleStatus($vehicle);
             return back()->with('success', 'Statut du véhicule mis à jour avec succès.');
         } catch (\Exception $e) {
+            Log::error('Erreur lors de la mise à jour du statut: ' . $e->getMessage(), ['exception' => $e]);
             return back()->with('error', 'Erreur lors de la mise à jour du statut : ' . $e->getMessage());
         }
     }

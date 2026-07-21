@@ -7,6 +7,7 @@ use App\Models\Permission;
 use App\Models\User;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class RoleController extends Controller
@@ -51,6 +52,7 @@ class RoleController extends Controller
 
             return redirect()->route('admin.roles.index')->with('success', "Rôle créé avec succès !");
         } catch (\Exception $e) {
+            Log::error('Erreur lors de la création du rôle : ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()->with('error', $e->getMessage());
         }
     }

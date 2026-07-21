@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\TouristCircuit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class TouristCircuitController extends Controller
@@ -85,6 +86,7 @@ class TouristCircuitController extends Controller
             return redirect()->route('admin.circuits.index')
                 ->with('success', 'Circuit touristique créé avec succès');
         } catch (\Exception $e) {
+            Log::error('Erreur lors de la création du circuit touristique : ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'Une erreur s\'est produite lors de la création du circuit');
@@ -148,6 +150,7 @@ class TouristCircuitController extends Controller
             return redirect()->route('admin.circuits.index')
                 ->with('success', 'Circuit touristique modifié avec succès');
         } catch (\Exception $e) {
+            Log::error('Erreur lors de la modification du circuit touristique : ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'Une erreur s\'est produite lors de la modification du circuit');
@@ -167,6 +170,7 @@ class TouristCircuitController extends Controller
             return redirect()->route('admin.circuits.index')
                 ->with('success', 'Circuit touristique supprimé avec succès');
         } catch (\Exception $e) {
+            Log::error('Erreur lors de la suppression du circuit touristique : ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()
                 ->with('error', 'Une erreur s\'est produite lors de la suppression du circuit');
         }
