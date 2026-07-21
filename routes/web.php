@@ -20,7 +20,7 @@ Route::middleware('guest')->group(function () {
     Route::post('/login-store', [AuthController::class, 'loginStore'])->name('login.store');
 });
 
-Route::middleware(['auth:sanctum', 'role:admin,driver,client'])->group(function () {
+Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/bookings/histories', [PageController::class, 'historiesBookings'])->name('bookings.histories');
 
