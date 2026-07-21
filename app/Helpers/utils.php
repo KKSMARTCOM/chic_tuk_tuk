@@ -73,7 +73,7 @@ if (!function_exists('bookingStatusLabel')) {
 }
 
 if (!function_exists('vehiculeType')) {
-    function vehiculeType(string $type): string
+    function vehiculeType(?string $type): string
     {
         return match ($type) {
             'tricycle'     => 'Tricycle',
