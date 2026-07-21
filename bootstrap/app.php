@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'guest'         => \App\Http\Middleware\RedirectIfAuthenticated::class,
             'role'          => \App\Http\Middleware\CheckRole::class,
             'permission'    => \App\Http\Middleware\CheckPermission::class,
+            'profil'        => \App\Http\Middleware\CheckProfil::class,
         ]);
     })
     ->withSchedule(function ($schedule) {

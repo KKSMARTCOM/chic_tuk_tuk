@@ -20,7 +20,7 @@ use App\Http\Controllers\Admin\VehiclePauseController;
 use App\Http\Controllers\Web\DashboardController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth:sanctum'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth:sanctum', 'profil:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard',                            [DashboardController::class, 'admin'])->name('dashboard')->middleware('permission:view-dashboard');
 
     // Drivers
