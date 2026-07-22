@@ -292,16 +292,16 @@
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700">Durée du contrat</label>
-                                        <select name="contract_months"
+                                        <select name="existing_contract_months"
                                             class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500">
-                                            <option value="24" selected>24 mois</option>
+                                            <option value="24">24 mois</option>
                                             <option value="30">30 mois</option>
                                             <option value="36">36 mois</option>
                                         </select>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700">Date de début</label>
-                                        <input type="date" name="start_date" value="{{ date('Y-m-d') }}"
+                                        <input type="date" name="existing_start_date" value="{{ date('Y-m-d') }}"
                                             class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500">
                                     </div>
                                 </div>
@@ -379,16 +379,16 @@
                         <div class="grid grid-cols-2 gap-4 border-t border-gray-100 pt-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Durée du contrat agent</label>
-                                <select name="contract_months"
+                                <select name="new_contract_months"
                                     class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500">
-                                    <option value="24" selected>24 mois</option>
+                                    <option value="24">24 mois</option>
                                     <option value="30">30 mois</option>
                                     <option value="36">36 mois</option>
                                 </select>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Date de début</label>
-                                <input type="date" name="start_date" value="{{ date('Y-m-d') }}"
+                                <input type="date" name="new_start_date" value="{{ date('Y-m-d') }}"
                                     class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500">
                             </div>
                         </div>

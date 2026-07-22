@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleContract;
 use App\Models\VehiclePause;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
@@ -187,25 +188,42 @@ class VehicleService
     {
         return DB::transaction(function () use ($vehicleId, $driverContractId, $dates) {
             $vehicle = Vehicle::findOrFail($vehicleId);
+            $startDate = Carbon::parse(min($dates))->startOfDay();
+            $endDate   = Carbon::parse(max($dates))->startOfDay();
+            $today     = Carbon::today();
 
-            // Clôturer la pause active si existante
-            if ($vehicle->activePause) {
-                $vehicle->activePause->update(['end_date' => $dates['start_date']]);
+            // Déterminer si la pause est passée, présente ou future
+            $isPast    = $endDate->lt($today);
+            $isCurrent = $startDate->lte($today) && $endDate->gte($today);
+            // $isFuture  = $startDate->gt($today);  // implicite
+
+            // ── Clôturer la pause active éventuelle ──────────────
+            // Uniquement si la nouvelle pause commence aujourd'hui ou dans le futur
+            if (!$isPast && $vehicle->activePause) {
+                $vehicle->activePause->update(['end_date' => $startDate->toDateString()]);
             }
 
-            // Créer une nouvelle pause automatique
+            // ── Créer la pause véhicule ───────────────────────────
             $pause = VehiclePause::create([
                 'vehicle_id'          => $vehicle->id,
                 'vehicle_contract_id' => $vehicle->activeVehicleContract?->id,
                 'driver_contract_id'  => $driverContractId,
-                'start_date'          => $dates['start_date'],
-                'end_date'            => $dates['end_date'] ?? null,
+                'start_date'          => $startDate->toDateString(),
+                'end_date'            => $endDate->toDateString(), // toujours renseigné car on connaît les dates
                 'reason_type'         => 'agent_leave',
-                'reason_notes'        => 'Pause automatique suite à un congé agent.',
+                'reason_notes'        => 'Pause automatique suite à une pause agent — '
+                    . ($isPast ? 'passé' : ($isCurrent ? 'en cours' : 'futur'))
+                    . '.',
                 'is_auto'             => true,
             ]);
 
-            $vehicle->update(['is_active' => false]);
+            // ── Désactiver le véhicule uniquement si la pause est en cours ──
+            // Passée → le véhicule n'est plus en pause, rien à changer
+            // Présente → désactiver
+            // Future → on ne touche pas à is_active maintenant (sera géré par un job ou à la date)
+            if ($isCurrent) {
+                $vehicle->update(['is_active' => false]);
+            }
 
             return $pause;
         });

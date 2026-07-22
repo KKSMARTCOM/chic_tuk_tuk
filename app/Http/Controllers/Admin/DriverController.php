@@ -90,6 +90,8 @@ class DriverController extends Controller
 
         $messages = [
             'name.required'           => 'Le nom est requis.',
+            'email.required'          => 'L\'email est requis.',
+            'email.unique'            => 'Cet email est déjà utilisé.',
             'phone.required'          => 'Le téléphone est requis.',
             'phone.unique'            => 'Ce numéro de téléphone est déjà utilisé.',
             'password.min'            => 'Le mot de passe doit contenir au moins 8 caractères.',
@@ -181,8 +183,8 @@ class DriverController extends Controller
             if ($mode === 'existing') {
                 $rules['owner_id']        = 'required|exists:users,id';
                 $rules['vehicle_id']      = 'required|exists:vehicles,id';
-                $rules['contract_months'] = 'required|integer|in:24,30,36';
-                $rules['start_date']      = 'required|date';
+                $rules['existing_contract_months'] = 'required|integer|in:24,30,36';
+                $rules['existing_start_date']      = 'required|date';
             } else {
                 $rules['new_owner_name']           = 'required|string|max:255';
                 $rules['new_owner_phone']          = 'required|string|unique:users,phone';
@@ -190,8 +192,8 @@ class DriverController extends Controller
                 $rules['new_owner_password']       = ['required', 'string', 'min:8', 'regex:/[A-Z]/', 'regex:/[0-9]/', 'regex:/[@$!%*#?&]/'];
                 $rules['new_vehicle_number']       = 'required|string|unique:vehicles,vehicle_number';
                 $rules['new_vehicle_type']         = 'required|in:moto,tricycle,car';
-                $rules['contract_months']          = 'required|integer|in:24,30,36';
-                $rules['start_date']               = 'required|date';
+                $rules['new_contract_months']      = 'required|integer|in:24,30,36';
+                $rules['new_start_date']               = 'required|date';
                 $rules['contract_total_amount']    = 'nullable|numeric|min:1';
                 $rules['contract_monthly_payment'] = 'nullable|numeric|min:0';
                 $rules['contract_start_date']      = 'nullable|date';
@@ -205,8 +207,10 @@ class DriverController extends Controller
             'license_number.required'    => 'La catégorie de permis est requise.',
             'owner_id.required'          => 'Le propriétaire est requis.',
             'vehicle_id.required'        => 'Le véhicule est requis.',
-            'contract_months.required'   => 'La durée du contrat est requise.',
-            'start_date.required'        => 'La date de début est requise.',
+            'existing_contract_months.required'   => 'La durée du contrat est requise.',
+            'new_contract_months.required'      => 'La durée du contrat est requise.',
+            'existing_start_date.required'        => 'La date de début est requise.',
+            'new_start_date.required'               => 'La date de début est requise.',
             'new_owner_name.required'    => 'Le nom du propriétaire est requis.',
             'new_owner_phone.required'   => 'Le téléphone du propriétaire est requis.',
             'new_owner_phone.unique'     => 'Ce numéro est déjà utilisé.',
@@ -227,8 +231,7 @@ class DriverController extends Controller
 
             $this->driverService->updateDriver($driver->id, $data);
 
-            return redirect()->route('admin.drivers.show', $driver)
-                ->with('success', 'Agent mis à jour avec succès.');
+            return redirect()->route('admin.drivers.show', $driver)->with('success', 'Agent mis à jour avec succès.');
         } catch (\Exception $e) {
             Log::error('Erreur lors de la mise à jour de l’agent : ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()->withInput()->with('error', $e->getMessage());
@@ -240,12 +243,10 @@ class DriverController extends Controller
         try {
             $this->driverService->deleteDriver($driver->id);
 
-            return redirect()->route('admin.drivers.index')
-                ->with('success', 'Agent supprimé avec succès');
+            return redirect()->route('admin.drivers.index')->with('success', 'Agent supprimé avec succès');
         } catch (\Exception $e) {
             Log::error('Erreur lors de la suppression de l’agent : ' . $e->getMessage(), ['exception' => $e]);
-            return redirect()->back()
-                ->with('error', $e->getMessage());
+            return redirect()->back()->with('error', $e->getMessage());
         }
     }
 

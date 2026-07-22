@@ -48,7 +48,7 @@ class LeaveController extends Controller
             return [
                 'id' => $user->id,
                 'name' => $user->name,
-                'contract_type' => $driver->contract_type,
+                'contract_type' => $driver->activeDriverContract->contract_months ?? null,
                 'leave_days_per_month' => $driver->getLeaveDaysPerMonth(),
                 'total_leave_days' => $driver->getTotalLeaveDays(),
                 'leave_days_used' => $driver->leave_days_used ?? 0,
@@ -106,8 +106,8 @@ class LeaveController extends Controller
             'available_leave_days' => $driverModel->getAvailableLeaveDays(),
             'remaining_leave_days' => $driverModel->getRemainingLeaveDays(),
             'leave_dates' => $driverModel->leave_dates ?? [],
-            'contract_start' => $driverModel->start_date,
-            'contract_months' => $driverModel->contract_type,
+            'contract_start' => $driverModel->activeDriverContract->start_date ?? null,
+            'contract_months' => $driverModel->activeDriverContract->contract_months ?? null,
         ];
 
         // Get pending and approved requests for this month
@@ -214,15 +214,15 @@ class LeaveController extends Controller
 
         $request->validate([
             'dates' => 'required|array|min:1',
-            'dates.*' => 'required|date|after_or_equal:today',
+            'dates.*' => 'required|date',
         ], [
             'dates.required' => 'Veuillez sélectionner au moins une date de Pause.',
             'dates.array' => 'Les dates de Pause doivent être un tableau.',
             'dates.min' => 'Veuillez sélectionner au moins une date de Pause.',
             'dates.*.date' => 'Les dates de Pause doivent être des dates valides.',
-            'dates.*.after_or_equal' => 'Les dates de Pause ne peuvent pas être dans le passé.',
         ]);
 
+        // Dédupliquer et trier
         $dates = collect($request->input('dates', []))
             ->filter()
             ->unique()
@@ -230,73 +230,77 @@ class LeaveController extends Controller
             ->values()
             ->all();
 
-        if (count($dates) !== count($request->input('dates', []))) {
-            return redirect()->back()->with('error', 'Les dates de Pause doivent être uniques.');
+        if (empty($dates)) {
+            return redirect()->back()->with('error', 'Veuillez sélectionner au moins une date.');
         }
 
-        $days = count($dates);
+        //$days = count($dates);
 
         // Check if all dates are in current month
-        $currentMonth = now()->month;
+        /* $currentMonth = now()->month;
         $currentYear = now()->year;
         foreach ($dates as $date) {
             $dateObj = Carbon::parse($date);
             if ($dateObj->month != $currentMonth || $dateObj->year != $currentYear) {
                 return redirect()->back()->with('error', 'Les dates de Pause doivent être dans le mois courant.');
             }
-        }
+        } */
 
-        sort($dates);
-
-        // Check if the selected dates are sequential
+        // Vérifier la consécutivité
         for ($i = 1; $i < count($dates); $i++) {
-            $previous = Carbon::parse($dates[$i - 1])->startOfDay();
-            $current = Carbon::parse($dates[$i])->startOfDay();
-            if (!$previous->copy()->addDay()->equalTo($current)) {
+            $prev = Carbon::parse($dates[$i - 1])->startOfDay();
+            $curr = Carbon::parse($dates[$i])->startOfDay();
+            if (!$prev->copy()->addDay()->equalTo($curr)) {
                 return redirect()->back()->with('error', 'Les jours doivent être consécutifs.');
             }
         }
 
-        if (!$driver->canRequestLeaveNow($days)) {
+        /* if (!$driver->canRequestLeaveNow($days)) {
             return redirect()->back()->with('error', 'L\'agent n\'a pas assez de jours de pause disponibles à date.');
-        }
+        } */
 
         // Check for existing approved or pending leaves
-        $existingDates = [];
-        $existingDates = array_merge($existingDates, $driver->leave_dates ?? []);
-        $pendingRequests = $driver->getPendingLeaveRequestsForCurrentMonth();
-        foreach ($pendingRequests as $req) {
-            $existingDates = array_merge($existingDates, $req->dates);
-        }
+        // Vérifier les doublons avec les dates déjà approuvées ou en attente
+        $existingDates = array_merge(
+            $driver->leave_dates ?? [],
+            ...($driver->getPendingLeaveRequestsForCurrentMonth()->pluck('dates')->toArray() ?: [[]])
+        );
 
         foreach ($dates as $date) {
             if (in_array($date, $existingDates)) {
-                return redirect()->back()->with('error', 'Cette date est déjà prise ou en attente.');
+                return redirect()->back()->with('error', "La date {$date} est déjà utilisée ou en attente.");
             }
         }
 
-        // Add the leave immediately and create an approved record
-        $driver->addLeaveDates($dates);
-
-        LeaveRequest::create([
-            'driver_id' => $driver->id,
-            'driver_contract_id'  => $driver->activeDriverContract?->id,
-            'dates' => $dates,
-            'status' => 'approved',
-        ]);
-
         $activeContract = $driver->activeDriverContract;
-        if ($activeContract) {
-            $this->vehicleService->createAutoAgentPause(
-                $activeContract->vehicle_id,
-                $activeContract->id,
-                $dates
-            );
+
+        if (!$activeContract) {
+            return redirect()->back()->with('error', 'Aucun contrat actif pour cet agent.');
         }
 
-        session()->flash('success', 'Pause instantanée ajoutée avec succès.');
+        // Ajouter les dates au profil du driver
+        $driver->addLeaveDates($dates);
 
-        return redirect()->away('https://docs.google.com/forms/d/e/1FAIpQLScDV8HvM0P8JaChAVhqoohp0gioFuW0OFMZRcVyMZRO2B-KbQ/viewform?pli=1&pli=1');
+        // Créer la demande de pause approuvée
+        LeaveRequest::create([
+            'driver_id'          => $driver->id,
+            'driver_contract_id' => $activeContract->id,
+            'dates'              => $dates,
+            'status'             => 'approved',
+        ]);
+
+        // Créer la pause véhicule (gestion passé/présent/futur dans le service)
+        $this->vehicleService->createAutoAgentPause(
+            $activeContract->vehicle_id,
+            $activeContract->id,
+            $dates
+        );
+
+        return redirect()->back()->with('success', 'Pause instantanée ajoutée avec succès.');
+
+        //session()->flash('success', 'Pause instantanée ajoutée avec succès.');
+
+        //return redirect()->away('https://docs.google.com/forms/d/e/1FAIpQLScDV8HvM0P8JaChAVhqoohp0gioFuW0OFMZRcVyMZRO2B-KbQ/viewform?pli=1&pli=1');
     }
 
     /**

@@ -83,12 +83,11 @@
                     <!-- Date Selection -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-3">
-                            Sélectionnez les dates (mois courant)
+                            Sélectionnez les dates
                         </label>
                         <div class="mb-4">
                             <input type="date" id="adminLeaveDate"
                                 class="border border-gray-300 rounded-lg px-4 py-2 w-full"
-                                min="{{ now()->toDateString() }}" max="{{ now()->endOfMonth()->toDateString() }}"
                                 title="Les dates doivent être dans le mois courant">
                             <button type="button" onclick="adminAddDate()"
                                 class="mt-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 w-full font-medium">
@@ -199,10 +198,13 @@
                     @foreach ($leaveInfo['leave_dates'] as $date)
                         <div class="bg-red-50 p-4 rounded-lg flex justify-between items-center border border-red-200">
                             <span class="text-red-800 font-medium">{{ formatDateFr($date) }}</span>
-                            <button type="button" class="text-red-600 hover:text-red-800 text-sm font-medium"
-                                onclick="openRevokeModal('{{ $date }}', '{{ route('admin.leaves.revoke', $driver) }}')">
-                                Révoquer
-                            </button>
+
+                            @hasrole('admin')
+                                <button type="button" class="text-red-600 hover:text-red-800 text-sm font-medium"
+                                    onclick="openRevokeModal('{{ $date }}', '{{ route('admin.leaves.revoke', $driver) }}')">
+                                    Révoquer
+                                </button>
+                            @endrole
                         </div>
                     @endforeach
                 </div>
@@ -348,10 +350,10 @@
                     return;
                 }
 
-                if (adminSelectedDates.length >= adminMaxDays) {
+                /* if (adminSelectedDates.length >= adminMaxDays) {
                     adminSetError(`Vous ne pouvez ajouter que ${adminMaxDays} jour(s) maximum.`);
                     return;
-                }
+                } */
 
                 adminSelectedDates.push(date);
                 adminSelectedDates.sort();

@@ -297,8 +297,8 @@ class DriverService
                     'driver_id'           => $user->driver->id,
                     'vehicle_id'          => $vehicle->id,
                     'vehicle_contract_id' => $vehicle->activeVehicleContract?->id,
-                    'start_date'          => $data['start_date'],
-                    'contract_months'     => $data['contract_months'],
+                    'start_date'          => $mode === 'existing' ? $data['existing_start_date'] : $data['new_start_date'],
+                    'contract_months'     => $mode === 'existing' ? $data['existing_contract_months'] : $data['new_contract_months'],
                     'status'              => 'active',
                 ]);
             }

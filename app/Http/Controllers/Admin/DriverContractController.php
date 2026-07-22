@@ -159,16 +159,14 @@ class DriverContractController extends Controller
 
         $this->contractService->end($driverContract, $validated);
 
-        return redirect()->route('admin.driver-contracts.show', $driverContract)
-            ->with('success', 'Contrat agent terminé. Une pause véhicule a été créée automatiquement.');
+        return redirect()->back()->with('success', 'Contrat agent terminé. Une pause véhicule a été créée automatiquement.');
     }
 
     public function destroy(DriverContract $driverContract)
     {
         try {
             $driverContract->delete();
-            return redirect()->route('admin.driver-contracts.index')
-                ->with('success', 'Contrat supprimé.');
+            return redirect()->back()->with('success', 'Contrat supprimé.');
         } catch (\Exception $e) {
             Log::error('Erreur lors de la suppression du contrat agent : ' . $e->getMessage(), ['exception' => $e]);
             return back()->with('error', $e->getMessage());

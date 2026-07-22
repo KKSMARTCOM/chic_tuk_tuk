@@ -166,7 +166,7 @@
                         </div>
 
                         {{-- Pauses --}}
-                        @php
+                        {{-- @php
                             $usedLeave = $activeContract->used_leave_days;
                             $accruedLeave = $activeContract->accrued_leave_days;
                             $surplus = max(0, $usedLeave - $accruedLeave);
@@ -186,7 +186,7 @@
                                 </div>
                                 <div class="text-xs text-gray-500">Solde pauses</div>
                             </div>
-                        </div>
+                        </div> --}}
 
                         @if (!$contractEditable)
                             <div

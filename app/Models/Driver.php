@@ -99,7 +99,7 @@ class Driver extends Model
 
     public function getContractMonths(): int
     {
-        return (int) ($this->contract_type ?? 24); // default 24 months
+        return (int) ($this->activeDriverContract->contract_months ?? 24); // default 24 months
     }
 
     public function getLeaveRequestsByStatus(string $status): int
@@ -124,11 +124,11 @@ class Driver extends Model
 
     public function getContractMonthsElapsed(): int
     {
-        if (!$this->start_date) {
+        if (!$this->activeDriverContract?->start_date) {
             return 0;
         }
 
-        $start = Carbon::parse($this->start_date)->startOfDay();
+        $start = Carbon::parse($this->activeDriverContract?->start_date)->startOfDay();
         $now = now()->startOfDay();
 
         if ($now->lt($start)) {
