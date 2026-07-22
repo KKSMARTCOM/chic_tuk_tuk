@@ -199,8 +199,8 @@
                                             {{ $driver->is_active ? 'Actif' : 'Inactif' }}
                                         </span>
                                         <span
-                                            class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $driver->driver->is_available ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' }}">
-                                            {{ $driver->driver->is_available ? 'Disponible' : 'Indisponible' }}
+                                            class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $driver->driver?->is_available ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' }}">
+                                            {{ $driver->driver?->is_available ? 'Disponible' : 'Indisponible' }}
                                         </span>
                                     </div>
                                 </td>
