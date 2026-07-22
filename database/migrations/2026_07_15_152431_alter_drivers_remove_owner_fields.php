@@ -12,14 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('drivers', function (Blueprint $table) {
-            $table->dropColumn([
-                'tricycle_owner',
-                'owner_phone',
-                'contract_type',
-                'start_date',
-                'vehicle_number',
-                'vehicle_type',
-            ]);
+            $table->string('tricycle_owner')->nullable()->change();
+            $table->string('owner_phone')->nullable()->change();
+            $table->string('contract_type')->nullable()->change();
+            $table->date('start_date')->nullable()->change();
+            $table->string('vehicle_number')->nullable()->change();
+            $table->string('vehicle_type')->nullable()->change();
         });
     }
 
@@ -29,12 +27,12 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('drivers', function (Blueprint $table) {
-            $table->string('tricycle_owner')->nullable();
-            $table->string('owner_phone')->nullable();
-            $table->string('contract_type')->nullable();
-            $table->date('start_date')->nullable();
-            $table->string('vehicle_number')->nullable();
-            $table->string('vehicle_type')->nullable();
+            $table->string('tricycle_owner')->nullable(false)->change();
+            $table->string('owner_phone')->nullable(false)->change();
+            $table->string('contract_type')->nullable(false)->change();
+            $table->date('start_date')->nullable(false)->change();
+            $table->string('vehicle_number')->nullable(false)->change();
+            $table->string('vehicle_type')->nullable(false)->change();
         });
     }
 };
