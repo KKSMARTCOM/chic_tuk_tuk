@@ -7,7 +7,15 @@ echo "==> Démarrage de l'application chictuktuk..."
 # Attendre que la base de données soit prête
 echo "==> Vérification de la connexion à la base de données..."
 RETRIES=30
-until php /var/www/html/artisan db:show --no-interaction 2>/dev/null || [ $RETRIES -eq 0 ]; do
+until php -r "
+    \$dsn = 'pgsql:host=' . getenv('DB_HOST') . ';port=' . (getenv('DB_PORT') ?: 5432) . ';dbname=' . getenv('DB_DATABASE');
+    try {
+        new PDO(\$dsn, getenv('DB_USERNAME'), getenv('DB_PASSWORD'));
+        exit(0);
+    } catch (Exception \$e) {
+        exit(1);
+    }
+" 2>/dev/null || [ $RETRIES -eq 0 ]; do
     echo "Base de données non disponible, attente 2s... ($RETRIES restants)"
     sleep 2
     RETRIES=$((RETRIES - 1))

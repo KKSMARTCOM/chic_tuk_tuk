@@ -62,9 +62,11 @@ RUN { \
     echo "opcache.validate_timestamps=0"; \
 } > /usr/local/etc/php/conf.d/opcache.ini
 
-# PHP-FPM : écouter sur 127.0.0.1:9000
-RUN sed -i 's|listen = /var/run/php-fpm.sock|listen = 127.0.0.1:9000|' \
-    /usr/local/etc/php-fpm.d/www.conf 2>/dev/null || true
+# PHP-FPM : forcer l'écoute sur 127.0.0.1:9000 (alpine utilise un socket par défaut)
+RUN sed -i 's|^listen = .*|listen = 127.0.0.1:9000|' \
+        /usr/local/etc/php-fpm.d/www.conf \
+    && sed -i 's|^;*listen = .*|listen = 127.0.0.1:9000|' \
+        /usr/local/etc/php-fpm.d/zz-docker.conf 2>/dev/null || true
 
 WORKDIR /var/www/html
 
