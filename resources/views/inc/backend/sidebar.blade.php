@@ -34,6 +34,31 @@
             {{ request()->routeIs('admin.vehicles*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
                 <i class="fas fa-car mr-3"></i> Véhicules
             </a>
+            <div id="contracts-menu">
+                <button onclick="toggleMenu('contracts-sub')"
+                    class="w-full flex items-center justify-between px-6 py-3 hover:bg-green-600 transition
+        {{ request()->routeIs('admin.driver-contracts*', 'admin.vehicle-contracts*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
+                    <span class="flex items-center">
+                        <i class="fas fa-file-contract mr-3"></i> Contrats
+                    </span>
+                    <i class="fas fa-chevron-down text-xs transition-transform duration-200" id="contracts-icon"></i>
+                </button>
+
+                <div id="contracts-sub"
+                    class="bg-green-900
+        {{ request()->routeIs('admin.driver-contracts*', 'admin.vehicle-contracts*') ? '' : 'hidden' }}">
+                    <a href="{{ route('admin.driver-contracts.index') }}"
+                        class="flex items-center pl-12 pr-6 py-2.5 text-sm hover:bg-green-600 transition
+            {{ request()->routeIs('admin.driver-contracts*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
+                        <i class="fas fa-user-tie mr-3 text-xs"></i> Cnt. Agents
+                    </a>
+                    <a href="{{ route('admin.vehicle-contracts.index') }}"
+                        class="flex items-center pl-12 pr-6 py-2.5 text-sm hover:bg-green-600 transition
+            {{ request()->routeIs('admin.vehicle-contracts*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
+                        <i class="fas fa-car mr-3 text-xs"></i> Cnt. Propriétaires
+                    </a>
+                </div>
+            </div>
             <a href="{{ route('admin.commissions.index') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition
                 {{ request()->routeIs('admin.commissions*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
@@ -49,11 +74,6 @@
             {{ request()->routeIs('admin.leaves*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
                 <i class="fas fa-calendar-alt mr-3"></i> Pauses
             </a>
-            {{-- <a href="{{ route('admin.pricing.index') }}"
-                class="flex items-center px-6 py-3 hover:bg-green-600 transition
-            {{ request()->routeIs('admin.pricing*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
-                <i class="fas fa-dollar-sign mr-3"></i> Tarification
-            </a> --}}
             <a href="{{ route('admin.users.index') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition
             {{ request()->routeIs('admin.users*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
@@ -64,16 +84,6 @@
             {{ request()->routeIs('admin.roles*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
                 <i class="fas fa-user-shield mr-3"></i> Rôles
             </a>
-            {{-- <a href="{{ route('admin.circuits.index') }}"
-                class="flex items-center px-6 py-3 hover:bg-green-600 transition
-            {{ request()->routeIs('admin.circuits*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
-                <i class="fas fa-map-marked-alt mr-3"></i> Circuits
-            </a>
-            <a href="{{ route('admin.promo-codes.index') }}"
-                class="flex items-center px-6 py-3 hover:bg-green-600 transition 
-            {{ request()->routeIs('admin.promo-codes.index') ? 'bg-green-600 border-l-4 border-white' : '' }}">
-                <i class="fas fa-tags mr-3"></i> Codes Promo
-            </a> --}}
         @endif
 
         @if (auth()->user()->profil === 'driver')
@@ -169,6 +179,13 @@
 
         function hideLogoutModal() {
             document.getElementById('logoutModal').classList.add('hidden');
+        }
+
+        function toggleMenu(id) {
+            const sub = document.getElementById(id);
+            const icon = document.getElementById('contracts-icon');
+            sub.classList.toggle('hidden');
+            icon.classList.toggle('rotate-180');
         }
     </script>
 @endpush

@@ -37,127 +37,129 @@
             <h3 class="text-lg font-semibold text-gray-800">Liste des Véhicules</h3>
         </div>
         <div class="overflow-x-auto p-4">
-            <table class="min-w-full divide-y divide-gray-200 display" id="datatable1">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">N° Véhicule</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Propriétaire</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Agent actuel</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Contrat véhicule</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Statut</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse ($vehicles as $vehicle)
-                        <tr class="hover:bg-gray-50 transition">
-                            <td class="px-4 py-4 whitespace-nowrap">
-                                <div class="font-semibold text-gray-900">{{ $vehicle->vehicle_number }}</div>
-                                @if ($vehicle->color)
-                                    <div class="text-xs text-gray-400">{{ $vehicle->color }}</div>
-                                @endif
-                            </td>
-                            <td class="px-4 py-4 whitespace-nowrap">
-                                @if ($vehicle->owner)
-                                    <div class="text-sm font-medium text-gray-900">{{ $vehicle->owner->name }}</div>
-                                    <div class="text-xs text-gray-400">{{ $vehicle->owner->phone }}</div>
-                                @else
-                                    <span class="text-xs text-gray-400 italic">Aucun propriétaire</span>
-                                @endif
-                            </td>
-                            <td class="px-4 py-4 whitespace-nowrap">
-                                @php $activeDriver = $vehicle->activeDriverContract?->driver?->user; @endphp
-                                @if ($activeDriver)
-                                    <div class="text-sm font-medium text-gray-900">{{ $activeDriver->name }}</div>
-                                    <div class="text-xs text-gray-400">{{ $activeDriver->phone }}</div>
-                                @else
-                                    <span class="text-xs text-gray-400 italic">Aucun agent</span>
-                                @endif
-                            </td>
-                            <td class="px-4 py-4 whitespace-nowrap">
-                                @if ($vehicle->activeVehicleContract)
-                                    @php
-                                        $c = $vehicle->activeVehicleContract;
-                                        $progress = $c->progress_percentage;
-                                    @endphp
-                                    <div class="text-xs text-gray-700 mb-1">
-                                        {{ number_format($c->total_paid, 0, ',', ' ') }}
-                                        / {{ number_format($c->total_amount, 0, ',', ' ') }} FCFA
-                                    </div>
-                                    <div class="w-24 bg-gray-200 rounded-full h-1.5">
-                                        <div class="bg-emerald-500 h-1.5 rounded-full" style="width: {{ $progress }}%">
-                                        </div>
-                                    </div>
-                                @else
-                                    <span class="text-xs text-gray-400 italic">Aucun contrat</span>
-                                @endif
-                            </td>
-                            <td class="px-4 py-4 whitespace-nowrap">
-                                <div class="flex flex-col gap-1">
-                                    <span
-                                        class="px-2 py-0.5 rounded-full text-xs font-semibold {{ $vehicle->is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600' }}">
-                                        {{ $vehicle->is_active ? 'Actif' : 'Inactif' }}
-                                    </span>
-                                    @if ($vehicle->activePause)
-                                        <span
-                                            class="px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">
-                                            En pause
-                                        </span>
+            @if ($vehicles && $vehicles->count() > 0)
+                <table class="min-w-full divide-y divide-gray-200 display" id="datatable1">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">N° Véhicule</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Propriétaire</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Agent actuel</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Contrat véhicule
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Statut</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @foreach ($vehicles as $vehicle)
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-4 py-4 whitespace-nowrap">
+                                    <div class="font-semibold text-gray-900">{{ $vehicle->vehicle_number }}</div>
+                                    @if ($vehicle->color)
+                                        <div class="text-xs text-gray-400">{{ $vehicle->color }}</div>
                                     @endif
-                                </div>
-                            </td>
-                            <td class="px-4 py-4 whitespace-nowrap">
-                                <div class="flex items-center gap-2">
-                                    <a href="{{ route('admin.vehicles.show', $vehicle) }}"
-                                        class="text-blue-600 hover:text-blue-800" title="Voir">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap">
+                                    @if ($vehicle->owner)
+                                        <div class="text-sm font-medium text-gray-900">{{ $vehicle->owner->name }}</div>
+                                        <div class="text-xs text-gray-400">{{ $vehicle->owner->phone }}</div>
+                                    @else
+                                        <span class="text-xs text-gray-400 italic">Aucun propriétaire</span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap">
+                                    @php $activeDriver = $vehicle->activeDriverContract?->driver?->user; @endphp
+                                    @if ($activeDriver)
+                                        <div class="text-sm font-medium text-gray-900">{{ $activeDriver->name }}</div>
+                                        <div class="text-xs text-gray-400">{{ $activeDriver->phone }}</div>
+                                    @else
+                                        <span class="text-xs text-gray-400 italic">Aucun agent</span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap">
+                                    @if ($vehicle->activeVehicleContract)
+                                        @php
+                                            $c = $vehicle->activeVehicleContract;
+                                            $progress = $c->progress_percentage;
+                                        @endphp
+                                        <div class="text-xs text-gray-700 mb-1">
+                                            {{ number_format($c->total_paid, 0, ',', ' ') }}
+                                            / {{ number_format($c->total_amount, 0, ',', ' ') }} FCFA
+                                        </div>
+                                        <div class="w-24 bg-gray-200 rounded-full h-1.5">
+                                            <div class="bg-emerald-500 h-1.5 rounded-full"
+                                                style="width: {{ $progress }}%">
+                                            </div>
+                                        </div>
+                                    @else
+                                        <span class="text-xs text-gray-400 italic">Aucun contrat</span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap">
+                                    <div class="flex flex-col gap-1">
+                                        <span
+                                            class="px-2 py-0.5 rounded-full text-xs font-semibold {{ $vehicle->is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600' }}">
+                                            {{ $vehicle->is_active ? 'Actif' : 'Inactif' }}
+                                        </span>
+                                        @if ($vehicle->activePause)
+                                            <span
+                                                class="px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">
+                                                En pause
+                                            </span>
+                                        @endif
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap">
+                                    <div class="flex items-center gap-2">
+                                        <a href="{{ route('admin.vehicles.show', $vehicle) }}"
+                                            class="text-blue-600 hover:text-blue-800" title="Voir">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
 
-                                    <button onclick="openEditModal({{ $vehicle->toJson() }})"
-                                        class="text-green-600 hover:text-green-800" title="Modifier">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
+                                        <button onclick="openEditModal({{ $vehicle->toJson() }})"
+                                            class="text-green-600 hover:text-green-800" title="Modifier">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
 
-                                    @if ($vehicle->activePause)
-                                        <form action="{{ route('admin.vehicles.end-pause', $vehicle->activePause) }}"
-                                            method="POST" class="inline">
+                                        @if ($vehicle->activePause)
+                                            <form action="{{ route('admin.vehicles.end-pause', $vehicle->activePause) }}"
+                                                method="POST" class="inline">
+                                                @csrf
+                                                <input type="hidden" name="end_date" value="{{ date('Y-m-d') }}">
+                                                <button type="submit" class="text-emerald-600 hover:text-emerald-800"
+                                                    title="Terminer la pause">
+                                                    <i class="fas fa-play"></i>
+                                                </button>
+                                            </form>
+                                        @else
+                                            <button
+                                                onclick="openPauseModal('{{ $vehicle->id }}', '{{ $vehicle->vehicle_number }}')"
+                                                class="text-yellow-600 hover:text-yellow-800" title="Mettre en pause">
+                                                <i class="fas fa-pause"></i>
+                                            </button>
+                                        @endif
+
+                                        <form action="{{ route('admin.vehicles.destroy', $vehicle) }}" method="POST"
+                                            class="inline"
+                                            onsubmit="return confirm('Supprimer le véhicule {{ $vehicle->vehicle_number }} ?')">
                                             @csrf
-                                            <input type="hidden" name="end_date" value="{{ date('Y-m-d') }}">
-                                            <button type="submit" class="text-emerald-600 hover:text-emerald-800"
-                                                title="Terminer la pause">
-                                                <i class="fas fa-play"></i>
+                                            @method('DELETE')
+                                            <button class="text-red-600 hover:text-red-800" title="Supprimer">
+                                                <i class="fas fa-trash"></i>
                                             </button>
                                         </form>
-                                    @else
-                                        <button
-                                            onclick="openPauseModal('{{ $vehicle->id }}', '{{ $vehicle->vehicle_number }}')"
-                                            class="text-yellow-600 hover:text-yellow-800" title="Mettre en pause">
-                                            <i class="fas fa-pause"></i>
-                                        </button>
-                                    @endif
-
-                                    <form action="{{ route('admin.vehicles.destroy', $vehicle) }}" method="POST"
-                                        class="inline"
-                                        onsubmit="return confirm('Supprimer le véhicule {{ $vehicle->vehicle_number }} ?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="text-red-600 hover:text-red-800" title="Supprimer">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="px-6 py-12 text-center text-gray-400">
-                                <i class="fas fa-truck-pickup text-4xl mb-3"></i>
-                                <p>Aucun véhicule enregistré.</p>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @else
+                <div class="px-6 py-12 text-center">
+                    <i class="fas fa-truck-pickup text-4xl mb-3"></i>
+                    <p>Aucun véhicule enregistré.</p>
+                </div>
+            @endif
         </div>
     </div>
 
