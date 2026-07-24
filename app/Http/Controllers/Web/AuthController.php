@@ -56,10 +56,10 @@ class AuthController extends Controller
 
             return $response;
         } catch (ValidationException $e) {
-            return back()->withErrors($e->errors())->withInput($request->only('email'));
+            return back()->withErrors(['email' => $e->getMessage()])->withInput($request->only('email'));
         } catch (\Exception $e) {
             Log::error('Erreur de connexion : ' . $e->getMessage());
-            return back()->with('error', 'Une erreur est survenue lors de la connexion. Veuillez réessayer.' . ' ' . $e->getMessage())->withInput($request->only('email'));
+            return back()->withErrors(['email' => $e->getMessage()])->withInput($request->only('email'));
         }
     }
 
