@@ -445,6 +445,28 @@
 
     @push('scripts')
         <script>
+            // ── DataTable ────────────────────────────────────────────
+            $("#datatable-agent").DataTable({
+                order: [
+                    [0, "asc"]
+                ],
+                language: {
+                    processing: "Traitement...",
+                    search: "Rechercher : ",
+                    lengthMenu: "Afficher _MENU_ éléments",
+                    info: "Affichage _START_ à _END_ sur _TOTAL_",
+                    zeroRecords: "Aucun véhicule trouvé",
+                    emptyTable: "Aucune donnée",
+                },
+                initComplete: function() {
+                    if (typeof $.fn.select2 !== "undefined") {
+                        $(".dataTables_length select").select2({
+                            minimumResultsForSearch: Infinity
+                        });
+                    }
+                },
+            });
+
             // ===== MODALS =====
             function openModal(id) {
                 document.getElementById(id).classList.remove('hidden');
