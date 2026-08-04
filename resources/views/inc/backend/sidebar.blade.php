@@ -34,7 +34,7 @@
             {{ request()->routeIs('admin.vehicles*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
                 <i class="fas fa-car mr-3"></i> Véhicules
             </a>
-            <div id="contracts-menu">
+            {{-- <div id="contracts-menu">
                 <button onclick="toggleMenu('contracts-sub')"
                     class="w-full flex items-center justify-between px-6 py-3 hover:bg-green-600 transition
         {{ request()->routeIs('admin.driver-contracts*', 'admin.vehicle-contracts*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
@@ -58,7 +58,7 @@
                         <i class="fas fa-car mr-3 text-xs"></i> Cnt. Propriétaires
                     </a>
                 </div>
-            </div>
+            </div> --}}
             <a href="{{ route('admin.commissions.index') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition
                 {{ request()->routeIs('admin.commissions*') ? 'bg-green-600 border-l-4 border-white' : '' }}">

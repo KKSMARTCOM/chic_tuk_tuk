@@ -32,7 +32,6 @@
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Début</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Durée</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Congés</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Paiements</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Statut</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Actions</th>
                             </tr>
@@ -92,9 +91,6 @@
                                             <div class="h-full rounded-full {{ $surplus > 0 ? 'bg-red-400' : 'bg-purple-500' }}"
                                                 style="width: {{ $leavePct }}%"></div>
                                         </div>
-                                    </td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-900">
-                                        {{ number_format($totalPaid, 0, ',', ' ') }} FCFA
                                     </td>
                                     <td class="px-4 py-3 whitespace-nowrap">
                                         <span
