@@ -16,6 +16,7 @@
                         @php
                             $isParent = $booking->is_subscription_parent;
                             $isChild = $booking->is_subscription_child;
+                            $isSimpleReturn = $booking->is_simple_return;
                             $isReturn = $booking->trip_type === 'return';
 
                             // Label de la course
@@ -29,19 +30,32 @@
                                     $booking->parentBooking?->client_name ??
                                     ($booking->parentBooking?->user?->name ?? $booking->parentBooking?->booking_number);
                                 $courseLabel = "Course n°{$index} de l'abonnement {$parentRef}";
+                            } elseif ($isSimpleReturn) {
+                                $parentRef =
+                                    $booking->parentBooking?->client_name ??
+                                    ($booking->parentBooking?->user?->name ?? $booking->parentBooking?->booking_number);
+                                $courseLabel = "Retour — {$parentRef}";
                             } else {
                                 $courseLabel = 'Course unique';
                             }
 
-                            // Suffixe aller/retour
-                            if ($booking->round_trip) {
+                            // Suffixe aller/retour pour les abonnements
+                            if (($isParent || $isChild) && $booking->round_trip) {
                                 $courseLabel .= $isReturn ? ' (Retour)' : ' (Aller)';
                             }
+
+                            $borderClass = match (true) {
+                                $isParent => 'border-emerald-300',
+                                $isChild => 'border-teal-300',
+                                $isSimpleReturn => 'border-orange-300',
+                                default => 'border-gray-200',
+                            };
                         @endphp
 
-                        <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+                        <div class="border {{ $borderClass }} rounded-lg p-4 hover:shadow-md transition">
                             <div class="flex items-start justify-between">
                                 <div class="flex-1">
+
                                     {{-- En-tête --}}
                                     <div class="flex flex-wrap items-center gap-2 mb-3">
                                         <span
@@ -50,22 +64,59 @@
                                         </span>
                                         <span class="text-sm text-gray-500 font-mono">{{ $booking->booking_number }}</span>
                                         <span class="text-sm font-semibold text-gray-700">{{ $courseLabel }}</span>
+
+                                        {{-- Badge aller-retour course simple --}}
+                                        @if (!$isParent && !$isChild && $booking->round_trip && !$isSimpleReturn)
+                                            <span
+                                                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-50 text-purple-600 border border-purple-200">
+                                                <i class="fas fa-arrows-left-right"></i> Aller-Retour
+                                            </span>
+                                        @endif
+
+                                        @if ($isSimpleReturn)
+                                            <span
+                                                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-50 text-orange-600 border border-orange-200">
+                                                <i class="fas fa-arrow-left"></i> Retour
+                                            </span>
+                                        @endif
                                     </div>
 
+                                    {{-- Info course aller liée (pour la retour simple) --}}
+                                    @if ($isSimpleReturn)
+                                        <div class="text-xs text-orange-500 font-medium mb-2 flex items-center gap-1">
+                                            <i class="fas fa-link text-orange-400"></i>
+                                            Course aller : {{ $booking->parentBooking?->booking_number }}
+                                            · {{ formatDateTimeFr($booking->parentBooking?->pickup_date_time) }}
+                                        </div>
+                                    @endif
+
+                                    {{-- Référence abonnement pour les enfants --}}
+                                    @if ($isChild)
+                                        <div class="text-xs text-teal-600 font-medium mb-2 flex items-center gap-1">
+                                            <i class="fas fa-link text-teal-400"></i>
+                                            Abonnement {{ $booking->parentBooking?->booking_number }}
+                                            @if ($booking->parentBooking?->client_name)
+                                                · {{ $booking->parentBooking->client_name }}
+                                            @elseif ($booking->parentBooking?->user?->name)
+                                                · {{ $booking->parentBooking->user->name }}
+                                            @endif
+                                        </div>
+                                    @endif
+
                                     {{-- Client + WhatsApp --}}
-                                    <div class="flex items-center gap-4 mb-2">
+                                    <div class="flex items-center gap-4 mb-3">
                                         <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $booking->phone) }}?text={{ urlencode('Bonjour, je suis votre chauffeur pour la course ' . $booking->booking_number) }}"
                                             target="_blank"
-                                            class="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition text-sm font-semibold flex items-center justify-center">
+                                            class="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition text-sm font-semibold flex items-center">
                                             <i class="fab fa-whatsapp mr-2"></i> WhatsApp
                                         </a>
-
                                         <div>
-                                            <h4 class="font-bold text-gray-800">
+                                            <p class="text-sm font-bold text-gray-800">
                                                 {{ $booking->client_name ?? ($booking->user?->name ?? 'Client') }}
-                                            </h4>
-                                            <p class="text-sm text-gray-600"><i class="fas fa-phone mr-1"></i>
-                                                {{ $booking->phone }}</p>
+                                            </p>
+                                            <p class="text-xs text-gray-500">
+                                                <i class="fas fa-phone mr-1"></i>{{ $booking->phone }}
+                                            </p>
                                         </div>
                                     </div>
 
@@ -87,21 +138,45 @@
                                                 <p class="text-sm text-gray-800">{{ $booking->to_location }}</p>
                                             </div>
                                         </div>
+
+                                        {{-- Heure retour sur aller simple (pas sur la retour elle-même) --}}
+                                        @if (!$isParent && !$isChild && $booking->round_trip && !$isSimpleReturn && $booking->return_time)
+                                            <div
+                                                class="mt-2 pt-2 border-t border-gray-200 flex items-center gap-1 text-xs text-purple-600">
+                                                <i class="fas fa-arrow-left"></i>
+                                                Retour prévu à {{ $booking->return_time }}
+                                            </div>
+                                        @endif
+
+                                        {{-- Heure retour abonnement parent --}}
+                                        @if ($isParent && $booking->round_trip && $booking->return_time)
+                                            <div
+                                                class="mt-2 pt-2 border-t border-gray-200 flex items-center gap-1 text-xs text-purple-600">
+                                                <i class="fas fa-arrow-left"></i>
+                                                Retour prévu à {{ $booking->return_time }} chaque jour
+                                            </div>
+                                        @endif
                                     </div>
 
+                                    {{-- Timer --}}
                                     @if ($booking->status === 'in_progress')
                                         <div id="timer-{{ $booking->id }}"
                                             data-start="{{ $booking->started_at_timestamp }}"
-                                            class="mb-6 text-lg font-bold text-blue-600">
+                                            class="mb-3 text-lg font-bold text-blue-600">
                                             ⏱️ 00:00:00
                                         </div>
                                     @endif
 
                                     {{-- Méta --}}
                                     <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                                        <span><i
-                                                class="far fa-clock mr-1"></i>{{ formatDateTimeFr($booking->pickup_date_time) }}</span>
-                                        <span><i class="fas fa-route mr-1"></i>{{ $booking->distance }} km estimé</span>
+                                        <span>
+                                            <i class="far fa-clock mr-1"></i>
+                                            {{ formatDateTimeFr($booking->pickup_date_time) }}
+                                        </span>
+                                        <span>
+                                            <i class="fas fa-route mr-1"></i>
+                                            {{ $booking->distance }} km estimé
+                                        </span>
                                         <span class="font-bold text-green-600">
                                             <i class="fas fa-money-bill mr-1"></i>
                                             {{ number_format($booking->base_price, 0, ',', ' ') }} FCFA
@@ -110,14 +185,17 @@
 
                                     @if ($booking->special_requests)
                                         <div class="mt-3 bg-yellow-50 border-l-4 border-yellow-400 p-3">
-                                            <p class="text-sm text-yellow-800"><i
-                                                    class="fas fa-info-circle mr-2"></i><strong>Note:</strong>
-                                                {{ $booking->special_requests }}</p>
+                                            <p class="text-sm text-yellow-800">
+                                                <i class="fas fa-info-circle mr-2"></i>
+                                                <strong>Note :</strong> {{ $booking->special_requests }}
+                                            </p>
                                         </div>
                                     @endif
+
                                 </div>
 
-                                <div class="ml-4 flex flex-col space-y-2">
+                                {{-- Actions --}}
+                                <div class="ml-4 flex flex-col space-y-2 shrink-0">
                                     @if ($booking->status === 'confirmed')
                                         <button onclick="startTrip('{{ $booking->id }}')"
                                             class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-sm font-semibold">
@@ -127,18 +205,20 @@
 
                                     @if ($booking->status === 'in_progress')
                                         <button onclick="completeTrip('{{ $booking->id }}')"
-                                            class="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition text-sm font-semibold">
+                                            class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition text-sm font-semibold">
                                             <i class="fas fa-check mr-1"></i> Terminer
                                         </button>
                                     @endif
 
                                     @if ($booking->canBeCancelled())
-                                        <button onclick="cancelTrip('{{ $booking->id }}')"
+                                        <button
+                                            onclick="cancelTrip('{{ $booking->id }}', '{{ $isChild ? 'child' : ($isParent ? 'parent' : 'unique') }}')"
                                             class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-sm font-semibold">
                                             <i class="fas fa-times mr-1"></i> Annuler
                                         </button>
                                     @endif
                                 </div>
+
                             </div>
                         </div>
                     @endforeach
@@ -220,7 +300,8 @@
                         class="flex-1 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition">
                         Retour
                     </button>
-                    <button type="submit" class="flex-1 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+                    <button type="submit"
+                        class="flex-1 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
                         Confirmer l'annulation
                     </button>
                 </div>

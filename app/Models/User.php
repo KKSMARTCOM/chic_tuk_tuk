@@ -33,7 +33,10 @@ class User extends Authenticatable
         'profile_photo',
         'is_active',
         'adresse',
-        'notification_preferences'
+        'notification_preferences',
+        'failed_login_attempts',
+        'locked_until',
+        'last_failed_login'
     ];
 
     /**
@@ -58,6 +61,9 @@ class User extends Authenticatable
             'password' => 'hashed',
             'is_active' => 'boolean',
             'notification_preferences' => 'array',
+            'failed_login_attempts' => 'integer',
+            'locked_until' => 'datetime',
+            'last_failed_login' => 'datetime',
         ];
     }
 

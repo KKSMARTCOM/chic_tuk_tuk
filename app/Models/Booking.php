@@ -220,7 +220,16 @@ class Booking extends Model
     // Indique si c'est une course enfant d'abonnement
     public function getIsSubscriptionChildAttribute(): bool
     {
-        return !is_null($this->parent_booking_id);
+        return !is_null($this->parent_booking_id) && $this->is_recurring === false
+            && optional($this->parentBooking)->is_recurring === true;
+    }
+
+    // Indique si c'est un retour d'une course simple
+    public function getIsSimpleReturnAttribute(): bool
+    {
+        return $this->trip_type === 'return'
+            && !is_null($this->parent_booking_id)
+            && optional($this->parentBooking)->is_recurring === false;
     }
 
     // Numéro de la course dans l'abonnement (ex: "Course 3")

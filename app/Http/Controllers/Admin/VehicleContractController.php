@@ -19,7 +19,11 @@ class VehicleContractController extends Controller
             ->latest()
             ->get();
 
-        return view('pages.admin.vehicle-contracts.index', compact('contracts'));
+        foreach ($contracts as $contract) {
+            $contract->stats = $this->contractService->getStats($contract);
+        }
+
+        return view('pages.admin.contracts.owner', compact('contracts'));
     }
 
     public function create()
@@ -54,8 +58,7 @@ class VehicleContractController extends Controller
 
         $this->contractService->create($validated);
 
-        return redirect()->route('admin.vehicle-contracts.index')
-            ->with('success', 'Contrat véhicule créé avec succès.');
+        return redirect()->route('admin.vehicle-contracts.index')->with('success', 'Contrat véhicule créé avec succès.');
     }
 
     public function show(VehicleContract $vehicleContract)
@@ -102,16 +105,14 @@ class VehicleContractController extends Controller
 
         $vehicleContract->update($validated);
 
-        return redirect()->route('admin.vehicle-contracts.show', $vehicleContract)
-            ->with('success', 'Contrat mis à jour avec succès.');
+        return redirect()->route('admin.vehicle-contracts.show', $vehicleContract)->with('success', 'Contrat mis à jour avec succès.');
     }
 
     public function destroy(VehicleContract $vehicleContract)
     {
         try {
             $vehicleContract->delete();
-            return redirect()->route('admin.vehicle-contracts.index')
-                ->with('success', 'Contrat supprimé avec succès.');
+            return redirect()->route('admin.vehicle-contracts.index')->with('success', 'Contrat supprimé avec succès.');
         } catch (\Exception $e) {
             Log::error('Erreur lors de la suppression du contrat véhicule : ' . $e->getMessage(), ['exception' => $e]);
             return back()->with('error', 'Impossible de supprimer ce contrat : ' . $e->getMessage());

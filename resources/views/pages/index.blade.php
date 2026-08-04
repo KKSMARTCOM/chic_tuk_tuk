@@ -17,7 +17,7 @@
                     <div class="text-white hidden md:block">
                         <h2 class="text-5xl font-bold mb-6">Voyagez avec Style et Confort</h2>
                         <p class="text-xl mb-8 text-purple-100">Découvrez une nouvelle façon de vous déplacer avec nos
-                            chic tuk tuk. Unique, modèle et confortable.</p>
+                            chic tuk tuk. Unique, moderne et confortable.</p>
                         <div class="flex space-x-6 mb-12">
                             <div class="text-center">
                                 <div class="text-4xl font-bold">500+</div>
@@ -198,6 +198,27 @@
                                     </div>
                                 </div>
 
+                                <div id="simpleRoundTripWrapper" class="my-4">
+                                    <div class="flex items-center gap-3">
+                                        <input type="checkbox" name="round_trip" id="simple_round_trip" value="1"
+                                            class="w-4 h-4 accent-[#286b41] cursor-pointer">
+                                        <label for="simple_round_trip" class="text-gray-700 font-semibold cursor-pointer">
+                                            Aller-Retour
+                                            <span class="text-sm font-normal text-gray-500 ml-1">(prix × 2)</span>
+                                        </label>
+                                    </div>
+
+                                    {{-- Heure de retour --}}
+                                    <div id="simpleReturnTimeWrapper" class="mt-3 hidden">
+                                        <label class="block text-gray-700 font-semibold mb-2">
+                                            Heure de retour <span class="text-red-500">*</span>
+                                        </label>
+                                        <input type="time" id="simple_return_time"
+                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent">
+                                        <p class="text-red-500 text-sm mt-1 hidden" id="simple_return_time_error"></p>
+                                    </div>
+                                </div>
+
                                 <!-- Option multi-jours -->
                                 <div class="mb-4">
                                     <label class="inline-flex items-center text-gray-700 font-semibold">
@@ -253,7 +274,7 @@
                                                 <label class="block text-gray-700 font-semibold mb-2">
                                                     Heure de retour <span class="text-red-500">*</span>
                                                 </label>
-                                                <input type="time" name="return_time" id="return_time"
+                                                <input type="time" id="return_time"
                                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent">
                                                 <p class="text-red-500 text-sm mt-1 hidden" id="return_time_error"></p>
                                             </div>
@@ -263,6 +284,8 @@
                                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                     @enderror
                                 </div>
+
+                                <input type="hidden" name="return_time" id="unified_return_time">
 
                                 {{-- PASSENGERS --}}
 
@@ -340,12 +363,31 @@
                                     <div id="recap-single">
                                         <div class="flex justify-between text-sm text-gray-600">
                                             <span class="text-gray-500">Type</span>
-                                            <span class="font-medium text-gray-700">Trajet unique</span>
+                                            <span id="recap-single-type" class="font-medium text-gray-700">Trajet
+                                                unique</span>
                                         </div>
+
+                                        {{-- Heure de retour (visible si aller-retour) --}}
+                                        <div id="recap-single-return-row"
+                                            class="flex justify-between text-sm text-gray-600 mt-2 hidden">
+                                            <span class="text-gray-500">Heure de retour</span>
+                                            <span id="recap-single-return-time"
+                                                class="font-medium text-gray-700">--</span>
+                                        </div>
+
                                         <div class="flex justify-between text-sm text-gray-600 mt-2">
-                                            <span class="text-gray-500">Prix</span>
-                                            <span id="recap-single-price" class="font-medium text-gray-700">-- FCFA</span>
+                                            <span class="text-gray-500">Prix du trajet</span>
+                                            <span id="recap-single-base-price" class="font-medium text-gray-700">--
+                                                FCFA</span>
                                         </div>
+
+                                        {{-- Ligne ×2 visible si aller-retour --}}
+                                        <div id="recap-single-round-row"
+                                            class="flex justify-between text-sm text-gray-600 mt-2 hidden">
+                                            <span class="text-gray-500">Aller-Retour</span>
+                                            <span class="font-medium text-gray-700">× 2</span>
+                                        </div>
+
                                     </div>
 
                                     {{-- Bloc abonnement (caché par défaut) --}}
@@ -808,6 +850,16 @@
                     showStep(step);
                 };
 
+                $('#bookingForm').on('submit', function() {
+                    var isSubscription = $('#multi_day').is(':checked');
+
+                    if (isSubscription) {
+                        $('#unified_return_time').val($('#return_time').val());
+                    } else {
+                        $('#unified_return_time').val($('#simple_return_time').val());
+                    }
+                });
+
                 window.newBooking = function() {
                     const form = $('#bookingForm')[0];
                     form.reset();
@@ -877,9 +929,11 @@
                 function updateRecap() {
                     var isSubscription = $('#multi_day').is(':checked');
                     var days = parseInt($('#days_hidden').val()) || 1;
-                    var isRound = $('#round_trip').is(':checked');
+                    var isRound = isSubscription ?
+                        $('#round_trip').is(':checked') :
+                        $('#simple_round_trip').is(':checked');
                     var tripPrice = isRound ? unitPrice * 2 : unitPrice;
-                    var total = isSubscription ? tripPrice * days : unitPrice;
+                    var total = isSubscription ? tripPrice * days : tripPrice;
 
                     // Trajet & horaire
                     $('#recap-from').text($('#from_input').val() || '--');
@@ -913,7 +967,23 @@
                         // Afficher bloc unique, masquer bloc abonnement
                         $('#recap-single').removeClass('hidden');
                         $('#recap-subscription').addClass('hidden');
-                        $('#recap-single-price').text(unitPrice ? unitPrice.toLocaleString() + ' FCFA' : '-- FCFA');
+
+                        // Afficher aller-retour dans le récap course simple
+                        if (isRound) {
+                            var returnTime = $('#simple_return_time').val();
+                            $('#recap-single-type').text('Trajet unique — Aller-Retour');
+                            $('#recap-single-base-price').text(unitPrice ? unitPrice.toLocaleString() + ' FCFA' :
+                                '-- FCFA');
+                            $('#recap-single-round-row').removeClass('hidden');
+                            $('#recap-single-return-row').removeClass('hidden');
+                            $('#recap-single-return-time').text(returnTime || '--');
+                        } else {
+                            $('#recap-single-type').text('Trajet unique');
+                            $('#recap-single-base-price').text(unitPrice ? unitPrice.toLocaleString() + ' FCFA' :
+                                '-- FCFA');
+                            $('#recap-single-round-row').addClass('hidden');
+                            $('#recap-single-return-row').addClass('hidden');
+                        }
                     }
 
                     // Total
@@ -927,24 +997,56 @@
                     updateRecap();
                 }
 
+                // Checkbox aller-retour (course simple)
+                $('#simple_round_trip').on('change', function() {
+                    if ($(this).is(':checked')) {
+                        $('#simpleReturnTimeWrapper').removeClass('hidden');
+                        $('#simple_return_time').attr('required', true);
+                    } else {
+                        $('#simpleReturnTimeWrapper').addClass('hidden');
+                        $('#simple_return_time').removeAttr('required').val('');
+                        $('#simple_return_time_error').addClass('hidden');
+                    }
+
+                    // Recalculer le prix si déjà calculé
+                    if (unitPrice) updateRecap();
+                });
+
+                $('#simple_return_time').on('change', function() {
+                    const depTime = $('#pickup_time').val();
+                    if (depTime && this.value <= depTime) {
+                        $('#simple_return_time_error')
+                            .text("L'heure de retour doit être après l'heure de départ.")
+                            .removeClass('hidden');
+                    } else {
+                        $('#simple_return_time_error').addClass('hidden');
+                    }
+                    updateRecap();
+                });
+
                 // Gestion réservation multi-jours
                 $('#multi_day').on('change', function() {
                     if ($(this).is(':checked')) {
+                        $('#simpleRoundTripWrapper').addClass('hidden');
+                        $('#simple_round_trip').prop('checked', false);
+                        $('#simpleReturnTimeWrapper').addClass('hidden');
+
                         $('#daysWrapper').removeClass('hidden');
-                        // Update hidden days value with visible input value
                         $('#days_hidden').val($('#days_input').val());
-                        updateSubscriptionSummary();
+                        //updateSubscriptionSummary();
                     } else {
+                        $('#simpleRoundTripWrapper').removeClass('hidden');
+
                         $('#daysWrapper').addClass('hidden');
-                        // Revert to single-day default
                         $('#days_hidden').val(1);
-                        $('#subscriptionSummary').addClass('hidden');
+                        //$('#subscriptionSummary').addClass('hidden');
 
                         // Rétablir le prix simple
-                        if (unitPrice) {
+                        /* if (unitPrice) {
                             $('#total-price').text(unitPrice.toLocaleString() + ' FCFA');
-                        }
+                        } */
                     }
+                    updateSubscriptionSummary()
                 });
 
                 $('#days_input').on('input', function() {

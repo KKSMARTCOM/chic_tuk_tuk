@@ -25,7 +25,7 @@ class DriverContractController extends Controller
             'vehicleContract',
         ])->latest()->get();
 
-        return view('pages.admin.driver-contracts.index', compact('contracts'));
+        return view('pages.admin.contracts.driver', compact('contracts'));
     }
 
     public function create()

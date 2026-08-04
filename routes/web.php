@@ -10,6 +10,7 @@ use App\Http\Controllers\Web\PageController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PageController::class, 'index'])->name('home');
+Route::get('/install', [PageController::class, 'install'])->name('install');
 
 // Prix public: récupère le tarif entre deux zones (option: ?days=)
 Route::post('/pricing/price', [PricingController::class, 'calculatePrice'])->name('pricing.get-price');

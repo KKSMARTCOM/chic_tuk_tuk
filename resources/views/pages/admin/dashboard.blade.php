@@ -103,18 +103,37 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                     <span>{{ $booking->booking_number }}</span>
 
+                                    @php
+                                        $isParent = $booking->is_subscription_parent;
+                                        $isChild = $booking->is_subscription_child;
+                                        $isSimpleReturn = $booking->is_simple_return;
+                                        $isReturn = $booking->trip_type === 'return';
+                                    @endphp
+
                                     <div class="mt-2 max-w-[250px] w-full flex flex-wrap gap-2">
-                                        @if ($booking->is_subscription_parent)
+
+                                        @if ($isParent)
                                             <span
                                                 class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200">
                                                 <i class="fas fa-rotate"></i>
                                                 Abonn parent · {{ $booking->days }}j
                                             </span>
-                                        @elseif ($booking->is_subscription_child)
+                                        @elseif ($isChild)
                                             <span
-                                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200">
-                                                <i class="fas fa-link"></i>
-                                                {{ $booking->subscription_label }}
+                                                class="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200 max-w-[200px]">
+                                                <i class="fas fa-link shrink-0"></i>
+                                                <span class="truncate">{{ $booking->subscription_label }}</span>
+                                            </span>
+                                        @elseif ($isSimpleReturn)
+                                            {{-- Course retour d'une course simple aller-retour --}}
+                                            <span
+                                                class="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-50 text-orange-600 border border-orange-200 max-w-[200px]">
+                                                <i class="fas fa-arrow-left shrink-0"></i>
+                                                <span class="truncate">
+                                                    Retour —
+                                                    {{ $booking->parentBooking?->client_name ??
+                                                        ($booking->parentBooking?->user?->name ?? ($booking->parentBooking?->booking_number ?? 'N/A')) }}
+                                                </span>
                                             </span>
                                         @else
                                             <span
@@ -124,18 +143,19 @@
                                             </span>
                                         @endif
 
-                                        @if ($booking->round_trip)
-                                            <span title="Aller-Retour"
-                                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-600 border border-purple-200">
-                                                <i class="fas fa-arrows-left-right"></i>
-                                            </span>
-                                        @endif
-
-                                        @if ($booking->trip_type === 'return')
-                                            <span title="Retour"
-                                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-50 text-orange-600 border border-orange-200">
-                                                <i class="fas fa-arrow-left"></i>
-                                            </span>
+                                        {{-- Badge aller-retour --}}
+                                        @if ($booking->round_trip && !$isSimpleReturn)
+                                            @if ($isReturn)
+                                                <span title="Retour"
+                                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-50 text-orange-600 border border-orange-200">
+                                                    <i class="fas fa-arrow-left"></i>
+                                                </span>
+                                            @else
+                                                <span title="Aller-Retour"
+                                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-600 border border-purple-200">
+                                                    <i class="fas fa-arrows-left-right"></i>
+                                                </span>
+                                            @endif
                                         @endif
 
                                         @if ($booking->is_revoked)
@@ -144,6 +164,7 @@
                                                 <i class="fas fa-ban"></i>
                                             </span>
                                         @endif
+
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">

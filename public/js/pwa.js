@@ -20,6 +20,10 @@ let deferredPrompt = null;
 window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();
     deferredPrompt = e;
+    window.__pwaDeferred = true;
+
+    // Notifier la page /install si elle est ouverte
+    window.dispatchEvent(new Event("pwa:installable"));
 
     // Ne pas afficher si :
     // - déjà installé (permanent)
