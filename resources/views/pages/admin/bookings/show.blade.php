@@ -54,19 +54,37 @@ $canDelete = in_array($booking->status, ['cancelled', 'expired']);
                     <h3 class="text-lg font-semibold text-gray-800">Informations de la Réservation</h3>
 
                     {{-- Badge type de course --}}
-                    <div class="flex flex-wrap items-center gap-2">
+                    @php
+                        $isParent = $booking->is_subscription_parent;
+                        $isChild = $booking->is_subscription_child;
+                        $isSimpleReturn = $booking->is_simple_return;
+                        $isReturn = $booking->trip_type === 'return';
+                    @endphp
 
-                        @if ($booking->is_subscription_parent)
+                    <div class="mt-2 max-w-[250px] w-full flex flex-wrap gap-2">
+
+                        @if ($isParent)
                             <span
                                 class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200">
                                 <i class="fas fa-rotate"></i>
                                 Abonn parent · {{ $booking->days }}j
                             </span>
-                        @elseif ($booking->is_subscription_child)
+                        @elseif ($isChild)
                             <span
-                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200">
-                                <i class="fas fa-link"></i>
-                                {{ $booking->subscription_label }}
+                                class="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200 max-w-[200px]">
+                                <i class="fas fa-link shrink-0"></i>
+                                <span class="truncate">{{ $booking->subscription_label }}</span>
+                            </span>
+                        @elseif ($isSimpleReturn)
+                            {{-- Course retour d'une course simple aller-retour --}}
+                            <span
+                                class="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-50 text-orange-600 border border-orange-200 max-w-[200px]">
+                                <i class="fas fa-arrow-left shrink-0"></i>
+                                <span class="truncate">
+                                    Retour —
+                                    {{ $booking->parentBooking?->client_name ??
+                                        ($booking->parentBooking?->user?->name ?? ($booking->parentBooking?->booking_number ?? 'N/A')) }}
+                                </span>
                             </span>
                         @else
                             <span
@@ -76,27 +94,25 @@ $canDelete = in_array($booking->status, ['cancelled', 'expired']);
                             </span>
                         @endif
 
-                        @if ($booking->round_trip)
-                            <span
-                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-600 border border-purple-200">
-                                <i class="fas fa-arrows-left-right"></i>
-                                Aller-Retour
-                            </span>
-                        @endif
-
-                        @if ($booking->trip_type === 'return')
-                            <span
-                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-50 text-orange-600 border border-orange-200">
-                                <i class="fas fa-arrow-left"></i>
-                                Retour
-                            </span>
+                        {{-- Badge aller-retour --}}
+                        @if ($booking->round_trip && !$isSimpleReturn)
+                            @if ($isReturn)
+                                <span title="Retour"
+                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-50 text-orange-600 border border-orange-200">
+                                    <i class="fas fa-arrow-left"></i>
+                                </span>
+                            @else
+                                <span title="Aller-Retour"
+                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-600 border border-purple-200">
+                                    <i class="fas fa-arrows-left-right"></i>
+                                </span>
+                            @endif
                         @endif
 
                         @if ($booking->is_revoked)
-                            <span
+                            <span title="Révoquée"
                                 class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-200">
                                 <i class="fas fa-ban"></i>
-                                Révoquée
                             </span>
                         @endif
 

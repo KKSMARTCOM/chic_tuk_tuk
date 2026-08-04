@@ -140,3 +140,10 @@ if (!function_exists('getNextAllowedDay')) {
         return $attempts < 7 ? $next : null;
     }
 }
+
+if (!function_exists('formatAmount')) {
+    function formatAmount($n)
+    {
+        return number_format($n, 0, ',', ' ') . ' FCFA';
+    }
+}

@@ -7,6 +7,7 @@ use App\Models\Driver;
 use App\Models\PromoCode;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 use function Symfony\Component\Clock\now;
 
@@ -83,8 +84,42 @@ class BookingService
             'subscription_end_date' => $endDate,
         ]);
 
+        // Créer la course retour si aller-retour et non récurrent
+        if (!$isRecurring && $isRound && !empty($data['return_time'])) {
+            Booking::create([
+                'from_location'          => $data['to_location'],
+                'to_location'            => $data['from_location'],
+                'from_lng'               => $data['to_lng'],
+                'from_lat'               => $data['to_lat'],
+                'to_lng'                 => $data['from_lng'],
+                'to_lat'                 => $data['from_lat'],
+                'distance'               => $distance,
+                'phone'                  => $data['phone'],
+                'days'                   => 1,
+                'remaining_days'         => 1,
+                'week_days'              => null,
+                'round_trip'             => true,
+                'return_time'            => null,
+                'trip_type'              => 'return',
+                'pickup_date'            => $data['pickup_date'],
+                'pickup_time'            => $data['return_time'],
+                'special_requests'       => $data['special_requests'] ?? null,
+                'tourist_circuit_id'     => $data['tourist_circuit_id'] ?? null,
+                'promo_code_id'          => $data['promo_code_id'] ?? null,
+                'discount'               => $data['discount'] ?? 0,
+                'base_price'             => $basePrice,
+                'total_price'            => $tripPrice,
+                'status'                 => 'pending',
+                'is_recurring'           => false,
+                'parent_booking_id'      => $booking->id,
+                'subscription_driver_id' => null, // cachée jusqu'à acceptation de l'aller
+                'user_id'                => $data['user_id'] ?? null,
+                'client_name'            => $data['client_name'] ?? null,
+            ]);
+        }
+
         // Créer la course retour cachée si aller-retour
-        if ($isRound && isset($data['return_time'])) {
+        if ($isRecurring && $isRound && isset($data['return_time'])) {
             Booking::create([
                 'from_location'          => $data['to_location'],   // inversé
                 'to_location'            => $data['from_location'],
@@ -145,14 +180,23 @@ class BookingService
             ->where('status', 'pending')
             ->where(function ($query) use ($driverId) {
 
-                // 1. Course unique (is_recurring=false, pas d'abonnement)
+                // 1. Course unique aller simple (sans aller-retour)
                 $query->where(function ($q) {
                     $q->where('is_recurring', false)
                         ->whereNull('parent_booking_id')
-                        ->where('trip_type', 'go');
+                        ->where('trip_type', 'go')
+                        ->where('round_trip', false);
                 })
 
-                    // 2. Abonnement parent sans titulaire → tout le monde
+                    // 2. Course unique aller avec aller-retour
+                    ->orWhere(function ($q) {
+                        $q->where('is_recurring', false)
+                            ->whereNull('parent_booking_id')
+                            ->where('trip_type', 'go')
+                            ->where('round_trip', true);
+                    })
+
+                    // 3. Abonnement parent sans titulaire → tout le monde
                     ->orWhere(function ($q) {
                         $q->where('is_recurring', true)
                             ->whereNull('parent_booking_id')
@@ -160,7 +204,7 @@ class BookingService
                             ->where('is_revoked', false);
                     })
 
-                    // 3. Abonnement parent lié à cet agent → lui seul
+                    // 4. Abonnement parent lié à cet agent → lui seul
                     ->orWhere(function ($q) use ($driverId) {
                         $q->where('is_recurring', true)
                             ->whereNull('parent_booking_id')
@@ -168,16 +212,47 @@ class BookingService
                             ->where('is_revoked', false);
                     })
 
-                    // 4. Enfant lié à cet agent → lui seul
+                    // 5. Enfant abonnement lié à cet agent → lui seul
                     ->orWhere(function ($q) use ($driverId) {
                         $q->whereNotNull('parent_booking_id')
+                            ->where('is_recurring', false)
+                            ->where('trip_type', 'go')
                             ->where('subscription_driver_id', $driverId)
-                            ->where('is_revoked', false);
+                            ->where('is_revoked', false)
+                            ->whereHas('parentBooking', fn($p) => $p->where('is_recurring', true));
                     })
 
-                    // 5. Enfant révoqué → tout le monde
+                    // 6. Enfant abonnement révoqué → tout le monde
                     ->orWhere(function ($q) {
                         $q->whereNotNull('parent_booking_id')
+                            ->where('is_recurring', false)
+                            ->where('is_revoked', true)
+                            ->whereHas('parentBooking', fn($p) => $p->where('is_recurring', true));
+                    })
+
+                    // 7. Course retour simple liée à cet agent → lui seul
+                    // (rendue visible après acceptation de l'aller)
+                    ->orWhere(function ($q) use ($driverId) {
+                        $q->whereNotNull('parent_booking_id')
+                            ->where('trip_type', 'return')
+                            ->where('is_recurring', false)
+                            ->where('subscription_driver_id', $driverId)
+                            ->whereHas('parentBooking', fn($p) => $p->where('is_recurring', false));
+                    })
+
+                    // 8. Course retour abonnement liée à cet agent → lui seul
+                    ->orWhere(function ($q) use ($driverId) {
+                        $q->whereNotNull('parent_booking_id')
+                            ->where('trip_type', 'return')
+                            ->where('is_recurring', false)
+                            ->where('subscription_driver_id', $driverId)
+                            ->where('is_revoked', false)
+                            ->whereHas('parentBooking', fn($p) => $p->where('is_recurring', true));
+                    })
+
+                    // 9. Course retour révoquée → tout le monde
+                    ->orWhere(function ($q) {
+                        $q->where('trip_type', 'return')
                             ->where('is_revoked', true);
                     });
             })
@@ -243,37 +318,49 @@ class BookingService
                 throw new \Exception('Réservation déjà prise ou annulée.');
             }
 
-            // Vérifier que l'agent a le droit de voir cette course
             if (!$booking->isVisibleToDriver($driverId)) {
                 throw new \Exception('Cette course n\'est pas accessible.');
             }
 
             $driver = Driver::lockForUpdate()->findOrFail($driverId);
 
-            $pickup = Carbon::parse($booking->pickup_date_time);
-
-            // ❌ Fenêtre de blocage ±2h
-            if ($driver->hasConflictWithinTwoHours($pickup)) {
-                throw new \Exception('Vous avez déjà une course dans une plage de 2 heures autour de cet horaire.');
-            }
-
             $updateData = [
                 'driver_id' => $driver->id,
                 'status'    => 'confirmed',
             ];
 
-            // Lier l'agent à l'abonnement seulement si c'est la première acceptation
-            if ($booking->is_recurring && !$booking->subscription_driver_id) {
+            // Abonnement parent → lier le titulaire + course retour abonnement
+            if (
+                $booking->is_recurring
+                && is_null($booking->parent_booking_id)
+                && !$booking->subscription_driver_id
+            ) {
                 $updateData['subscription_driver_id'] = $driver->id;
 
-                // Lier aussi la course retour du J1 si elle existe
                 Booking::where('parent_booking_id', $booking->id)
                     ->where('trip_type', 'return')
                     ->whereNull('subscription_driver_id')
                     ->update(['subscription_driver_id' => $driver->id]);
             }
 
+            // Course unique aller avec aller-retour → lier l'agent à la course retour
+            if (
+                !$booking->is_recurring
+                && $booking->round_trip
+                && $booking->trip_type === 'go'
+                && is_null($booking->parent_booking_id) // course aller principale
+            ) {
+                $updated = Booking::where('parent_booking_id', $booking->id)
+                    ->where('trip_type', 'return')
+                    ->whereNull('subscription_driver_id')
+                    ->update(['subscription_driver_id' => $driver->id]);
+
+                Log::info("[take] Courses retour simples liées à l'agent : {$updated}");
+            }
+
             $booking->update($updateData);
+
+            Log::info("[take] Booking {$bookingId} accepté par driver {$driverId}");
         });
     }
 
@@ -293,7 +380,6 @@ class BookingService
 
             // CAS 1 — Course enfant d'abonnement → révocation
             if ($booking->is_subscription_child) {
-
                 $booking->update([
                     'status'              => 'cancelled',
                     'cancelled_at'        => now(),
@@ -336,7 +422,7 @@ class BookingService
             }
 
             // CAS 2 — Abonnement parent → annulation + recréation sans agent
-            if ($booking->is_subscription_parent) {
+            if ($booking->is_subscription_parent && $booking->is_recurring) {
                 $booking->update([
                     'status'              => 'cancelled',
                     'cancelled_at'        => now(),
@@ -447,6 +533,9 @@ class BookingService
                 'remaining_days'     => 1,
                 'pickup_date'        => $booking->pickup_date,
                 'pickup_time'        => $booking->pickup_time,
+                'round_trip'         => $booking->round_trip,
+                'return_time'        => $booking->return_time,
+                'trip_type'          => $booking->trip_type,
                 'special_requests'   => $booking->special_requests,
                 'tourist_circuit_id' => $booking->tourist_circuit_id,
                 'discount'           => $booking->discount,
@@ -455,10 +544,48 @@ class BookingService
                 'total_price'        => $booking->total_price,
                 'status'             => 'pending',
                 'is_recurring'       => false,
-                'round_trip'         => false,
-                'trip_type'          => 'go',
+                'user_id'            => $booking->user_id,
                 'client_name'        => $booking->client_name,
             ]);
+
+            // Si aller-retour → recréer aussi la course retour cachée liée au nouvel aller
+            if ($booking->round_trip  && $booking->return_time) {
+                // Supprimer l'ancienne course retour
+                Booking::where('parent_booking_id', $booking->id)
+                    ->where('trip_type', 'return')
+                    ->delete();
+
+                // Recréer liée au nouvel aller
+                Booking::create([
+                    'from_location'          => $booking->to_location,   // inversé
+                    'to_location'            => $booking->from_location,
+                    'from_lng'               => $booking->to_lng,
+                    'from_lat'               => $booking->to_lat,
+                    'to_lng'                 => $booking->from_lng,
+                    'to_lat'                 => $booking->from_lat,
+                    'distance'               => $booking->distance,
+                    'phone'                  => $booking->phone,
+                    'days'                   => 1,
+                    'remaining_days'         => 1,
+                    'pickup_date'            => $booking->pickup_date,
+                    'pickup_time'            => $booking->return_time, // heure retour
+                    'round_trip'             => true,
+                    'return_time'            => null,
+                    'trip_type'              => 'return',
+                    'special_requests'       => $booking->special_requests,
+                    'tourist_circuit_id'     => $booking->tourist_circuit_id,
+                    'discount'               => $booking->discount,
+                    'promo_code_id'          => $booking->promo_code_id,
+                    'base_price'             => $booking->base_price,
+                    'total_price'            => $booking->total_price,
+                    'status'                 => 'pending',
+                    'is_recurring'           => false, // ne recrée pas
+                    'parent_booking_id'      => $newBooking->id,
+                    'subscription_driver_id' => null, // cachée de tous
+                    'user_id'                => $booking->user_id,
+                    'client_name'            => $booking->client_name,
+                ]);
+            }
 
             return $booking;
         });
