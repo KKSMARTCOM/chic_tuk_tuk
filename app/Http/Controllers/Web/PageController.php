@@ -40,6 +40,11 @@ class PageController extends Controller
         return view('pages.index', compact('testimonials', 'zones'));
     }
 
+    public function install()
+    {
+        return view('pages.install');
+    }
+
     public function availableBookings()
     {
         $driver   = Auth::user()->driver;

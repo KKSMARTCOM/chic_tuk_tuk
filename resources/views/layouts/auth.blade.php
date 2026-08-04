@@ -31,7 +31,9 @@
 
 <body class="min-h-screen bg-gray-50 flex items-center justify-center">
     {{-- PWA Components --}}
-    @include('inc.backend.pwa-components')
+    @if (!isset($hidePwaComponent) || !$hidePwaComponent)
+        @include('inc.backend.pwa-components')
+    @endif
 
     <div class="w-full max-w-xl px-4">
         <div class="bg-white shadow-lg rounded-2xl overflow-hidden">

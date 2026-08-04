@@ -16,13 +16,13 @@
                         @php
                             $isParent = $booking->is_subscription_parent;
                             $isChild = $booking->is_subscription_child;
-                            $isUnique = !$booking->is_recurring && !$isChild;
+                            $isSimpleReturn = $booking->is_simple_return;
                             $isReturn = $booking->trip_type === 'return';
 
-                            // Couleur bordure selon type
                             $borderClass = match (true) {
                                 $isParent => 'border-emerald-400 bg-emerald-50/30',
                                 $isChild => 'border-teal-400 bg-teal-50/30',
+                                $isSimpleReturn => 'border-orange-300 bg-orange-50/30',
                                 default => 'border-gray-200',
                             };
                         @endphp
@@ -31,7 +31,7 @@
 
                             {{-- En-tête : badges --}}
                             <div class="flex flex-wrap items-center gap-1.5 mb-3">
-                                {{-- Type de course --}}
+
                                 @if ($isParent)
                                     <span
                                         class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200">
@@ -39,8 +39,19 @@
                                     </span>
                                 @elseif ($isChild)
                                     <span
-                                        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200">
-                                        <i class="fas fa-link"></i> {{ $booking->subscription_label }}
+                                        class="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200 max-w-[200px]">
+                                        <i class="fas fa-link shrink-0"></i>
+                                        <span class="truncate">{{ $booking->subscription_label }}</span>
+                                    </span>
+                                @elseif ($isSimpleReturn)
+                                    <span
+                                        class="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-50 text-orange-600 border border-orange-200 max-w-[200px]">
+                                        <i class="fas fa-arrow-left shrink-0"></i>
+                                        <span class="truncate">
+                                            Retour —
+                                            {{ $booking->parentBooking?->client_name ??
+                                                ($booking->parentBooking?->user?->name ?? ($booking->parentBooking?->booking_number ?? 'N/A')) }}
+                                        </span>
                                     </span>
                                 @else
                                     <span
@@ -49,35 +60,42 @@
                                     </span>
                                 @endif
 
-                                {{-- Aller-Retour --}}
-                                @if ($booking->round_trip)
+                                {{-- Badge aller-retour --}}
+                                @if ($booking->round_trip && !$isSimpleReturn)
                                     <span
                                         class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-50 text-purple-600 border border-purple-200">
-                                        <i class="fas fa-arrows-left-right"></i>
-                                        {{ $isReturn ? 'Retour' : 'Aller-Retour' }}
+                                        <i class="fas fa-arrows-left-right"></i> Aller-Retour
                                     </span>
                                 @endif
 
-                                {{-- Course révoquée --}}
+                                {{-- Badge révoquée --}}
                                 @if ($booking->is_revoked)
                                     <span
                                         class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-500 border border-red-200">
                                         <i class="fas fa-ban"></i> Révoquée
                                     </span>
                                 @endif
-
                             </div>
 
-                            {{-- Référence abonnement parent pour les courses enfants --}}
+                            {{-- Référence pour les enfants abonnement --}}
                             @if ($isChild)
                                 <div class="text-xs text-teal-600 font-medium mb-2 flex items-center gap-1">
                                     <i class="fas fa-link text-teal-400"></i>
-                                    {{ $booking->booking_number }}
-                                    @if ($booking->parentBooking?->user)
-                                        · {{ $booking->parentBooking->user->name }}
-                                    @elseif ($booking->parentBooking?->client_name)
+                                    Abonnement {{ $booking->parentBooking?->booking_number }}
+                                    @if ($booking->parentBooking?->client_name)
                                         · {{ $booking->parentBooking->client_name }}
+                                    @elseif ($booking->parentBooking?->user?->name)
+                                        · {{ $booking->parentBooking->user->name }}
                                     @endif
+                                </div>
+                            @endif
+
+                            {{-- Info retour simple --}}
+                            @if ($isSimpleReturn)
+                                <div class="text-xs text-orange-500 font-medium mb-2 flex items-center gap-1">
+                                    <i class="fas fa-arrow-left text-orange-400"></i>
+                                    Course aller : {{ $booking->parentBooking?->booking_number }}
+                                    · {{ formatDateTimeFr($booking->parentBooking?->pickup_date_time) }}
                                 </div>
                             @endif
 
@@ -88,12 +106,8 @@
                                     {{ formatDateFr($booking->pickup_date_time) }}
                                     · {{ formatTimeFr($booking->pickup_date_time) }}
                                 </span>
-
-                                {{-- Jours restants pour abonnement --}}
-                                @if ($booking->days > 1)
-                                    <span class="text-xs text-gray-400">
-                                        {{ $booking->remaining_days }}j restants
-                                    </span>
+                                @if ($isParent && $booking->days > 1)
+                                    <span class="text-xs text-gray-400">{{ $booking->remaining_days }}j restants</span>
                                 @endif
                             </div>
 
@@ -109,7 +123,15 @@
                                 </div>
                             </div>
 
-                            {{-- Heure de retour : uniquement sur le parent --}}
+                            {{-- Heure de retour sur le parent aller-retour simple --}}
+                            @if (!$isParent && $booking->round_trip && $booking->return_time && !$isReturn && !$isSimpleReturn)
+                                <div class="text-xs text-purple-600 mb-3 flex items-center gap-1">
+                                    <i class="fas fa-arrow-left"></i>
+                                    Retour prévu à {{ $booking->return_time }}
+                                </div>
+                            @endif
+
+                            {{-- Heure de retour sur le parent abonnement --}}
                             @if ($isParent && $booking->round_trip && $booking->return_time)
                                 <div class="text-xs text-purple-600 mb-3 flex items-center gap-1">
                                     <i class="fas fa-arrow-left"></i>
@@ -118,7 +140,7 @@
                             @endif
 
                             {{-- Infos abonnement --}}
-                            @if ($booking->days > 1)
+                            @if ($isParent && $booking->days > 1)
                                 <div class="text-xs text-gray-500 mb-3 flex items-center gap-3">
                                     @if ($booking->week_days)
                                         <span>
@@ -141,33 +163,34 @@
                                 </div>
                             @endif
 
-                            <div class="flex items-center justify-between text-xs text-gray-600 mb-3">
-                                <span><i class="far fa-clock mr-1"></i>
-                                    {{ formatDateFr($booking->pickup_date_time) }}</span>
+                            {{-- Bouton accepter --}}
+                            <div class="flex flex-col gap-2">
+                                <form action="{{ route('driver.bookings.accept', $booking->id) }}" method="POST">
+                                    @csrf
+                                    <button type="submit"
+                                        class="w-full py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold text-sm">
+                                        <i class="fas fa-check-circle mr-2"></i>
+                                        @if ($isParent)
+                                            Accepter l'abonnement
+                                        @elseif ($isSimpleReturn)
+                                            Accepter le retour
+                                        @elseif ($isChild)
+                                            Accepter cette course
+                                        @else
+                                            Accepter
+                                        @endif
+                                    </button>
+                                </form>
+
+                                {{-- Révoquer uniquement pour les enfants abonnement liés à cet agent --}}
+                                @if ($isChild && $booking->subscription_driver_id === auth()->user()->driver?->id)
+                                    <button onclick="revokeTrip('{{ $booking->id }}')"
+                                        class="w-full py-2 border border-amber-400 text-amber-600 rounded-lg hover:bg-amber-50 transition font-semibold text-sm">
+                                        <i class="fas fa-ban mr-2"></i> Révoquer
+                                    </button>
+                                @endif
                             </div>
 
-                            <form action="{{ route('driver.bookings.accept', $booking->id) }}" method="POST">
-                                @csrf
-                                <button type="submit"
-                                    class="w-full py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold text-sm">
-                                    <i class="fas fa-check-circle mr-2"></i>
-                                    @if ($isParent)
-                                        Accepter l'abonnement
-                                    @elseif ($isChild)
-                                        Accepter cette course
-                                    @else
-                                        Accepter
-                                    @endif
-                                </button>
-                            </form>
-
-                            {{-- Révoquer : uniquement pour les courses enfants liées au titulaire --}}
-                            @if ($isChild && $booking->subscription_driver_id === auth()->user()->driver?->id)
-                                <button onclick="revokeTrip('{{ $booking->id }}')"
-                                    class="w-full mt-2 py-2 border border-amber-400 text-amber-600 rounded-lg hover:bg-amber-50 transition font-semibold text-sm">
-                                    <i class="fas fa-ban mr-2"></i> Révoquer
-                                </button>
-                            @endif
                         </div>
                     @endforeach
                 </div>
