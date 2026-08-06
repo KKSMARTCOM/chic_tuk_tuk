@@ -38,45 +38,23 @@ class VehicleController extends Controller
 
     public function store(Request $request)
     {
-        $mode = $request->input('_owner_mode', 'existing');
-
         $rules = [
             'vehicle_number'           => 'required|string|unique:vehicles,vehicle_number',
             'vehicle_type'             => 'required|in:moto,tricycle,car',
             'notes'                    => 'nullable|string|max:500',
-            'contract_total_amount'    => 'nullable|numeric|min:1',
-            'contract_monthly_payment' => 'nullable|numeric|min:0',
-            'contract_start_date'      => 'nullable|date',
-            'contract_end_date'        => 'nullable|date|after:contract_start_date',
-            'contract_notes'           => 'nullable|string|max:1000',
         ];
-
-        if ($mode === 'existing') {
-            $rules['owner_id'] = 'required|exists:users,id';
-        } else {
-            $rules['new_owner_name']     = 'required|string|max:255';
-            $rules['new_owner_phone']    = 'required|string|unique:users,phone';
-            $rules['new_owner_email']    = 'nullable|email|unique:users,email';
-            $rules['new_owner_password'] = ['required', 'string', 'min:8', 'regex:/[A-Z]/', 'regex:/[0-9]/', 'regex:/[@$!%*#?&]/'];
-        }
 
         $validated = $request->validate($rules, [
             'vehicle_number.required'      => 'Le numéro de véhicule est obligatoire.',
             'vehicle_number.unique'        => 'Ce numéro de véhicule existe déjà.',
             'vehicle_type.required'        => 'Le type de véhicule est obligatoire.',
-            'owner_id.required'            => 'Le propriétaire est obligatoire.',
-            'new_owner_name.required'      => 'Le nom du propriétaire est obligatoire.',
-            'new_owner_phone.required'     => 'Le téléphone du propriétaire est obligatoire.',
-            'new_owner_phone.unique'       => 'Ce numéro est déjà utilisé.',
-            'new_owner_email.unique'       => 'Cet email est déjà utilisé.',
-            'new_owner_password.required'  => 'Le mot de passe est obligatoire.',
-            'new_owner_password.min'       => 'Le mot de passe doit contenir au moins 8 caractères.',
-            'new_owner_password.regex'     => 'Le mot de passe doit contenir une majuscule, un chiffre et un caractère spécial.',
-            'contract_end_date.after'      => 'La date de fin doit être après la date de début.',
+            'vehicle_type.in'              => 'Le type de véhicule sélectionné est invalide.',
+            'notes.string'                 => 'Les notes doivent être une chaîne de caractères.',
+            'notes.max'                    => 'Les notes ne doivent pas dépasser 500 caractères.',
         ]);
 
         try {
-            $data = array_merge($validated, ['_owner_mode' => $mode]);
+            $data = $validated;
 
             $vehicle = $this->vehicleService->create($data);
 
@@ -123,54 +101,30 @@ class VehicleController extends Controller
 
     public function update(Request $request, Vehicle $vehicle)
     {
-        $mode              = $request->input('_owner_mode', 'existing');
         $activeContract    = $vehicle->activeVehicleContract;
         $hasActiveContract = $activeContract !== null;
-        $existingContractId = $request->input('existing_contract_id'); // envoyé par le modal
 
         $rules = [
             'vehicle_number' => 'required|string|unique:vehicles,vehicle_number,' . $vehicle->id,
             'vehicle_type'   => 'required|in:moto,tricycle,car',
             'notes'          => 'nullable|string|max:500',
-            // Champs contrat toujours acceptés (création OU mise à jour)
-            'contract_total_amount'    => 'nullable|numeric|min:1',
-            'contract_monthly_payment' => 'nullable|numeric|min:0',
-            'contract_start_date'      => 'nullable|date',
-            'contract_end_date'        => 'nullable|date|after:contract_start_date',
-            'contract_notes'           => 'nullable|string|max:1000',
-            'existing_contract_id'     => 'nullable|exists:vehicle_contracts,id',
         ];
-
-        if ($mode === 'existing') {
-            $rules['owner_id'] = 'required|exists:users,id';
-        } else {
-            $rules['new_owner_name']     = 'required|string|max:255';
-            $rules['new_owner_phone']    = 'required|string|unique:users,phone';
-            $rules['new_owner_email']    = 'nullable|email|unique:users,email';
-            $rules['new_owner_password'] = ['required', 'string', 'min:8', 'regex:/[A-Z]/', 'regex:/[0-9]/', 'regex:/[@$!%*#?&]/'];
-        }
 
         $validated = $request->validate($rules, [
             'vehicle_number.unique'        => 'Ce numéro de véhicule existe déjà.',
-            'owner_id.required'            => 'Le propriétaire est obligatoire.',
-            'new_owner_name.required'      => 'Le nom du propriétaire est obligatoire.',
-            'new_owner_phone.unique'       => 'Ce numéro est déjà utilisé.',
-            'new_owner_password.required'  => 'Le mot de passe est obligatoire.',
-            'new_owner_password.min'       => 'Minimum 8 caractères.',
-            'new_owner_password.regex'     => 'Le mot de passe doit contenir une majuscule, un chiffre et un caractère spécial.',
-            'contract_end_date.after'      => 'La date de fin doit être après la date de début.',
+            'vehicle_number.required'      => 'Le numéro de véhicule est obligatoire.',
+            'vehicle_type.required'        => 'Le type de véhicule est obligatoire.',
+            'vehicle_type.in'              => 'Le type de véhicule sélectionné est invalide.',
+            'notes.string'                 => 'Les notes doivent être une chaîne de caractères.',
+            'notes.max'                    => 'Les notes ne doivent pas dépasser 500 caractères.',
         ]);
 
         try {
-            $data = array_merge($validated, [
-                '_owner_mode' => $mode,
-                'has_active_contract' => $hasActiveContract,
-                'existing_contract_id' => $existingContractId,
-            ]);
+            $data = array_merge($validated, ['has_active_contract' => $hasActiveContract]);
 
             $this->vehicleService->update($vehicle, $data);
 
-            return redirect()->route('admin.vehicles.show', $vehicle)->with('success', 'Véhicule mis à jour avec succès.');
+            return back()->with('success', 'Véhicule mis à jour avec succès.');
         } catch (\Exception $e) {
             Log::error('Erreur lors de la mise à jour du véhicule: ' . $e->getMessage(), ['exception' => $e]);
             return back()->withInput()->with('error', $e->getMessage());
@@ -186,7 +140,7 @@ class VehicleController extends Controller
 
             $vehicle->delete();
 
-            return redirect()->route('admin.vehicles.index')->with('success', 'Véhicule supprimé avec succès.');
+            return back()->with('success', 'Véhicule supprimé avec succès.');
         } catch (\Exception $e) {
             Log::error('Erreur lors de la suppression du véhicule: ' . $e->getMessage(), ['exception' => $e]);
             return back()->with('error', 'Impossible de supprimer ce véhicule : ' . $e->getMessage());
@@ -217,7 +171,7 @@ class VehicleController extends Controller
         try {
             $this->vehicleService->pauseVehicle($vehicle, $validated);
 
-            return redirect()->route('admin.vehicles.index')->with('success', 'Pause véhicule enregistrée avec succès.');
+            return back()->with('success', 'Pause véhicule enregistrée avec succès.');
         } catch (\Exception $e) {
             Log::error('Erreur lors de l\'ajout de la pause: ' . $e->getMessage(), ['exception' => $e]);
             return back()->withInput()->with('error', 'Erreur lors de l\'ajout de la pause : ' . $e->getMessage());

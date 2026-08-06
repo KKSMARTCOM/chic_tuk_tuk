@@ -1,4 +1,4 @@
-<div id="modal-pause" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-30">
+<div id="pauseModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-bold text-gray-800">

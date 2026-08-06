@@ -19,23 +19,27 @@
             {{ request()->routeIs('admin.dashboard') ? 'bg-green-600 border-l-4 border-white' : '' }}">
                 <i class="fas fa-tachometer-alt mr-3"></i> Vue d'ensemble
             </a>
+
             <a href="{{ route('admin.bookings.index') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition
             {{ request()->routeIs('admin.bookings*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
                 <i class="fas fa-calendar-check mr-3"></i> Réservations
             </a>
+
             <a href="{{ route('admin.drivers.index') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition
             {{ request()->routeIs('admin.drivers*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
                 <i class="fas fa-users mr-3"></i> Agents
             </a>
+
             <a href="{{ route('admin.vehicles.index') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition
             {{ request()->routeIs('admin.vehicles*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
                 <i class="fas fa-car mr-3"></i> Véhicules
             </a>
-            {{-- <div id="contracts-menu">
-                <button onclick="toggleMenu('contracts-sub')"
+
+            <div id="contracts-menu">
+                <button onclick="toggleMenu('contracts-sub','contracts-icon')"
                     class="w-full flex items-center justify-between px-6 py-3 hover:bg-green-600 transition
         {{ request()->routeIs('admin.driver-contracts*', 'admin.vehicle-contracts*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
                     <span class="flex items-center">
@@ -58,27 +62,63 @@
                         <i class="fas fa-car mr-3 text-xs"></i> Cnt. Propriétaires
                     </a>
                 </div>
-            </div> --}}
+            </div>
+
             <a href="{{ route('admin.commissions.index') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition
                 {{ request()->routeIs('admin.commissions*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
                 <i class="fas fa-percent mr-3"></i> Commissions
             </a>
+
             <a href="{{ route('admin.payments.index') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition
                 {{ request()->routeIs('admin.payments*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
                 <i class="fas fa-money-bill mr-3"></i> Paiements
             </a>
+
             <a href="{{ route('admin.leaves.index') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition
             {{ request()->routeIs('admin.leaves*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
                 <i class="fas fa-calendar-alt mr-3"></i> Pauses
             </a>
-            <a href="{{ route('admin.users.index') }}"
+
+            {{-- <a href="{{ route('admin.users.index') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition
             {{ request()->routeIs('admin.users*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
                 <i class="fas fa-user mr-3"></i> Utilisateurs
-            </a>
+            </a> --}}
+
+            <div id="users-menu">
+                <button onclick="toggleMenu('users-sub','users-icon')"
+                    class="w-full flex items-center justify-between px-6 py-3 hover:bg-green-600 transition
+        {{ request()->routeIs('admin.users*', 'admin.owners*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
+                    <span class="flex items-center">
+                        <i class="fas fa-user mr-3"></i> Utilisateurs
+                    </span>
+                    <i class="fas fa-chevron-down text-xs transition-transform duration-200" id="users-icon"></i>
+                </button>
+
+                <div id="users-sub"
+                    class="bg-green-900
+        {{ request()->routeIs('admin.users*', 'admin.owners*') ? '' : 'hidden' }}">
+                    <a href="{{ route('admin.users.index') }}"
+                        class="flex items-center pl-12 pr-6 py-2.5 text-sm hover:bg-green-600 transition
+            {{ request()->routeIs('admin.users*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
+                        <i class="fas fa-user-tie mr-3 text-xs"></i> Administrateurs
+                    </a>
+                    <a href="{{ route('admin.owners.index') }}"
+                        class="flex items-center pl-12 pr-6 py-2.5 text-sm hover:bg-green-600 transition
+            {{ request()->routeIs('admin.owners*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
+                        <i class="fas fa-car mr-3 text-xs"></i>Propriétaires
+                    </a>
+                    {{-- <a href="{{ route('admin.users.index') }}"
+                        class="flex items-center pl-12 pr-6 py-2.5 text-sm hover:bg-green-600 transition
+            {{ request()->routeIs('admin.users*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
+                        <i class="fas fa-user-tie mr-3 text-xs"></i> Clients
+                    </a> --}}
+                </div>
+            </div>
+
             <a href="{{ route('admin.roles.index') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition
             {{ request()->routeIs('admin.roles*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
@@ -181,9 +221,9 @@
             document.getElementById('logoutModal').classList.add('hidden');
         }
 
-        function toggleMenu(id) {
+        function toggleMenu(id, ic) {
             const sub = document.getElementById(id);
-            const icon = document.getElementById('contracts-icon');
+            const icon = document.getElementById(ic);
             sub.classList.toggle('hidden');
             icon.classList.toggle('rotate-180');
         }
