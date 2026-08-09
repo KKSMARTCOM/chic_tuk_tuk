@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\CommissionController;
 use App\Http\Controllers\Admin\DriverContractController;
 use App\Http\Controllers\Admin\DriverController;
 use App\Http\Controllers\Admin\LeaveController;
+use App\Http\Controllers\Admin\OwnerController;
 use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\PricingController;
 use App\Http\Controllers\Admin\PromoCodeController;
@@ -111,4 +112,6 @@ Route::middleware(['auth:sanctum', 'profil:admin'])->prefix('admin')->name('admi
     Route::post('driver-contracts/{driverContract}/end', [DriverContractController::class, 'end'])->name('driver-contracts.end')->middleware('permission:manage-contracts');
 
     Route::get('users/{user}/vehicles', [UserController::class, 'vehicles'])->name('users.vehicles');
+
+    Route::resource('owners', OwnerController::class);
 });

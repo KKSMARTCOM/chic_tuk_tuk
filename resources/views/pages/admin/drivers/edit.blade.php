@@ -105,36 +105,6 @@
             </div>
         </div>
 
-        {{-- ── Contrat Agent ── --}}
-        <div class="bg-white rounded-lg shadow-md">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-800">Contrat Agent</h3>
-            </div>
-            <div class="px-6 py-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Code Agent</label>
-                    <input type="text" name="agent_code" value="{{ old('agent_code', $driver->driver?->agent_code) }}"
-                        class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">ID Agent</label>
-                    <input type="text" name="agent_id" value="{{ old('agent_id', $driver->driver?->agent_id) }}"
-                        class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500">
-                </div>
-                @if ($activeContract)
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Durée du contrat actif</label>
-                        <input type="text"
-                            value="{{ $activeContract->contract_months }} mois — depuis {{ $activeContract->start_date->format('d/m/Y') }}"
-                            disabled
-                            class="mt-1 w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-500 cursor-not-allowed">
-                        <p class="text-xs text-gray-400 mt-1">Pour modifier, terminez le contrat actif depuis la fiche de
-                            l'agent.</p>
-                    </div>
-                @endif
-            </div>
-        </div>
-
         {{-- ── Véhicule & Propriétaire ── --}}
         <div class="bg-white rounded-lg shadow-md">
             <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
@@ -427,6 +397,37 @@
                     </div>
                 @endif
 
+            </div>
+        </div>
+
+        {{-- ── Contrat Agent ── --}}
+        <div class="bg-white rounded-lg shadow-md">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">Contrat Agent</h3>
+            </div>
+            <div class="px-6 py-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Code Agent</label>
+                    <input type="text" name="agent_code"
+                        value="{{ old('agent_code', $driver->driver?->agent_code) }}"
+                        class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">ID Agent</label>
+                    <input type="text" name="agent_id" value="{{ old('agent_id', $driver->driver?->agent_id) }}"
+                        class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500">
+                </div>
+                @if ($activeContract)
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Durée du contrat actif</label>
+                        <input type="text"
+                            value="{{ $activeContract->contract_months }} mois — depuis {{ $activeContract->start_date->format('d/m/Y') }}"
+                            disabled
+                            class="mt-1 w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-500 cursor-not-allowed">
+                        <p class="text-xs text-gray-400 mt-1">Pour modifier, terminez le contrat actif depuis la fiche de
+                            l'agent.</p>
+                    </div>
+                @endif
             </div>
         </div>
 

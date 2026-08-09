@@ -6,13 +6,13 @@
     <div class="bg-white rounded-lg shadow-md mb-8">
         <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
             <div>
-                <h1 class="text-lg md:text-2xl font-bold text-gray-800">Gestion des Administrateurs</h1>
-                <p class="text-xs md:text-base text-gray-600">Gérez les comptes administrateurs</p>
+                <h1 class="text-lg md:text-2xl font-bold text-gray-800">Gestion des Propriétaires</h1>
+                <p class="text-xs md:text-base text-gray-600">Gérez les comptes propriétaires</p>
             </div>
-            <button onclick="openCreateModal()"
+            <a href="{{ route('admin.owners.create') }}"
                 class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
-                <i class="fas fa-plus mr-2"></i> Nouvel Administrateur
-            </button>
+                <i class="fas fa-plus mr-2"></i> Nouveau Propriétaire
+            </a>
         </div>
     </div>
 
@@ -37,7 +37,7 @@
     {{-- Filtres --}}
     <div class="bg-white rounded-lg shadow-md mb-6">
         <div class="px-6 py-4">
-            <form method="GET" action="{{ route('admin.users.index') }}" class="flex flex-wrap gap-4">
+            <form method="GET" action="{{ route('admin.owners.index') }}" class="flex flex-wrap gap-4">
                 <div class="flex-1 min-w-48">
                     <input type="text" name="search" value="{{ request('search') }}"
                         placeholder="Nom, email, téléphone..."
@@ -68,7 +68,7 @@
     {{-- Table --}}
     <div class="bg-white rounded-lg shadow-md">
         <div class="px-6 py-4 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-800">Liste des Administrateurs</h3>
+            <h3 class="text-lg font-semibold text-gray-800">Liste des Propriétaires</h3>
         </div>
         @if ($users->count() > 0)
             <div class="overflow-x-auto p-4">
@@ -77,10 +77,10 @@
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                 Ajouter le </th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Administrateur
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Propriétaire
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Contact</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Rôle</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Véhicule(s)</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Statut</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Actions</th>
                         </tr>
@@ -105,18 +105,17 @@
                                     <p class="text-sm text-gray-500">{{ $user->phone }}</p>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span
-                                        class="px-2 py-1 text-xs font-semibold rounded-full
-                                {{ $user->profil === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700' }}">
-                                        {{ ucfirst($user->profil) }}
-                                    </span>
-                                    <div class="mt-1 flex flex-wrap gap-1">
-                                        @foreach ($user->roles as $role)
-                                            <span class="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600">
-                                                {{ $role->label ?? $role->name }}
-                                            </span>
-                                        @endforeach
-                                    </div>
+                                    @if ($user->vehicles->count() > 0)
+                                        <div class="mt-1 flex flex-wrap gap-1">
+                                            @foreach ($user->vehicles as $vehicle)
+                                                <span class="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600">
+                                                    {{ $vehicle->vehicle_number }}
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <span class="text-xs text-gray-600">Aucun véhicle</span>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span
@@ -128,11 +127,10 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
                                     <div class="flex items-center gap-3">
 
-                                        <button
-                                            onclick="openEditModal({{ $user->toJson() }}, {{ $user->roles->pluck('name')->toJson() }})"
+                                        <a href="{{ route('admin.owners.edit', $user) }}"
                                             class="text-green-600 hover:text-green-800" title="Modifier">
                                             <i class="fas fa-edit"></i>
-                                        </button>
+                                        </a>
                                         <button onclick="openPasswordModal('{{ $user->id }}')"
                                             class="text-blue-600 hover:text-blue-800" title="Modifier le mot de passe">
                                             <i class="fas fa-key"></i>
@@ -164,16 +162,10 @@
         @else
             <div class="px-6 py-12 text-center">
                 <i class="fas fa-users text-4xl text-gray-300 mb-4"></i>
-                <p class="text-gray-500">Aucun administrateur trouvé.</p>
+                <p class="text-gray-500">Aucun propriétaire trouvé.</p>
             </div>
         @endif
     </div>
-
-    {{-- ===== MODAL CRÉATION ===== --}}
-    @include('inc.modals.users.add')
-
-    {{-- ===== MODAL MODIFICATION ===== --}}
-    @include('inc.modals.users.edit')
 
     {{-- ===== MODAL MOT DE PASSE ===== --}}
     <div id="passwordModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-30">
@@ -234,11 +226,10 @@
     <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-30">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4">
             <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-bold text-gray-800">Supprimer l'administrateur</h3>
+                <h3 class="text-lg font-bold text-gray-800">Supprimer l'utilisateur</h3>
             </div>
             <div class="p-6">
-                <p class="text-gray-600 mb-6" id="deleteMessage">Êtes-vous sûr de vouloir supprimer cet administrateur ?
-                </p>
+                <p class="text-gray-600 mb-6" id="deleteMessage">Êtes-vous sûr de vouloir supprimer cet utilisateur ?</p>
                 <form id="deleteForm" method="POST">
                     @csrf
                     @method('DELETE')
@@ -288,50 +279,11 @@
                 },
             })
 
-            // ===== CRÉATION =====
-            function openCreateModal() {
-                generatePassword();
-
-                document.getElementById('create_role').value = '';
-
-                document.getElementById('createModal').classList.remove('hidden');
-                document.getElementById('createModal').classList.add('flex');
-            }
-
-            function closeCreateModal() {
-                document.getElementById('createModal').classList.add('hidden');
-                document.getElementById('createModal').classList.remove('flex');
-            }
-
             // Génère un mot de passe via AJAX
             async function generatePassword() {
                 const res = await fetch('{{ route('admin.users.generate-password') }}');
                 const data = await res.json();
                 document.getElementById('create_password').value = data.password;
-            }
-
-            // ===== MODIFICATION =====
-            function openEditModal(user, userRoles) {
-                document.getElementById('edit_name').value = user.name;
-                document.getElementById('edit_email').value = user.email ?? '';
-                document.getElementById('edit_phone').value = user.phone;
-                document.getElementById('edit_profil').value = user.profil;
-                document.getElementById('edit_adresse').value = user.adresse ?? '';
-                document.getElementById('edit_is_active').checked = user.is_active;
-
-                // Rôle Spatie — premier rôle de l'utilisateur
-                const firstRole = userRoles.length > 0 ? userRoles[0] : '';
-                document.getElementById('edit_role').value = firstRole;
-
-                document.getElementById('editForm').action = `/admin/users/${user.id}`;
-
-                document.getElementById('editModal').classList.remove('hidden');
-                document.getElementById('editModal').classList.add('flex');
-            }
-
-            function closeEditModal() {
-                document.getElementById('editModal').classList.add('hidden');
-                document.getElementById('editModal').classList.remove('flex');
             }
 
             // ===== MOT DE PASSE =====

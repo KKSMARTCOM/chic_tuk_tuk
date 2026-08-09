@@ -96,42 +96,6 @@
             </div>
         </div>
 
-        {{-- ── Contrat Agent ── --}}
-        <div class="bg-white rounded-lg shadow-md">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-800">Contrat Agent</h3>
-            </div>
-            <div class="px-6 py-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Code Agent</label>
-                    <input type="text" name="agent_code" value="{{ old('agent_code') }}"
-                        class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-                        placeholder="Code agent">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">ID Agent</label>
-                    <input type="text" name="agent_id" value="{{ old('agent_id') }}"
-                        class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-                        placeholder="ID agent">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Durée du contrat</label>
-                    <select name="contract_months"
-                        class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500">
-                        <option value="">-- Sélectionnez --</option>
-                        <option value="24" {{ old('contract_months') == '24' ? 'selected' : '' }}>24 mois</option>
-                        <option value="30" {{ old('contract_months') == '30' ? 'selected' : '' }}>30 mois</option>
-                        <option value="36" {{ old('contract_months') == '36' ? 'selected' : '' }}>36 mois</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Date de début</label>
-                    <input type="date" name="start_date" value="{{ old('start_date') }}"
-                        class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500">
-                </div>
-            </div>
-        </div>
-
         {{-- ── Propriétaire & Véhicule ── --}}
         <div class="bg-white rounded-lg shadow-md">
             <div class="px-6 py-4 border-b border-gray-200">
@@ -348,7 +312,46 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
 
+        {{-- ── Contrat Agent ── --}}
+        <div class="bg-white rounded-lg shadow-md">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">Contrat Agent</h3>
+            </div>
+
+            <div class="px-6 py-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Code Agent</label>
+                    <input type="text" name="agent_code" value="{{ old('agent_code') }}"
+                        class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                        placeholder="Code agent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">ID Agent</label>
+                    <input type="text" name="agent_id" value="{{ old('agent_id') }}"
+                        class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                        placeholder="ID agent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Durée du contrat</label>
+                    <select name="contract_months"
+                        class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500">
+                        <option value="">-- Sélectionnez --</option>
+                        <option value="24" {{ old('contract_months') == '24' ? 'selected' : '' }}>24 mois</option>
+                        <option value="30" {{ old('contract_months') == '30' ? 'selected' : '' }}>30 mois</option>
+                        <option value="36" {{ old('contract_months') == '36' ? 'selected' : '' }}>36 mois</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Date de début</label>
+                    <input type="date" name="start_date" value="{{ old('start_date') }}"
+                        class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500">
+                </div>
+            </div>
+
+            <div class="px-6 pb-6">
                 <p class="text-sm text-blue-800 bg-blue-50 rounded-lg px-4 py-3">
                     <i class="fas fa-info-circle mr-2"></i>
                     L'agent sera créé <strong>Actif</strong> et <strong>Disponible</strong> par défaut.
