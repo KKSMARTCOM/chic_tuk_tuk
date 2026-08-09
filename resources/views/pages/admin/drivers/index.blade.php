@@ -186,11 +186,16 @@
                                     <div class="text-sm text-gray-500">{{ $driver->phone ?? 'N/A' }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">
-                                        {{ $driver->driver->currentVehicle->vehicle_number ?? 'N/A' }}
-                                    </div>
-                                    <div class="text-sm text-gray-500">
-                                        {{ vehiculeType($driver->driver->currentVehicle?->vehicle_type) ?? 'N/A' }}</div>
+                                    @if ($driver->driver->currentVehicle)
+                                        <div class="text-sm text-gray-900">
+                                            {{ $driver->driver->currentVehicle->vehicle_number ?? 'N/A' }}
+                                        </div>
+                                        <div class="text-sm text-gray-500">
+                                            {{ vehiculeType($driver->driver->currentVehicle?->vehicle_type) ?? 'N/A' }}
+                                        </div>
+                                    @else
+                                        <span class="text-xs text-gray-400 italic">Aucun véhicule</span>
+                                    @endif()
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex flex-col space-y-1">

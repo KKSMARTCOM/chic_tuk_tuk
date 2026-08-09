@@ -12,9 +12,12 @@ class Payment extends Model
 
     protected $fillable = [
         'driver_id',
+        'payment_type',         // nouveau
         'vehicle_contract_id',  // nouveau
         'driver_contract_id',   // nouveau
         'payment_month',        // nouveau
+        'gross_amount',         // nouveau
+        'status',               // nouveau
         'amount',
         'payment_method',
         'payment_date',
@@ -26,6 +29,7 @@ class Payment extends Model
         'payment_date' => 'date',
         'payment_month' => 'date', // nouveau
         'amount' => 'decimal:2',
+        'gross_amount' => 'decimal:2', // nouveau
     ];
 
     public function driver()

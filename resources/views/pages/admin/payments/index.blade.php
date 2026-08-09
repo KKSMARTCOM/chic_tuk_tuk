@@ -126,6 +126,18 @@
                 </div>
 
                 <div>
+                    <label class="block text-gray-700 text-sm font-semibold mb-2">Type de Paiement</label>
+                    <select name="payment_type"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">-- Tous --</option>
+                        <option value="commission" {{ request('payment_type') == 'commission' ? 'selected' : '' }}>
+                            Commission</option>
+                        <option value="contract" {{ request('payment_type') == 'contract' ? 'selected' : '' }}>Contractuel
+                        </option>
+                    </select>
+                </div>
+
+                <div>
                     <label class="block text-gray-700 text-sm font-semibold mb-2">Recherche</label>
                     <input type="text" name="search" placeholder="Nom ou Référence..."
                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"

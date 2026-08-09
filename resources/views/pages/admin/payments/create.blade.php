@@ -40,6 +40,60 @@
                 @enderror
             </div>
 
+            <!-- Type de Paiement -->
+            <div class="mb-6">
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Type de Paiement <span
+                        class="text-red-600">*</span></label>
+                <select name="payment_type" required
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 @error('payment_type') border-red-500 @enderror">
+                    <option value="commission" {{ old('payment_type') == 'commission' ? 'selected' : '' }}>Commission
+                    </option>
+                    <option value="contract" {{ old('payment_type') == 'contract' ? 'selected' : '' }}>Contractuel</option>
+                </select>
+                @error('payment_type')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <!-- Contrat agent -->
+            <div class="mb-6">
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Contrat Agent</label>
+                <select name="driver_contract_id"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">-- Aucun --</option>
+                    @foreach ($driverContracts as $contract)
+                        <option value="{{ $contract->id }}"
+                            {{ old('driver_contract_id') == $contract->id ? 'selected' : '' }}>
+                            {{ $contract->driver?->user?->name ?? 'N/A' }} –
+                            {{ $contract->vehicle?->vehicle_number ?? 'N/A' }}
+                            ({{ ucfirst($contract->status) }})
+                        </option>
+                    @endforeach
+                </select>
+                @error('driver_contract_id')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <!-- Contrat véhicule -->
+            <div class="mb-6">
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Contrat Véhicule</label>
+                <select name="vehicle_contract_id"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">-- Aucun --</option>
+                    @foreach ($vehicleContracts as $contract)
+                        <option value="{{ $contract->id }}"
+                            {{ old('vehicle_contract_id') == $contract->id ? 'selected' : '' }}>
+                            {{ $contract->vehicle?->vehicle_number ?? 'N/A' }} – {{ $contract->owner?->name ?? 'N/A' }}
+                            ({{ ucfirst($contract->status) }})
+                        </option>
+                    @endforeach
+                </select>
+                @error('vehicle_contract_id')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
             <!-- Montant -->
             <div class="mb-6">
                 <label class="block text-gray-700 text-sm font-semibold mb-2">Montant (FCFA) <span

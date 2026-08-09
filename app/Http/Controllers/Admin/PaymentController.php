@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Driver;
+use App\Models\DriverContract;
 use App\Models\Payment;
+use App\Models\VehicleContract;
 use App\Services\PaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -43,8 +45,10 @@ class PaymentController extends Controller
     {
         try {
             $drivers = Driver::with('user')->orderBy('id')->get();
+            $driverContracts = DriverContract::with('driver.user', 'vehicle')->latest()->get();
+            $vehicleContracts = VehicleContract::with('vehicle', 'owner')->latest()->get();
 
-            return view('pages.admin.payments.create', compact('drivers'));
+            return view('pages.admin.payments.create', compact('drivers', 'driverContracts', 'vehicleContracts'));
         } catch (\Exception $e) {
             Log::error('Erreur lors de l’affichage du formulaire de paiement : ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()->with('error', $e->getMessage());
@@ -59,25 +63,15 @@ class PaymentController extends Controller
         try {
             $validated = $request->validate([
                 'driver_id' => 'required|exists:drivers,id',
-                'amount'           => [
-                    'required',
-                    'numeric',
-                    'min:0.01',
-                    function ($attribute, $value, $fail) use ($request) {
-                        $driverId  = $request->driver_id;
-                        $totalDue  = \App\Models\Commission::where('driver_id', $driverId)->sum('amount');
-                        $totalPaid = \App\Models\Payment::where('driver_id', $driverId)->sum('amount');
-                        $remaining = $totalDue - $totalPaid;
-
-                        if ($value > $remaining) {
-                            $fail("Le montant ne peut pas dépasser la commission restante due ({$remaining}).");
-                        }
-                    },
-                ],
+                'payment_type' => 'required|in:commission,contract',
+                'vehicle_contract_id' => 'nullable|exists:vehicle_contracts,id',
+                'driver_contract_id' => 'nullable|exists:driver_contracts,id',
+                'amount'           => 'required|numeric|min:0.01',
                 'payment_method' => 'required|in:cash,bank_transfer,check,mobile_money,other',
                 'payment_date' => 'required|date',
                 'notes' => 'nullable|string|max:500',
-                //'reference_number' => 'nullable|string|max:100|unique:payments',
+                'reference_number' => 'nullable|string|max:100|unique:payments',
+                'gross_amount' => 'nullable|numeric|min:0.01',
             ]);
 
             $this->paymentService->create($validated);
@@ -112,8 +106,10 @@ class PaymentController extends Controller
     {
         try {
             $drivers = Driver::with('user')->orderBy('id')->get();
+            $driverContracts = DriverContract::with('driver.user', 'vehicle')->latest()->get();
+            $vehicleContracts = VehicleContract::with('vehicle', 'owner')->latest()->get();
 
-            return view('pages.admin.payments.edit', compact('payment', 'drivers'));
+            return view('pages.admin.payments.edit', compact('payment', 'drivers', 'driverContracts', 'vehicleContracts'));
         } catch (\Exception $e) {
             Log::error('Erreur lors de l’affichage du paiement : ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()->with('error', $e->getMessage());
@@ -133,12 +129,13 @@ class PaymentController extends Controller
                 'payment_date' => 'required|date',
                 'notes' => 'nullable|string|max:500',
                 'reference_number' => 'nullable|string|max:100|unique:payments,reference_number,' . $payment->id,
+                'gross_amount' => 'nullable|numeric|min:0.01',
+                'status' => 'nullable|in:pending,completed,cancelled',
             ]);
 
             $this->paymentService->update($payment->id, $validated);
 
-            return redirect()->route('admin.payments.show', $payment)
-                ->with('success', 'Paiement mis à jour avec succès');
+            return redirect()->route('admin.payments.show', $payment)->with('success', 'Paiement mis à jour avec succès');
         } catch (\Exception $e) {
             Log::error('Erreur lors de la mise à jour du paiement : ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()->with('error', $e->getMessage());
@@ -153,8 +150,7 @@ class PaymentController extends Controller
         try {
             $this->paymentService->delete($payment->id);
 
-            return redirect()->route('admin.payments.index')
-                ->with('success', 'Paiement supprimé avec succès');
+            return redirect()->route('admin.payments.index')->with('success', 'Paiement supprimé avec succès');
         } catch (\Exception $e) {
             Log::error('Erreur lors de la suppression du paiement : ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()->with('error', $e->getMessage());

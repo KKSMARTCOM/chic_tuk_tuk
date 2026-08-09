@@ -98,7 +98,37 @@ class DriverContractController extends Controller
 
         $stats = $this->contractService->getStats($driverContract);
 
-        return view('pages.admin.driver-contracts.show', compact('driverContract', 'stats'));
+        $driver = $driverContract->driver?->user;
+        $vehicle = $driverContract->vehicle;
+        $owner = $vehicle?->owner;
+        $paymentsByMonth = $driverContract->payments
+            ->groupBy(fn($payment) => ($payment->payment_month ?? $payment->payment_date)?->format('Y-m'))
+            ->map(function ($payments, $month) {
+                return (object) [
+                    'month' => $month,
+                    'total' => $payments->sum('amount'),
+                ];
+            });
+
+        $usedDays = $stats['used_leave_days'] ?? $driverContract->used_leave_days;
+        $accruedDays = $stats['accrued_leave_days'] ?? $driverContract->accrued_leave_days;
+        $availableDays = $stats['available_leave_days'] ?? $driverContract->available_leave_days;
+        $surplusDays = $stats['surplus_leave_days'] ?? max(0, $availableDays < 0 ? abs($availableDays) : 0);
+        $progressPercent = $stats['progress_percent'] ?? min(100, round(($stats['months_elapsed'] ?? $driverContract->months_elapsed) / $driverContract->contract_months * 100));
+
+        return view('pages.admin.contracts.driver-show', compact(
+            'driverContract',
+            'stats',
+            'driver',
+            'vehicle',
+            'owner',
+            'paymentsByMonth',
+            'usedDays',
+            'accruedDays',
+            'availableDays',
+            'surplusDays',
+            'progressPercent'
+        ));
     }
 
     public function update(Request $request, DriverContract $driverContract)
@@ -165,7 +195,7 @@ class DriverContractController extends Controller
     public function destroy(DriverContract $driverContract)
     {
         try {
-            $driverContract->delete();
+            $this->contractService->delete($driverContract);
             return redirect()->back()->with('success', 'Contrat supprimé.');
         } catch (\Exception $e) {
             Log::error('Erreur lors de la suppression du contrat agent : ' . $e->getMessage(), ['exception' => $e]);
