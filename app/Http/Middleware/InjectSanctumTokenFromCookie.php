@@ -17,7 +17,7 @@ class InjectSanctumTokenFromCookie
     {
         if (!$request->bearerToken()) {
             // Parcourt les trois cookies possibles
-            foreach (['admin', 'driver', 'client'] as $profil) {
+            foreach (['admin', 'driver', 'client', 'owner'] as $profil) {
                 $token = $request->cookie('ctt_' . $profil . '_token');
                 if ($token) {
                     $request->headers->set('Authorization', 'Bearer ' . $token);
