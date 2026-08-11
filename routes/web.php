@@ -18,6 +18,7 @@ Route::post('/bookings', [BookingController::class, 'store'])->name('bookings.st
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+    Route::get('/owner/login', [AuthController::class, 'showOwnerLoginForm'])->name('owner.login');
     Route::post('/login-store', [AuthController::class, 'loginStore'])->name('login.store');
 });
 
