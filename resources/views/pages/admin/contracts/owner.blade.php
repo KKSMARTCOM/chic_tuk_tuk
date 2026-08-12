@@ -35,8 +35,8 @@
                                 </th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Progression
                                 </th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Mensualité
-                                </th>
+                                {{-- <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Mensualité
+                                </th> --}}
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Statut</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Actions</th>
                             </tr>
@@ -94,9 +94,9 @@
                                             @endif
                                         </div>
                                     </td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                                    {{-- <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
                                         {{ number_format($stats['monthly_payment'], 0, ',', ' ') }} FCFA
-                                    </td>
+                                    </td> --}}
                                     <td class="px-4 py-3 whitespace-nowrap">
                                         <span
                                             class="px-2 py-1 text-xs font-semibold rounded-full
@@ -140,25 +140,6 @@
                     <p class="text-gray-500">Aucun contrat propriétaire trouvé.</p>
                 </div>
             @endif
-        </div>
-    </div>
-
-    {{-- ===== MODAL DÉTAIL ===== --}}
-    <div id="detailModal" class="fixed inset-0 px-4 bg-black bg-opacity-50 hidden items-center justify-center z-30">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4">
-            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                <h3 class="text-lg font-bold text-gray-800" id="detailTitle">Détails du contrat</h3>
-                <button onclick="closeModal('detailModal')" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="p-6 space-y-2" id="detailBody"></div>
-            <div class="px-6 py-4 border-t border-gray-100 flex justify-end">
-                <button onclick="closeModal('detailModal')"
-                    class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
-                    Fermer
-                </button>
-            </div>
         </div>
     </div>
 
@@ -341,38 +322,6 @@
                 document.getElementById(id).classList.remove('flex');
             }
 
-            // ===== DÉTAIL =====
-            function openDetailModal(type, id, contract, stats) {
-                const body = document.getElementById('detailBody');
-                const title = document.getElementById('detailTitle');
-
-                title.textContent = 'Contrat propriétaire — ' + (contract.owner?.name ?? 'N/A');
-                const rem = (stats?.remaining ?? 0);
-                const surplus = (stats?.surplus ?? 0);
-                body.innerHTML = detailRow('Propriétaire', contract.owner?.name ?? 'N/A') +
-                    detailRow('Véhicule', contract.vehicle?.vehicle_number ?? 'N/A') +
-                    detailRow('Début', contract.start_date) +
-                    detailRow('Montant total', formatAmount(contract.total_amount ?? 0)) +
-                    detailRow('Mensualité', formatAmount(contract.monthly_payment ?? 0)) +
-                    detailRow('Total payé', '<span class="text-green-600 font-medium">' + formatAmount(stats?.total_paid ??
-                        0) + '</span>') +
-                    detailRow('Restant', rem <= 0 ? '<span class="text-green-600 font-medium">Soldé</span>' :
-                        '<span class="text-red-500 font-medium">' + formatAmount(rem) + '</span>') +
-                    (surplus > 0 ? detailRow('Surplus', '<span class="text-amber-500 font-medium">+' + formatAmount(
-                        surplus) + '</span>') : '') +
-                    detailRow('Progression', (stats?.progress_percent ?? 0) + '%') +
-                    detailRow('Paiements', (stats?.payments_count ?? 0) + ' paiement(s)');
-
-                openModal('detailModal');
-            }
-
-            function detailRow(label, value) {
-                return `<div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-            <span class="text-sm text-gray-500">${label}</span>
-            <span class="text-sm font-medium text-gray-900">${value}</span>
-        </div>`;
-            }
-
             function formatAmount(n) {
                 return Number(n).toLocaleString('fr-FR') + ' FCFA';
             }
@@ -423,11 +372,6 @@
                 document.getElementById('deleteContractName').textContent = name;
                 document.getElementById('deleteForm').action = `/admin/${resource}/${id}`;
                 openModal('deleteModal');
-            }
-
-            // ===== CRÉER =====
-            function openCreateModal() {
-                openModal('createModal');
             }
 
             document.getElementById('contract_months').addEventListener('change', function() {

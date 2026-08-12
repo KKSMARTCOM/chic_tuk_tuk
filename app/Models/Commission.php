@@ -16,6 +16,7 @@ class Commission extends Model
         'booking_id',
         'amount',
         'date',
+        'status',
     ];
 
     protected $casts = [

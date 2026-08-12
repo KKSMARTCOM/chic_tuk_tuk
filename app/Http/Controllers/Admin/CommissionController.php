@@ -41,4 +41,15 @@ class CommissionController extends Controller
             return redirect()->back()->with('error', $e->getMessage());
         }
     }
+
+    public function destroy(Commission $commission)
+    {
+        try {
+            $commission->delete();
+            return back()->with('success', 'Commission supprimer avec succès.');
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de l’annulation de la commission : ' . $e->getMessage(), ['exception' => $e]);
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+    }
 }

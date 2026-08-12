@@ -17,7 +17,6 @@ use App\Http\Controllers\Admin\TouristCircuitController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VehicleContractController;
 use App\Http\Controllers\Admin\VehicleController;
-use App\Http\Controllers\Admin\VehiclePauseController;
 use App\Http\Controllers\Web\DashboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -71,10 +70,14 @@ Route::middleware(['auth:sanctum', 'profil:admin'])->prefix('admin')->name('admi
     // Commissions
     Route::get('commissions', [CommissionController::class, 'index'])->name('commissions.index')->middleware('permission:view-commissions');
     Route::get('commissions/{commission}', [CommissionController::class, 'show'])->name('commissions.show')->middleware('permission:view-commissions');
+    Route::patch('commissions/{commission}', [CommissionController::class, 'destroy'])->name('commissions.destroy');
 
     // Payments
     Route::resource('payments', PaymentController::class);
     Route::get('payments/driver/{driverId}/details', [PaymentController::class, 'driverPaymentDetails'])->name('payments.driver-details')->middleware('permission:view-payments');
+    Route::patch('payments/{payment}/validated', [PaymentController::class, 'validate'])->name('payments.validate');
+    Route::patch('payments/{payment}/cancelled', [PaymentController::class, 'cancel'])->name('payments.cancel');
+    Route::post('payments/{payment}/generated', [PaymentController::class, 'generatePayment'])->name('payments.generate');
 
     // Roles & Permissions Management - API routes first (more specific)
     Route::get('roles/{role}/data', [RoleController::class, 'getData'])->name('roles.data')->middleware('permission:view-roles');
