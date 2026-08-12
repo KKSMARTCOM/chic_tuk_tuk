@@ -318,7 +318,7 @@
 
         {{-- Boutons --}}
         <div class="bg-white rounded-lg shadow-md px-6 py-4 flex justify-end gap-3">
-            <a href="{{ route('admin.users.index') }}"
+            <a href="{{ route('admin.owners.index') }}"
                 class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-semibold">
                 Annuler
             </a>

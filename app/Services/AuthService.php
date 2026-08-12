@@ -98,6 +98,9 @@ class AuthService
             'driver' => redirect()->route('driver.dashboard')
                 ->with('success', 'Connexion réussie en tant que conducteur.')
                 ->cookie($cookie),
+            'owner'  => redirect()->route('owner.dashboard')
+                ->with('success', 'Connexion réussie.')
+                ->cookie($cookie),
             default  => redirect()->route('client.dashboard')
                 ->with('success', 'Connexion réussie.')
                 ->cookie($cookie),
@@ -180,7 +183,7 @@ class AuthService
     public function logout(Request $request)
     {
         // Cherche le rôle actif parmi les cookies présents
-        foreach (['admin', 'driver', 'client'] as $profil) {
+        foreach (['admin', 'driver', 'client', 'owner'] as $profil) {
             $cookieName = 'ctt_' . $profil . '_token';
             $rawToken   = $request->cookie($cookieName);
 
@@ -200,7 +203,11 @@ class AuthService
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
-            return redirect('/login')->with('success', 'Déconnecté avec succès.');
+            if ($profil === 'owner') {
+                return redirect('/owner/login')->with('success', 'Déconnecté avec succès.');
+            } else {
+                return redirect('/login')->with('success', 'Déconnecté avec succès.');
+            }
         }
 
         // Sécurité : déconnecter la session même si aucun cookie trouvé

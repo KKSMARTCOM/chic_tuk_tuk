@@ -92,23 +92,13 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
-        $isOwner = false;
-        if (method_exists($user, 'hasRole')) {
-            $isOwner = $user->hasRole('proprietaire');
-        } elseif (isset($user->role)) {
-            $isOwner = $user->role === 'proprietaire';
-        }
-
-        if ($isOwner) {
-            return view('pages.client.owner.payments');
-        }
-
-        return view('pages.client.dashboard', compact('stats'));
+        return view('pages.client.dashboard');
     }
 
     public function owner()
     {
-        $user     = auth()->user();
+        $user = Auth::user();
+
         $vehicles = $user->vehicles()->with([
             'activeVehicleContract',
             'activeDriverContract.driver.user',
@@ -126,6 +116,6 @@ class DashboardController extends Controller
             ];
         });
 
-        return view('pages.owner.dashboard', compact('vehicles', 'stats'));
+        return view('pages.client.owner.payments', compact('vehicles', 'stats'));
     }
 }

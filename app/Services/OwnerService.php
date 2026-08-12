@@ -17,7 +17,7 @@ class OwnerService
     public function getAll(array $filters = [])
     {
         $query = User::with('roles', 'vehicles')
-            ->where('profil', 'client')
+            ->where('profil', 'owner')
             ->role('proprietaire');
 
         if (!empty($filters['search'])) {
@@ -42,14 +42,12 @@ class OwnerService
 
     public function getStats(): array
     {
-        $users = User::where('profil', 'proprietaire');
+        $users = User::where('profil', 'owner')->role('proprietaire');
 
         return [
             'total'    => $users->count(),
             'active'   => (clone $users)->where('is_active', true)->count(),
             'inactive' => (clone $users)->where('is_active', false)->count(),
-            'admins'   => (clone $users)->where('profil', 'admin')->count(),
-            'clients'  => (clone $users)->where('profil', 'client')->count(),
         ];
     }
 
@@ -79,17 +77,6 @@ class OwnerService
         return implode('', $password);
     }
 
-    /*     public function generatePassword(): string
-    {
-        
-        $upper   = strtoupper(Str::random(2));
-        $digits  = rand(10, 99);
-        $special = Str::random(2, '@$!%*#?&');
-        $lower   = Str::random(4);
-
-        return str_shuffle($upper . $digits . $special . $lower);
-    } */
-
     public function create(array $data): User
     {
         return DB::transaction(function () use ($data) {
@@ -99,7 +86,7 @@ class OwnerService
                 'email'     => $data['email'] ?? null,
                 'phone'     => $data['phone'],
                 'password'  => Hash::make($data['password']),
-                'profil'    => 'client',
+                'profil'    => 'owner',
                 'adresse'   => $data['adresse'] ?? null,
                 'is_active' => $data['is_active'] ?? true,
             ]);
@@ -155,7 +142,7 @@ class OwnerService
                 'name'      => $data['name'],
                 'email'     => $data['email']    ?? $owner->email,
                 'phone'     => $data['phone'],
-                'profil'    => 'client',
+                'profil'    => 'owner',
                 'adresse'   => $data['adresse']  ?? $owner->adresse,
                 'is_active' => $data['is_active'] ?? $owner->is_active,
             ]);

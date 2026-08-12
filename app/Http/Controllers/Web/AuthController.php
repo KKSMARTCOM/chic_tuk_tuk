@@ -23,11 +23,16 @@ class AuthController extends Controller
         return view('pages.auth.login');
     }
 
+    public function showOwnerLoginForm()
+    {
+        return view('pages.auth.owner-login');
+    }
+
     public function loginStore(Request $request)
     {
         try {
             $credentials = $request->validate([
-                'profil'    => ['required', 'string', 'in:admin,client,driver'],
+                'profil'    => ['required', 'string', 'in:admin,client,driver,owner'],
                 'email'    => ['required', 'email'],
                 'password' => [
                     'required',
