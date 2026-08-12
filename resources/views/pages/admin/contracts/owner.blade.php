@@ -35,8 +35,8 @@
                                 </th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Progression
                                 </th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Mensualité
-                                </th>
+                                {{-- <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Mensualité
+                                </th> --}}
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Statut</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Actions</th>
                             </tr>
@@ -94,9 +94,9 @@
                                             @endif
                                         </div>
                                     </td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                                    {{-- <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
                                         {{ number_format($stats['monthly_payment'], 0, ',', ' ') }} FCFA
-                                    </td>
+                                    </td> --}}
                                     <td class="px-4 py-3 whitespace-nowrap">
                                         <span
                                             class="px-2 py-1 text-xs font-semibold rounded-full

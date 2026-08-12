@@ -15,6 +15,19 @@ class VehicleContract
         36 => 4_049_100,
     ];
 
+    // Charge fiscale
+    public const TAXE = [
+        24 => 241,
+        30 => 229,
+        36 => 211
+    ];
+
+    public const AMOUNTS = [
+        24 => 6112,
+        30 => 5691,
+        36 => 5251
+    ];
+
     // Charges mensuelles par défaut
     public const DEFAULT_UNLIMITED_INTERNET   = 5_000;
     public const DEFAULT_SPOTIFY_PREMIUM      = 2_500;

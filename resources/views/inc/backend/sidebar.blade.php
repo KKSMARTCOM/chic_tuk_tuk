@@ -101,13 +101,13 @@
                 <i class="fas fa-percent mr-3"></i> Commissions
             </a>
 
-            {{-- <a href="{{ route('admin.payments.index') }}"
+            <a href="{{ route('admin.payments.index') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition
                 {{ request()->routeIs('admin.payments*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
                 <i class="fas fa-money-bill mr-3"></i> Paiements
-            </a> --}}
+            </a>
 
-            <div id="payments-menu">
+            {{-- <div id="payments-menu">
                 <button onclick="toggleMenu('payments-sub','payments-icon')"
                     class="w-full flex items-center justify-between px-6 py-3 hover:bg-green-600 transition
         {{ request()->routeIs('admin.payments*', 'admin.vehicle-contracts*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
@@ -131,7 +131,7 @@
                         <i class="fas fa-car mr-3 text-xs"></i> Contractuels
                     </a>
                 </div>
-            </div>
+            </div> --}}
 
             <a href="{{ route('admin.leaves.index') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition

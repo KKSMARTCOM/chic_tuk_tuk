@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('payments', function (Blueprint $table) {
             $table->enum('payment_type', ['commission', 'contract', 'bonus', 'other'])->default('commission')->after('driver_id');
             $table->enum('status', ['pending', 'completed', 'cancelled', 'failed'])->default('pending')->after('payment_type');
-            $table->decimal('gross_amount', 12, 2)->nullable()->after('amount');
+            $table->decimal('net_amount', 12, 2)->nullable()->after('amount');
         });
     }
 
@@ -24,7 +24,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('payments', function (Blueprint $table) {
-            $table->dropColumn(['payment_type', 'status', 'gross_amount']);
+            $table->dropColumn(['payment_type', 'status', 'net_amount']);
         });
     }
 };

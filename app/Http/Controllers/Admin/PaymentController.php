@@ -26,7 +26,7 @@ class PaymentController extends Controller
     public function index(Request $request)
     {
         try {
-            $filters = $request->only(['driver_id', 'payment_method', 'search', 'date_from', 'date_to']);
+            $filters = $request->only(['driver_id', 'payment_method', 'payment_type', 'search', 'date_from', 'date_to']);
             $payments = $this->paymentService->getAllPayments($filters);
             $stats = $this->paymentService->getPaymentStats();
             $drivers = Driver::with('user')->orderBy('id')->get();
@@ -44,11 +44,12 @@ class PaymentController extends Controller
     public function create()
     {
         try {
-            $drivers = Driver::with('user')->orderBy('id')->get();
-            $driverContracts = DriverContract::with('driver.user', 'vehicle')->latest()->get();
-            $vehicleContracts = VehicleContract::with('vehicle', 'owner')->latest()->get();
+            // Récupérer uniquement les agents qui ont un contrat actif
+            $drivers = Driver::whereHas('driverContracts', function ($query) {
+                $query->where('status', 'active');
+            })->with('user', 'activeDriverContract', 'currentVehicle.activeVehicleContract')->orderBy('id')->get();
 
-            return view('pages.admin.payments.create', compact('drivers', 'driverContracts', 'vehicleContracts'));
+            return view('pages.admin.payments.create', compact('drivers'));
         } catch (\Exception $e) {
             Log::error('Erreur lors de l’affichage du formulaire de paiement : ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()->with('error', $e->getMessage());
@@ -64,21 +65,35 @@ class PaymentController extends Controller
             $validated = $request->validate([
                 'driver_id' => 'required|exists:drivers,id',
                 'payment_type' => 'required|in:commission,contract',
-                'vehicle_contract_id' => 'nullable|exists:vehicle_contracts,id',
-                'driver_contract_id' => 'nullable|exists:driver_contracts,id',
                 'amount'           => 'required|numeric|min:0.01',
                 'payment_method' => 'required|in:cash,bank_transfer,check,mobile_money,other',
                 'payment_date' => 'required|date',
                 'notes' => 'nullable|string|max:500',
                 'reference_number' => 'nullable|string|max:100|unique:payments',
-                'gross_amount' => 'nullable|numeric|min:0.01',
+            ], [
+                'driver_id.required' => 'L\'agent est obligatoire.',
+                'driver_id.exists' => 'L\'agent sélectionné est invalide.',
+                'payment_type.required' => 'Le type de paiement est obligatoire.',
+                'payment_type.in' => 'Le type de paiement sélectionné est invalide.',
+                'amount.required' => 'Le montant est obligatoire.',
+                'amount.numeric' => 'Le montant doit être un nombre.',
+                'amount.min' => 'Le montant doit être supérieur à 0.',
+                'payment_method.required' => 'La méthode de paiement est obligatoire.',
+                'payment_method.in' => 'La méthode de paiement sélectionnée est invalide.',
+                'payment_date.required' => 'La date de paiement est obligatoire.',
+                'payment_date.date' => 'La date de paiement n\'est pas valide.',
+                'notes.string' => 'Les notes doivent être une chaîne de caractères.',
+                'notes.max' => 'Les notes ne doivent pas dépasser 500 caractères.',
+                'reference_number.string' => 'Le numéro de référence doit être une chaîne de caractères.',
+                'reference_number.max' => 'Le numéro de référence ne doit pas dépasser 100 caractères.',
+                'reference_number.unique' => 'Le numéro de référence existe déjà pour un autre paiement.',
             ]);
 
             $this->paymentService->create($validated);
 
-            return redirect()->route('admin.payments.index')
-                ->with('success', 'Paiement enregistré avec succès');
+            return redirect()->route('admin.payments.index')->with('success', 'Paiement enregistré avec succès');
         } catch (\Exception $e) {
+            dd($e->getMessage());
             Log::error('Erreur lors de la création du paiement : ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()->with('error', $e->getMessage());
         }
@@ -129,8 +144,22 @@ class PaymentController extends Controller
                 'payment_date' => 'required|date',
                 'notes' => 'nullable|string|max:500',
                 'reference_number' => 'nullable|string|max:100|unique:payments,reference_number,' . $payment->id,
-                'gross_amount' => 'nullable|numeric|min:0.01',
                 'status' => 'nullable|in:pending,completed,cancelled',
+            ], [
+                'driver_id.required' => 'L\'agent est obligatoire.',
+                'driver_id.exists' => 'L\'agent sélectionné est invalide.',
+                'amount.required' => 'Le montant est obligatoire.',
+                'amount.numeric' => 'Le montant doit être un nombre.',
+                'amount.min' => 'Le montant doit être supérieur à 0.',
+                'payment_method.required' => 'La méthode de paiement est obligatoire.',
+                'payment_method.in' => 'La méthode de paiement sélectionnée est invalide.',
+                'payment_date.required' => 'La date de paiement est obligatoire.',
+                'payment_date.date' => 'La date de paiement n\'est pas valide.',
+                'notes.string' => 'Les notes doivent être une chaîne de caractères.',
+                'notes.max' => 'Les notes ne doivent pas dépasser 500 caractères.',
+                'reference_number.string' => 'Le numéro de référence doit être une chaîne de caractères.',
+                'reference_number.max' => 'Le numéro de référence ne doit pas dépasser 100 caractères.',
+                'reference_number.unique' => 'Le numéro de référence existe déjà pour un autre paiement.',
             ]);
 
             $this->paymentService->update($payment->id, $validated);
@@ -172,6 +201,40 @@ class PaymentController extends Controller
             return view('pages.admin.payments.driver-details', compact('driverStats', 'payments', 'commissions'));
         } catch (\Exception $e) {
             Log::error('Erreur lors de l’affichage des détails de paiement : ' . $e->getMessage(), ['exception' => $e]);
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function validate(Payment $payment)
+    {
+        try {
+            $payment->update(['status' => 'completed']);
+            return back()->with('success', 'Paiement validé avec succès.');
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la validation du paiement : ' . $e->getMessage(), ['exception' => $e]);
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function cancel(Payment $payment)
+    {
+        try {
+            $payment->update(['status' => 'cancelled']);
+            return back()->with('success', 'Paiement annulé avec succès.');
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de l’annulation du paiement : ' . $e->getMessage(), ['exception' => $e]);
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function generatePayment(Payment $payment)
+    {
+        try {
+            $contract = $payment->driverContract;
+            $this->paymentService->generateDailyPaymentForContract($contract);
+            return back()->with('success', 'Paiement généré avec succès.');
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la génération du paiement : ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()->with('error', $e->getMessage());
         }
     }

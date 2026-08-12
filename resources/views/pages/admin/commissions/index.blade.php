@@ -114,10 +114,17 @@
                                     {{ formatDateFr($commission->date) ?? formatDateFr($commission->created_at) }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    <a href="{{ route('admin.commissions.show', $commission) }}"
-                                        class="text-blue-600 hover:text-blue-800">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
+                                    <div class="flex gap-2">
+                                        <a href="{{ route('admin.commissions.show', $commission) }}"
+                                            class="text-blue-600 hover:text-blue-800">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <button type="button" class="text-red-600 hover:text-red-800"
+                                            title="Supprimer la commission"
+                                            onclick="openDeleteCommissionModal('{{ $commission->id }}', '{{ addslashes($commission->driver->user->name ?? 'N/A') }}', '{{ number_format($commission->amount, 0, ',', ' ') }} FCFA', '{{ $commission->booking->booking_number ?? 'N/A' }}')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
@@ -136,6 +143,43 @@
                 <i class="fas fa-inbox text-4xl text-gray-400 mb-4"></i>
             </div>
         @endif
+    </div>
+
+    <!-- Modal: Supprimer Commission -->
+    <div id="deleteCommissionModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50">
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-md mx-4">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 class="text-lg font-bold text-gray-800">
+                    <i class="fas fa-times-circle text-red-600 mr-2"></i> Supprimer la commission
+                </h3>
+                <button type="button" onclick="closeDeleteCommissionModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="deleteCommissionForm" method="POST" action="">
+                @csrf
+                @method('PATCH')
+                <div class="px-6 py-4">
+                    <p class="text-gray-700">
+                        Confirmez-vous la suppression de la commission
+                        <span id="deleteCommissionBooking" class="font-semibold"></span>
+                        de <span id="deleteCommissionAmount" class="font-semibold"></span>
+                        pour <span id="deleteCommissionName" class="font-semibold"></span> ?
+                    </p>
+                    <p class="text-sm text-red-500 mt-2">Cette action est irréversible.</p>
+                </div>
+                <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+                    <button type="button" onclick="closeDeleteCommissionModal()"
+                        class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg">
+                        Retour
+                    </button>
+                    <button type="submit"
+                        class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg">
+                        <i class="fas fa-ban mr-2"></i> Supprimer la commission
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 
     @push('scripts')
@@ -168,6 +212,25 @@
                     }
                 },
             })
+
+            function openDeleteCommissionModal(commissionId, driverName, amount, bookingNumber) {
+                document.getElementById('deleteCommissionName').textContent = driverName;
+                document.getElementById('deleteCommissionAmount').textContent = amount;
+                document.getElementById('deleteCommissionBooking').textContent = bookingNumber;
+
+                const form = document.getElementById('deleteCommissionForm');
+                form.action = `{{ url('admin/commissions') }}/${commissionId}`;
+
+                const modal = document.getElementById('deleteCommissionModal');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+
+            function closeDeleteCommissionModal() {
+                const modal = document.getElementById('deleteCommissionModal');
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
         </script>
     @endpush
 @endsection

@@ -5,13 +5,18 @@
     <div class="bg-white rounded-lg shadow-md mb-8">
         <div class="px-6 py-4 border-b border-gray-200 block md:flex items-center justify-between">
             <div>
-                <h1 class="text-lg md:text-2xl font-bold text-gray-800">Gestion des Paiements</h1>
-                <p class="text-sm md:text-base text-gray-600">Enregistrez et gérez les paiements des Agents</p>
+                <h1 class="text-lg md:text-2xl font-bold text-gray-800">Gestion du Paiement</h1>
+                <p class="text-sm md:text-base text-gray-600">Enregistrez et gérez le paiement des Agents</p>
             </div>
-            <div class="mt-4 md:mt-0">
+            <div class="mt-4 md:mt-0 flex gap-4">
                 <a href="{{ route('admin.payments.create') }}"
                     class="bg-blue-600 hover:bg-blue-700 text-white text-nowrap font-semibold py-2 px-4 rounded-lg">
-                    <i class="fas fa-plus mr-2"></i> Nouveau Paiement
+                    <i class="fas fa-plus mr-2"></i> Ajouter
+                </a>
+
+                <a href="{{ route('admin.payments.create') }}"
+                    class="bg-green-600 hover:bg-green-700 text-white text-nowrap font-semibold py-2 px-4 rounded-lg">
+                    <i class="fas fa-plus mr-2"></i> Générer
                 </a>
             </div>
         </div>
@@ -23,7 +28,7 @@
         <div class="bg-white rounded-lg shadow-md p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-gray-500 text-sm font-semibold">Total Payé</p>
+                    <p class="text-gray-500 text-sm font-semibold">Commission Total Payée</p>
                     <p class="text-3xl font-bold text-green-600 mt-2">
                         {{ number_format($stats['total_paid'], 0, ',', ' ') }} FCFA
                     </p>
@@ -41,7 +46,7 @@
         <div class="bg-white rounded-lg shadow-md p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-gray-500 text-sm font-semibold">Total Dû</p>
+                    <p class="text-gray-500 text-sm font-semibold">Commission Total à Payer</p>
                     <p class="text-3xl font-bold text-red-600 mt-2">
                         {{ number_format($stats['total_due'], 0, ',', ' ') }} FCFA
                     </p>
@@ -59,7 +64,7 @@
         <div class="bg-white rounded-lg shadow-md p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-gray-500 text-sm font-semibold">Solde Dû</p>
+                    <p class="text-gray-500 text-sm font-semibold">Commission Restante à Payer</p>
                     <p class="text-3xl font-bold text-orange-600 mt-2">
                         {{ number_format($stats['balance_due'], 0, ',', ' ') }} FCFA
                     </p>
@@ -77,7 +82,7 @@
         <div class="bg-white rounded-lg shadow-md p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-gray-500 text-sm font-semibold">Payé Ce Mois</p>
+                    <p class="text-gray-500 text-sm font-semibold">Commission Payée Ce Mois</p>
                     <p class="text-3xl font-bold text-blue-600 mt-2">
                         {{ number_format($stats['paid_this_month'], 0, ',', ' ') }} FCFA
                     </p>
@@ -90,90 +95,142 @@
                 <i class="fas fa-info-circle"></i> Mois actuel
             </div>
         </div>
+
+        <!-- Paiements Validés -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-semibold">Paiements Validés</p>
+                    <p class="text-3xl font-bold text-emerald-600 mt-2">
+                        {{ number_format($stats['validated_payments_amount'], 0, ',', ' ') }} FCFA
+                    </p>
+                </div>
+                <div class="bg-emerald-100 rounded-full w-16 h-16 flex justify-center items-center">
+                    <i class="fas fa-check-double text-emerald-600 text-2xl"></i>
+                </div>
+            </div>
+            <div class="mt-4 text-sm text-emerald-600">
+                <i class="fas fa-info-circle"></i> {{ $stats['validated_payments_count'] }} paiement(s) validé(s)
+            </div>
+        </div>
+
+        <!-- Paiements en Attente -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-semibold">Paiements en Attente</p>
+                    <p class="text-3xl font-bold text-amber-600 mt-2">
+                        {{ number_format($stats['pending_payments_amount'], 0, ',', ' ') }} FCFA
+                    </p>
+                </div>
+                <div class="bg-amber-100 rounded-full w-16 h-16 flex justify-center items-center">
+                    <i class="fas fa-hourglass-half text-amber-600 text-2xl"></i>
+                </div>
+            </div>
+            <div class="mt-4 text-sm text-amber-600">
+                <i class="fas fa-info-circle"></i> {{ $stats['pending_payments_count'] }} paiement(s) en attente
+            </div>
+        </div>
+
+        <!-- Paiements Total -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-semibold">Paiements Annulés</p>
+                    <p class="text-3xl font-bold text-indigo-600 mt-2">
+                        {{ number_format($stats['cancelled_payments_amount'], 0, ',', ' ') }} FCFA
+                    </p>
+                </div>
+                <div class="bg-indigo-100 rounded-full w-16 h-16 flex justify-center items-center">
+                    <i class="fas fa-money-bill-wave text-indigo-600 text-2xl"></i>
+                </div>
+            </div>
+            <div class="mt-4 text-sm text-indigo-600">
+                <i class="fas fa-info-circle"></i> {{ $stats['cancelled_payments_count'] }} paiement(s) annulé(s)
+            </div>
+        </div>
     </div>
 
     <!-- Filters -->
-    @if ($payments && $payments->count() > 0)
-        <div class="bg-white rounded-lg shadow-md mb-8 p-6">
-            <form method="GET" action="{{ route('admin.payments.index') }}" class="grid grid-cols-1 md:grid-cols-5 gap-4">
-                <div>
-                    <label class="block text-gray-700 text-sm font-semibold mb-2">Agent</label>
-                    <select name="driver_id"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">-- Tous les agents --</option>
-                        @foreach ($drivers as $driver)
-                            <option value="{{ $driver->id }}" {{ request('driver_id') == $driver->id ? 'selected' : '' }}>
-                                {{ $driver->user?->name ?? 'N/A' }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-gray-700 text-sm font-semibold mb-2">Moyen de Paiement</label>
-                    <select name="payment_method"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">-- Tous --</option>
-                        <option value="cash" {{ request('payment_method') == 'cash' ? 'selected' : '' }}>Espèces</option>
-                        <option value="bank_transfer" {{ request('payment_method') == 'bank_transfer' ? 'selected' : '' }}>
-                            Virement Bancaire</option>
-                        <option value="check" {{ request('payment_method') == 'check' ? 'selected' : '' }}>Chèque</option>
-                        <option value="mobile_money" {{ request('payment_method') == 'mobile_money' ? 'selected' : '' }}>
-                            Mobile
-                            Money</option>
-                        <option value="other" {{ request('payment_method') == 'other' ? 'selected' : '' }}>Autre</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-gray-700 text-sm font-semibold mb-2">Type de Paiement</label>
-                    <select name="payment_type"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">-- Tous --</option>
-                        <option value="commission" {{ request('payment_type') == 'commission' ? 'selected' : '' }}>
-                            Commission</option>
-                        <option value="contract" {{ request('payment_type') == 'contract' ? 'selected' : '' }}>Contractuel
+    <div class="bg-white rounded-lg shadow-md mb-8 p-6">
+        <form method="GET" action="{{ route('admin.payments.index') }}" class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div>
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Agent</label>
+                <select name="driver_id"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">-- Tous les agents --</option>
+                    @foreach ($drivers as $driver)
+                        <option value="{{ $driver->id }}" {{ request('driver_id') == $driver->id ? 'selected' : '' }}>
+                            {{ $driver->user?->name ?? 'N/A' }}
                         </option>
-                    </select>
-                </div>
+                    @endforeach
+                </select>
+            </div>
 
-                <div>
-                    <label class="block text-gray-700 text-sm font-semibold mb-2">Recherche</label>
-                    <input type="text" name="search" placeholder="Nom ou Référence..."
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        value="{{ request('search') }}">
-                </div>
+            <div>
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Moyen de Paiement</label>
+                <select name="payment_method"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">-- Tous --</option>
+                    <option value="cash" {{ request('payment_method') == 'cash' ? 'selected' : '' }}>Espèces</option>
+                    <option value="bank_transfer" {{ request('payment_method') == 'bank_transfer' ? 'selected' : '' }}>
+                        Virement Bancaire</option>
+                    <option value="check" {{ request('payment_method') == 'check' ? 'selected' : '' }}>Chèque</option>
+                    <option value="mobile_money" {{ request('payment_method') == 'mobile_money' ? 'selected' : '' }}>
+                        Mobile
+                        Money</option>
+                    <option value="other" {{ request('payment_method') == 'other' ? 'selected' : '' }}>Autre</option>
+                </select>
+            </div>
 
-                <div>
-                    <label class="block text-gray-700 text-sm font-semibold mb-2">Du</label>
-                    <input type="date" name="date_from"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        value="{{ request('date_from') }}">
-                </div>
+            <div>
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Type de Paiement</label>
+                <select name="payment_type"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">-- Tous --</option>
+                    <option value="commission" {{ request('payment_type') == 'commission' ? 'selected' : '' }}>
+                        Commission</option>
+                    <option value="contract" {{ request('payment_type') == 'contract' ? 'selected' : '' }}>Contractuel
+                    </option>
+                </select>
+            </div>
 
-                <div>
-                    <label class="block text-gray-700 text-sm font-semibold mb-2">Au</label>
-                    <input type="date" name="date_to"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        value="{{ request('date_to') }}">
-                </div>
+            <div>
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Recherche</label>
+                <input type="text" name="search" placeholder="Nom ou Référence..."
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value="{{ request('search') }}">
+            </div>
 
-                <div class="flex items-end">
-                    <button type="submit"
-                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg">
-                        <i class="fas fa-search mr-2"></i> Filtrer
-                    </button>
-                </div>
+            <div>
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Du</label>
+                <input type="date" name="date_from"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value="{{ request('date_from') }}">
+            </div>
 
-                <div class="flex items-end">
-                    <a href="{{ route('admin.payments.index') }}"
-                        class="w-full bg-gray-400 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg text-center">
-                        <i class="fas fa-redo mr-2"></i> Réinitialiser
-                    </a>
-                </div>
-            </form>
-        </div>
-    @endif
+            <div>
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Au</label>
+                <input type="date" name="date_to"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value="{{ request('date_to') }}">
+            </div>
+
+            <div class="flex items-end">
+                <button type="submit"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg">
+                    <i class="fas fa-search mr-2"></i> Filtrer
+                </button>
+            </div>
+
+            <div class="flex items-end">
+                <a href="{{ route('admin.payments.index') }}"
+                    class="w-full bg-gray-400 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg text-center">
+                    <i class="fas fa-redo mr-2"></i> Réinitialiser
+                </a>
+            </div>
+        </form>
+    </div>
 
     <!-- Payments Table -->
     <div class="bg-white rounded-lg shadow-md overflow-hidden">
@@ -191,6 +248,8 @@
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                 Moyen
                                 de Paiement</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Statut</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                 Date du paiement
                             </th>
@@ -222,6 +281,24 @@
                                         {{ ucfirst(str_replace('_', ' ', $payment->payment_method)) }}
                                     </span>
                                 </td>
+                                <td class="px-6 py-4 text-sm">
+                                    <span
+                                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold
+                                    {{ $payment->status === 'completed' ? 'bg-emerald-100 text-emerald-800' : '' }}
+                                    {{ $payment->status === 'pending' ? 'bg-amber-100 text-amber-800' : '' }}
+                                    {{ $payment->status === 'cancelled' ? 'bg-red-100 text-red-800' : '' }}
+                                ">
+                                        @if ($payment->status === 'completed')
+                                            Validé
+                                        @elseif ($payment->status === 'pending')
+                                            En attente
+                                        @elseif ($payment->status === 'cancelled')
+                                            Annulé
+                                        @else
+                                            {{ ucfirst($payment->status) }}
+                                        @endif
+                                    </span>
+                                </td>
                                 <td class="px-6 py-4 text-sm text-gray-700">
                                     {{ formatDateFr($payment->payment_date) }}
                                 </td>
@@ -233,14 +310,25 @@
                                         class="text-blue-600 hover:text-blue-800 mr-3">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <a href="{{ route('admin.payments.edit', $payment) }}"
-                                        class="text-green-600 hover:text-green-800 mr-3">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    {{-- <form action="{{ route('admin.payments.destroy', $payment) }}" method="POST"
+                                    @if ($payment->status === 'pending')
+                                        <a href="{{ route('admin.payments.edit', $payment) }}"
+                                            class="text-green-600 hover:text-green-800 mr-3">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button type="button" class="text-emerald-600 hover:text-emerald-800 mr-3"
+                                            title="Valider le paiement"
+                                            onclick="openPaymentModal('validateModal', '{{ $payment->id }}', '{{ addslashes($payment->driver->user?->name ?? 'N/A') }}', '{{ number_format($payment->amount, 0, ',', ' ') }} FCFA')">
+                                            <i class="fas fa-check-circle"></i>
+                                        </button>
+                                        <button type="button" class="text-red-600 hover:text-red-800"
+                                            title="Annuler le paiement"
+                                            onclick="openPaymentModal('cancelModal', '{{ $payment->id }}', '{{ addslashes($payment->driver->user?->name ?? 'N/A') }}', '{{ number_format($payment->amount, 0, ',', ' ') }} FCFA')">
+                                            <i class="fas fa-times-circle"></i>
+                                        </button>
+                                    @endif
+                                    {{-- <form action="{{ route('admin.payments.generate', $payment) }}" method="POST"
                                         class="inline-block" onclick="return confirm('Êtes-vous sûr ?')">
                                         @csrf
-                                        @method('DELETE')
                                         <button type="submit" class="text-red-600 hover:text-red-800">
                                             <i class="fas fa-trash"></i>
                                         </button>
@@ -263,6 +351,80 @@
                 <i class="fas fa-inbox text-4xl text-gray-400 mb-4"></i>
             </div>
         @endif
+    </div>
+
+    <!-- Modal: Valider Paiement -->
+    <div id="validateModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50">
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-md mx-4">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 class="text-lg font-bold text-gray-800">
+                    <i class="fas fa-check-circle text-emerald-600 mr-2"></i> Valider le paiement
+                </h3>
+                <button type="button" onclick="closePaymentModal('validateModal')"
+                    class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="validateForm" method="POST" action="">
+                @csrf
+                @method('PATCH')
+                <div class="px-6 py-4">
+                    <p class="text-gray-700">
+                        Confirmez-vous la validation du paiement de
+                        <span id="validateAmount" class="font-semibold"></span>
+                        pour <span id="validateName" class="font-semibold"></span> ?
+                    </p>
+                    <p class="text-sm text-gray-500 mt-2">Cette action marquera le paiement comme validé.</p>
+                </div>
+                <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+                    <button type="button" onclick="closePaymentModal('validateModal')"
+                        class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg">
+                        Annuler
+                    </button>
+                    <button type="submit"
+                        class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-4 rounded-lg">
+                        <i class="fas fa-check mr-2"></i> Valider
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Annuler Paiement -->
+    <div id="cancelModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50">
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-md mx-4">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 class="text-lg font-bold text-gray-800">
+                    <i class="fas fa-times-circle text-red-600 mr-2"></i> Annuler le paiement
+                </h3>
+                <button type="button" onclick="closePaymentModal('cancelModal')"
+                    class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="cancelForm" method="POST" action="">
+                @csrf
+                @method('PATCH')
+                <div class="px-6 py-4">
+                    <p class="text-gray-700">
+                        Confirmez-vous l'annulation du paiement de
+                        <span id="cancelAmount" class="font-semibold"></span>
+                        pour <span id="cancelName" class="font-semibold"></span> ?
+                    </p>
+                    <p class="text-sm text-red-500 mt-2">Cette action est irréversible.</p>
+                </div>
+                <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+                    <button type="button" onclick="closePaymentModal('cancelModal')"
+                        class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg">
+                        Retour
+                    </button>
+                    <button type="submit"
+                        class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg">
+                        <i class="fas fa-ban mr-2"></i> Annuler le paiement
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 
     @push('scripts')
@@ -295,6 +457,27 @@
                     }
                 },
             })
+
+            function openPaymentModal(modalId, paymentId, driverName, amount) {
+                const modal = document.getElementById(modalId);
+                const prefix = modalId === 'validateModal' ? 'validate' : 'cancel';
+
+                document.getElementById(prefix + 'Name').textContent = driverName;
+                document.getElementById(prefix + 'Amount').textContent = amount;
+
+                const form = document.getElementById(prefix + 'Form');
+                const routeName = prefix === 'validate' ? 'admin.payments.validate' : 'admin.payments.cancel';
+                form.action = `{{ url('admin/payments') }}/${paymentId}/${prefix === 'validate' ? 'validated' : 'cancelled'}`;
+
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+
+            function closePaymentModal(modalId) {
+                const modal = document.getElementById(modalId);
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
         </script>
     @endpush
 @endsection
