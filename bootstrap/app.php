@@ -24,9 +24,9 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withSchedule(function ($schedule) {
-        $schedule->command('app:expire-bookings')->appendOutputTo(storage_path('logs/commands.log'));
-        $schedule->command('app:process-recurring-bookings')->appendOutputTo(storage_path('logs/commands.log'));
-        $schedule->command('app:generate-daily')->appendOutputTo(storage_path('logs/commands.log'));
+        $schedule->command('app:expire-bookings')->dailyAt('01:00')->appendOutputTo(storage_path('logs/commands.log'));
+        $schedule->command('app:process-recurring-bookings')->dailyAt('01:00')->appendOutputTo(storage_path('logs/commands.log'));
+        $schedule->command('app:generate-daily')->dailyAt('23:30')->appendOutputTo(storage_path('logs/commands.log'));
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
@@ -36,7 +36,7 @@ return Application::configure(basePath: dirname(__DIR__))
             if (!in_array($code, [404, 500], true)) {
 
                 // Supprimer tous les cookies de session Sanctum
-                foreach (['admin', 'driver', 'client'] as $profil) {
+                foreach (['admin', 'driver', 'client', 'owner'] as $profil) {
                     $cookieName = 'ctt_' . $profil . '_token';
 
                     if ($request->cookie($cookieName)) {
