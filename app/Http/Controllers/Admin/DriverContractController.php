@@ -113,6 +113,7 @@ class DriverContractController extends Controller
         $usedDays = $stats['used_leave_days'] ?? $driverContract->used_leave_days;
         $accruedDays = $stats['accrued_leave_days'] ?? $driverContract->accrued_leave_days;
         $availableDays = $stats['available_leave_days'] ?? $driverContract->available_leave_days;
+        $remainingDays = $stats['remaining_leave_days'] ?? $driverContract->remaining_leave_days;
         $surplusDays = $stats['surplus_leave_days'] ?? max(0, $availableDays < 0 ? abs($availableDays) : 0);
         $progressPercent = $stats['progress_percent'] ?? min(100, round(($stats['months_elapsed'] ?? $driverContract->months_elapsed) / $driverContract->contract_months * 100));
 
@@ -126,6 +127,7 @@ class DriverContractController extends Controller
             'usedDays',
             'accruedDays',
             'availableDays',
+            'remainingDays',
             'surplusDays',
             'progressPercent'
         ));

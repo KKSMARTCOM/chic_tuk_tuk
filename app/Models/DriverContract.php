@@ -77,13 +77,24 @@ class DriverContract extends Model
         return 2 * $this->months_elapsed; // 2j/mois
     }
 
+    // Jours de pause restants sur la totalité du contrat (durée totale, pas seulement mois écoulés)
+    public function getRemainingContractLeaveDaysAttribute(): int
+    {
+        $totalAllotted = 2 * $this->contract_months;
+        return $totalAllotted - $this->used_leave_days;
+    }
+
     // Jours de pause utilisés sur ce contrat
     public function getUsedLeaveDaysAttribute(): int
     {
-        return $this->leaveRequests()
-            ->where('status', 'approved')
+        $completed = $this->leaveRequests()->where('status', 'completed')->sum('effective_days');
+
+        $ongoing = $this->leaveRequests()
+            ->where('status', 'ongoing')
             ->get()
-            ->sum(fn($lr) => count($lr->dates ?? []));
+            ->sum(fn($lr) => $lr->start_date->diffInDays(now()) + 1);
+
+        return $completed + $ongoing;
     }
 
     // Jours disponibles (sans restriction de dépassement)

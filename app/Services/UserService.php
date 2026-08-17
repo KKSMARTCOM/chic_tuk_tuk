@@ -126,7 +126,6 @@ class UserService
 
     public function toggleStatus(User $user): User
     {
-        //dd($user->is_active);
         $user->update(['is_active' => !$user->is_active]);
         return $user->refresh();
     }

@@ -117,23 +117,23 @@ class VehicleService
     }
 
     // Créer automatiquement une pause suite à un congé agent
-    public function createAutoAgentPause(string $vehicleId, string $driverContractId, array $dates): VehiclePause
+    public function createAutoAgentPause(string $vehicleId, string $driverContractId, string $startDate, ?string $endDate = null): VehiclePause
     {
-        return DB::transaction(function () use ($vehicleId, $driverContractId, $dates) {
+        return DB::transaction(function () use ($vehicleId, $driverContractId, $startDate, $endDate) {
             $vehicle = Vehicle::findOrFail($vehicleId);
-            $startDate = Carbon::parse(min($dates))->startOfDay();
-            $endDate   = Carbon::parse(max($dates))->startOfDay();
-            $today     = Carbon::today();
+            $start   = Carbon::parse($startDate)->startOfDay();
+            $end     = $endDate ? Carbon::parse($endDate)->startOfDay() : null;
+            $today   = Carbon::today();
 
             // Déterminer si la pause est passée, présente ou future
-            $isPast    = $endDate->lt($today);
-            $isCurrent = $startDate->lte($today) && $endDate->gte($today);
+            $isPast    = $end && $end->lt($today);
+            $isCurrent = $start->lte($today) && (!$end || $end->gte($today));
             // $isFuture  = $startDate->gt($today);  // implicite
 
             // ── Clôturer la pause active éventuelle ──────────────
             // Uniquement si la nouvelle pause commence aujourd'hui ou dans le futur
             if (!$isPast && $vehicle->activePause) {
-                $vehicle->activePause->update(['end_date' => $startDate->toDateString()]);
+                $vehicle->activePause->update(['end_date' => $start->toDateString()]);
             }
 
             // ── Créer la pause véhicule ───────────────────────────
@@ -141,8 +141,8 @@ class VehicleService
                 'vehicle_id'          => $vehicle->id,
                 'vehicle_contract_id' => $vehicle->activeVehicleContract?->id,
                 'driver_contract_id'  => $driverContractId,
-                'start_date'          => $startDate->toDateString(),
-                'end_date'            => $endDate->toDateString(), // toujours renseigné car on connaît les dates
+                'start_date'          => $start->toDateString(),
+                'end_date'            => $end?->toDateString(), // toujours renseigné car on connaît les dates
                 'reason_type'         => 'agent_leave',
                 'reason_notes'        => 'Pause automatique suite à une pause agent — '
                     . ($isPast ? 'passé' : ($isCurrent ? 'en cours' : 'futur'))
@@ -159,6 +159,51 @@ class VehicleService
             }
 
             return $pause;
+        });
+    }
+
+    // Terminer la pause véhicule liée à un contrat chauffeur (appelée quand l'admin clôture la pause agent)
+    public function endAgentPause(string $driverContractId, ?string $endDate = null): ?VehiclePause
+    {
+        $pause = VehiclePause::where('driver_contract_id', $driverContractId)
+            ->whereNull('end_date')
+            ->latest('start_date')
+            ->first();
+
+        if (!$pause) {
+            return null;
+        }
+
+        return $this->endPause($pause, $endDate);
+    }
+
+    /**
+     * Corriger la date de début (et éventuellement la date de fin) d'une pause véhicule existante,
+     * sans en créer une nouvelle.
+     */
+    public function correctPauseDates(VehiclePause $pause, string $startDate, ?string $endDate = null): VehiclePause
+    {
+        return DB::transaction(function () use ($pause, $startDate, $endDate) {
+            $pause->update([
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+            ]);
+
+            $vehicle = $pause->vehicle;
+            $today = Carbon::today();
+            $start = Carbon::parse($startDate)->startOfDay();
+            $end   = $endDate ? Carbon::parse($endDate)->startOfDay() : null;
+
+            $isCurrentlyPaused = $start->lte($today) && (!$end || $end->gte($today));
+
+            // Le véhicule doit refléter l'état réel après correction
+            if ($isCurrentlyPaused) {
+                $vehicle->update(['is_active' => false]);
+            } elseif (!$vehicle->activePause) {
+                $vehicle->update(['is_active' => true]);
+            }
+
+            return $pause->refresh();
         });
     }
 

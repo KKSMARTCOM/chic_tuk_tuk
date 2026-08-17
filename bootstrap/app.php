@@ -27,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('app:expire-bookings')->appendOutputTo(storage_path('logs/commands.log'));
         $schedule->command('app:process-recurring-bookings')->appendOutputTo(storage_path('logs/commands.log'));
         $schedule->command('app:generate-daily')->appendOutputTo(storage_path('logs/commands.log'));
+        $schedule->command('app:activate-leave-pauses')->appendOutputTo(storage_path('logs/commands.log'));
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

@@ -61,11 +61,17 @@ Route::middleware(['auth:sanctum', 'profil:admin'])->prefix('admin')->name('admi
     // Leaves
     Route::get('leaves', [LeaveController::class, 'index'])->name('leaves.index')->middleware('permission:view-leaves');
     Route::get('leaves/{driver}', [LeaveController::class, 'show'])->name('leaves.show')->middleware('permission:view-leaves');
-    Route::post('leaves/{driver}/add-instant', [LeaveController::class, 'addInstantLeave'])->name('leaves.add-instant')->middleware('permission:create-leaves');
     Route::get('leave/requests', [LeaveController::class, 'requests'])->name('leave.requests.index')->middleware('permission:view-leave-requests');
     Route::post('leave/requests/{leaveRequest}/approve', [LeaveController::class, 'approveRequest'])->name('leave.requests.approve')->middleware('permission:approve-leave-requests');
     Route::post('leave/requests/{leaveRequest}/reject', [LeaveController::class, 'rejectRequest'])->name('leave.requests.reject')->middleware('permission:reject-leave-requests');
-    Route::post('leaves/{driver}/revoke', [LeaveController::class, 'revokeLeave'])->name('leaves.revoke')->middleware('permission:delete-leaves');
+    Route::patch('leaves/{leaveRequest}/end', [LeaveController::class, 'endLeave'])->name('leaves.end');
+    Route::post('leaves/{id}/add-ongoing', [LeaveController::class, 'addOngoingLeave'])->name('leaves.add-ongoing');
+    Route::post('leaves/{id}/add-historical', [LeaveController::class, 'addHistoricalLeave'])->name('leaves.add-historical');
+    Route::patch('leaves/history/{leaveRequest}', [LeaveController::class, 'updateHistoricalLeave'])->name('leaves.history.update');
+    Route::delete('leaves/history/{leaveRequest}', [LeaveController::class, 'destroyHistoricalLeave'])->name('leaves.history.destroy');
+    Route::patch('leaves/{leaveRequest}/correct', [LeaveController::class, 'updateOngoingLeave'])->name('leaves.ongoing.update');
+    //Route::post('leaves/{driver}/add-instant', [LeaveController::class, 'addInstantLeave'])->name('leaves.add-instant')->middleware('permission:create-leaves');
+    //Route::post('leaves/{driver}/revoke', [LeaveController::class, 'revokeLeave'])->name('leaves.revoke')->middleware('permission:delete-leaves');
 
     // Commissions
     Route::get('commissions', [CommissionController::class, 'index'])->name('commissions.index')->middleware('permission:view-commissions');

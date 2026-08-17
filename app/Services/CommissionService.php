@@ -46,7 +46,7 @@ class CommissionService
 
     public function getCommissionStats()
     {
-        $totalRevenue = Commission::sum('amount');
+        $totalRevenue = Commission::where('status', 'active')->sum('amount');
         $totalCommissionsCount = Commission::count();
 
         return [
@@ -67,8 +67,8 @@ class CommissionService
             'driver' => $driver,
             'driver_earning' => $driverEarning,
             'commissions_count' => $driver->commissions()->count(),
-            'paid_revenue' => $driver->payments()->sum('amount'),
-            'unpaid_revenue' => $driver->commissions()->sum('amount') - $driver->payments()->sum('amount'),
+            'paid_revenue' => $driver->payments()->where('payment_type', 'commission')->sum('amount'),
+            'unpaid_revenue' => $driver->commissions()->sum('amount') - $driver->payments()->where('payment_type', 'commission')->sum('amount'),
         ];
     }
 

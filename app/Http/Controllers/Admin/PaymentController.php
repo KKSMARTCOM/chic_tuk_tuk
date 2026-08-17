@@ -26,7 +26,7 @@ class PaymentController extends Controller
     public function index(Request $request)
     {
         try {
-            $filters = $request->only(['driver_id', 'payment_method', 'payment_type', 'search', 'date_from', 'date_to']);
+            $filters = $request->only(['driver_id', 'status', 'payment_type', 'search', 'date_from', 'date_to']);
             $payments = $this->paymentService->getAllPayments($filters);
             $stats = $this->paymentService->getPaymentStats();
             $drivers = Driver::with('user')->orderBy('id')->get();
@@ -93,7 +93,6 @@ class PaymentController extends Controller
 
             return redirect()->route('admin.payments.index')->with('success', 'Paiement enregistré avec succès');
         } catch (\Exception $e) {
-            dd($e->getMessage());
             Log::error('Erreur lors de la création du paiement : ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()->with('error', $e->getMessage());
         }
@@ -120,7 +119,9 @@ class PaymentController extends Controller
     public function edit(Payment $payment)
     {
         try {
-            $drivers = Driver::with('user')->orderBy('id')->get();
+            $drivers = Driver::whereHas('driverContracts', function ($query) {
+                $query->where('status', 'active');
+            })->with('user', 'activeDriverContract', 'currentVehicle.activeVehicleContract')->orderBy('id')->get();
             $driverContracts = DriverContract::with('driver.user', 'vehicle')->latest()->get();
             $vehicleContracts = VehicleContract::with('vehicle', 'owner')->latest()->get();
 
