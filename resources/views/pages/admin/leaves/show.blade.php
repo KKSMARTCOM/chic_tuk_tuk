@@ -71,65 +71,94 @@
         </div>
 
         <!-- Add Instant Leave Form -->
-        <div class="mb-8 p-6 bg-indigo-50 rounded-lg border-2 border-indigo-200">
-            <h2 class="text-xl font-semibold text-indigo-900 mb-4">Ajouter une Pause instantanée</h2>
-            <p class="text-sm text-indigo-700 mb-6">Permet d'ajouter une Pause directement sans passer par le processus de
-                demande.</p>
-
-            <form action="{{ route('admin.leaves.add-instant', $driver->driver->id) }}" method="POST"
-                id="addInstantLeaveForm">
-                @csrf
-                <div class="space-y-4">
-                    <!-- Date Selection -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-3">
-                            Sélectionnez les dates
-                        </label>
-                        <div class="mb-4">
-                            <input type="date" id="adminLeaveDate"
-                                class="border border-gray-300 rounded-lg px-4 py-2 w-full"
-                                title="Les dates doivent être dans le mois courant">
-                            <button type="button" onclick="adminAddDate()"
-                                class="mt-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 w-full font-medium">
-                                + Ajouter une date
-                            </button>
-                        </div>
-
-                        <!-- Selected Dates Display -->
-                        <div id="adminSelectedDatesContainer" class="space-y-2">
-                            <p class="text-xs text-gray-500 font-semibold uppercase">Dates sélectionnées:</p>
-                            <div id="adminSelectedDates"
-                                class="flex flex-wrap gap-2 min-h-12 p-3 bg-white rounded-lg border-2 border-dashed border-indigo-300">
-                                <p class="text-gray-400 text-sm w-full text-center py-2">Aucune date sélectionnée</p>
-                            </div>
-                        </div>
-
-                        <!-- Hidden inputs for form submission -->
-                        <div id="adminDatesInputs"></div>
-                        <p id="adminDateError" class="text-sm text-red-600 mt-2 hidden"></p>
-                    </div>
-
-                    <!-- Validation Info -->
-                    <div class="p-3 bg-indigo-100 border border-indigo-300 rounded text-sm text-indigo-800">
-                        ℹ️ Les jours doivent être consécutifs. Agent dispose de
-                        <strong>{{ $leaveInfo['available_leave_days'] }}</strong> jour(s) disponible(s).
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div class="flex gap-3 pt-2">
-                        <button type="submit" id="adminSubmitBtn"
-                            class="flex-1 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-medium transition disabled:bg-gray-300"
-                            disabled>
-                            Ajouter la Pause
-                        </button>
-                        <button type="button" onclick="adminClearDates()"
-                            class="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 font-medium transition">
-                            Réinitialiser
-                        </button>
-                    </div>
+        @if ($ongoingLeave)
+            <div class="mb-8 p-6 bg-orange-50 rounded-lg border-2 border-orange-200">
+                <h2 class="text-xl font-semibold text-orange-900 mb-2">Pause en cours</h2>
+                <p class="text-gray-700">
+                    Depuis le <strong>{{ formatDateFr($ongoingLeave->start_date) }}</strong>
+                    — {{ $ongoingLeave->requested_days }} jour(s) demandé(s)
+                    @if ($ongoingLeave->is_overdue)
+                        <span class="text-red-600 font-semibold">(dépasse la durée prévue)</span>
+                    @endif
+                </p>
+                <p class="text-xs text-gray-500 mt-1">
+                    Fin prévue le {{ formatDateFr($ongoingLeave->expected_end_date) }}
+                </p>
+                <div class="flex gap-3 mt-4">
+                    <button type="button"
+                        onclick="openCorrectOngoingModal(
+                    '{{ route('admin.leaves.ongoing.update', $ongoingLeave) }}',
+                    '{{ $ongoingLeave->start_date->toDateString() }}',
+                    '{{ $ongoingLeave->requested_days }}'
+                )"
+                        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-medium">
+                        <i class="fas fa-edit"></i> Corriger
+                    </button>
+                    <button type="button" onclick="openEndLeaveModal('{{ route('admin.leaves.end', $ongoingLeave) }}')"
+                        class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 font-medium">
+                        Mettre fin à la pause
+                    </button>
                 </div>
-            </form>
-        </div>
+            </div>
+        @else
+            <div class="mb-8 p-6 bg-indigo-50 rounded-lg border-2 border-indigo-200">
+                <h2 class="text-xl font-semibold text-indigo-900 mb-4">Ajouter une Pause</h2>
+
+                <div class="flex gap-3 mb-4">
+                    <button type="button" onclick="switchLeaveTab('ongoing')" id="tabOngoingBtn"
+                        class="flex-1 bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium">Pause en cours</button>
+                    <button type="button" onclick="switchLeaveTab('historical')" id="tabHistoricalBtn"
+                        class="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium">Pause passée</button>
+                </div>
+
+                <form id="ongoingLeaveForm" action="{{ route('admin.leaves.add-ongoing', $driver->driver->id) }}"
+                    method="POST">
+                    @csrf
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Date de début</label>
+                            <input type="date" name="start_date" required
+                                class="w-full border border-gray-300 rounded-lg px-4 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nombre de jours demandés</label>
+                            <input type="number" name="requested_days" min="1" value="1" required
+                                class="w-full border border-gray-300 rounded-lg px-4 py-2">
+                        </div>
+                    </div>
+                    <p class="text-xs text-indigo-700 mb-4">ℹ️ Cette pause démarre immédiatement (ou à la date choisie) et
+                        restera active jusqu'à ce qu'un administrateur y mette fin, même si elle dépasse le nombre de jours
+                        indiqué.</p>
+                    <button type="submit"
+                        class="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-medium">
+                        Démarrer la pause
+                    </button>
+                </form>
+
+                <form id="historicalLeaveForm" action="{{ route('admin.leaves.add-historical', $driver->driver->id) }}"
+                    method="POST" class="hidden">
+                    @csrf
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Date de début</label>
+                            <input type="date" name="start_date" max="{{ now()->subDay()->toDateString() }}" required
+                                class="w-full border border-gray-300 rounded-lg px-4 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nombre de jours</label>
+                            <input type="number" name="requested_days" min="1" value="1" required
+                                class="w-full border border-gray-300 rounded-lg px-4 py-2">
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-500 mb-4">ℹ️ Utilisez ceci uniquement pour une pause déjà entièrement
+                        terminée. Aucun impact sur le statut actuel de l'agent.</p>
+                    <button type="submit"
+                        class="w-full bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 font-medium">
+                        Ajouter la pause passée
+                    </button>
+                </form>
+            </div>
+        @endif
 
         <!-- Pending Requests -->
         @if ($pendingRequests->count() > 0)
@@ -138,53 +167,22 @@
                 <div class="space-y-4">
                     @foreach ($pendingRequests as $request)
                         <div class="bg-white p-4 rounded-lg border border-yellow-200">
-                            <div class="flex justify-between items-start mb-3">
-                                <div>
-                                    <p class="text-sm text-gray-600">Demande du
-                                        {{ formatDateFr($request->created_at) }}</p>
-                                    <p class="font-semibold text-gray-800">Dates demandées:</p>
-                                    <div class="flex flex-wrap gap-2 mt-2">
-                                        @foreach ($request->dates as $date)
-                                            <span
-                                                class="inline-block bg-yellow-100 text-yellow-800 px-3 py-1 rounded text-sm">
-                                                {{ formatDateFr($date) }}
-                                            </span>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            </div>
+                            <p class="text-sm text-gray-600">Demande du {{ formatDateFr($request->created_at) }}</p>
+                            <p class="font-semibold text-gray-800">
+                                Du {{ formatDateFr($request->start_date) }} — {{ $request->requested_days }} jour(s)
+                                demandé(s)
+                            </p>
+                            <p class="text-xs text-gray-500 mt-1">
+                                Fin prévue le {{ formatDateFr($request->expected_end_date) }}
+                            </p>
                             <div class="flex gap-3 mt-4">
                                 <button type="button"
-                                    onclick="openApproveModal('{{ $request->id }}', '{{ route('admin.leave.requests.approve', $request) }}')"
-                                    class="flex-1 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-                                    Approuver
-                                </button>
+                                    onclick="openApproveModal('{{ route('admin.leave.requests.approve', $request) }}')"
+                                    class="flex-1 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Approuver</button>
                                 <button type="button" onclick="openRejectModal('{{ $request->id }}')"
-                                    class="flex-1 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
-                                    Rejeter
-                                </button>
+                                    class="flex-1 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Rejeter</button>
                             </div>
                         </div>
-                    @endforeach
-                </div>
-            </div>
-        @endif
-
-        <!-- Approved Leaves for Current Month -->
-        @if ($approvedRequests->count() > 0)
-            <div class="mb-8 p-6 bg-green-50 rounded-lg border-2 border-green-200">
-                <h2 class="text-xl font-semibold text-green-900 mb-4">Pauses approuvés ce mois</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    @foreach ($approvedRequests as $request)
-                        @foreach ($request->dates as $date)
-                            <div class="bg-white p-4 rounded-lg border border-green-200">
-                                <p class="font-semibold text-green-800">
-                                    {{ formatDateFr($date) }}
-                                </p>
-                                <p class="text-sm text-gray-600">Approuvé le
-                                    {{ formatDateFr($request->updated_at) }}</p>
-                            </div>
-                        @endforeach
                     @endforeach
                 </div>
             </div>
@@ -192,25 +190,39 @@
 
         <!-- All Taken Leaves -->
         <div class="mb-8">
-            <h2 class="text-xl font-semibold text-gray-800 mb-4">Tous les jours de Pause pris</h2>
-            @if (count($leaveInfo['leave_dates']) > 0)
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    @foreach ($leaveInfo['leave_dates'] as $date)
-                        <div class="bg-red-50 p-4 rounded-lg flex justify-between items-center border border-red-200">
-                            <span class="text-red-800 font-medium">{{ formatDateFr($date) }}</span>
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Historique des pauses</h2>
+            @forelse ($history as $leave)
+                <div class="bg-gray-50 p-4 rounded-lg flex justify-between items-center border border-gray-200 mb-2">
+                    <div>
+                        <span class="font-medium text-gray-800">
+                            {{ formatDateFr($leave->start_date) }} → {{ formatDateFr($leave->end_date) }}
+                        </span>
+                        <span class="text-sm text-gray-500 ml-2">({{ $leave->effective_days }} jour(s) effectif(s))</span>
+                        @if ($leave->is_historical)
+                            <span class="text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded ml-2">Historique</span>
+                        @endif
+                    </div>
 
-                            @hasrole('admin')
-                                <button type="button" class="text-red-600 hover:text-red-800 text-sm font-medium"
-                                    onclick="openRevokeModal('{{ $date }}', '{{ route('admin.leaves.revoke', $driver) }}')">
-                                    Révoquer
-                                </button>
-                            @endrole
+                    @if ($leave->is_historical)
+                        <div class="flex gap-3">
+                            <button type="button" class="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                                onclick="openEditHistoricalModal(
+                            '{{ route('admin.leaves.history.update', $leave) }}',
+                            '{{ $leave->start_date->toDateString() }}',
+                            '{{ $leave->requested_days }}'
+                        )">
+                                <i class="fas fa-edit"></i> Modifier
+                            </button>
+                            <button type="button" class="text-red-600 hover:text-red-800 text-sm font-medium"
+                                onclick="openDeleteHistoricalModal('{{ route('admin.leaves.history.destroy', $leave) }}')">
+                                <i class="fas fa-trash"></i> Supprimer
+                            </button>
                         </div>
-                    @endforeach
+                    @endif
                 </div>
-            @else
-                <p class="text-gray-500">Aucun Pause pris pour le moment.</p>
-            @endif
+            @empty
+                <p class="text-gray-500">Aucune pause terminée pour le moment.</p>
+            @endforelse
         </div>
     </div>
 
@@ -261,24 +273,107 @@
         </div>
     </div>
 
-    <!-- Revoke Modal -->
-    <div id="revokeModal" class="fixed px-4 inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-20">
+    <div id="endLeaveModal" class="fixed px-4 inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-20">
         <div class="bg-white rounded-lg p-6 max-w-md w-full">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">Révoquer le Pause</h2>
-            <p class="text-gray-700 mb-6">Êtes-vous sûr de vouloir révoquer ce Pause ? Cette action libérera un jour pour
-                le
-                Agent.</p>
-            <form id="revokeForm" method="POST">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Mettre fin à la pause</h2>
+            <form id="endLeaveForm" method="POST">
                 @csrf
-                <input type="hidden" id="leave_date" name="leave_date" value="">
+                @method('PATCH')
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Date de fin</label>
+                    <input type="date" name="end_date" value="{{ now()->toDateString() }}" required
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2">
+                </div>
                 <div class="flex gap-3">
-                    <button type="button" onclick="closeRevokeModal()"
-                        class="flex-1 bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">
-                        Annuler
-                    </button>
-                    <button type="submit" class="flex-1 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
-                        Révoquer
-                    </button>
+                    <button type="button" onclick="closeEndLeaveModal()"
+                        class="flex-1 bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">Annuler</button>
+                    <button type="submit"
+                        class="flex-1 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Terminer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Historical Leave Modal -->
+    <div id="editHistoricalModal"
+        class="fixed px-4 inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-20">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Modifier la pause historique</h2>
+            <form id="editHistoricalForm" method="POST">
+                @csrf
+                @method('PATCH')
+                <div class="grid grid-cols-1 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Date de début</label>
+                        <input type="date" name="start_date" id="editHistoricalStartDate"
+                            max="{{ now()->subDay()->toDateString() }}" required
+                            class="w-full border border-gray-300 rounded-lg px-4 py-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nombre de jours</label>
+                        <input type="number" name="requested_days" id="editHistoricalDays" min="1" required
+                            class="w-full border border-gray-300 rounded-lg px-4 py-2">
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeEditHistoricalModal()"
+                        class="flex-1 bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">Annuler</button>
+                    <button type="submit"
+                        class="flex-1 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Correct Ongoing Leave Modal -->
+    <div id="correctOngoingModal"
+        class="fixed px-4 inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-20">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Corriger la pause en cours</h2>
+            <p class="text-sm text-gray-500 mb-4">
+                La modification de la date de début répercute automatiquement le changement sur la pause du véhicule et sur
+                la disponibilité de l'agent.
+            </p>
+            <form id="correctOngoingForm" method="POST">
+                @csrf
+                @method('PATCH')
+                <div class="grid grid-cols-1 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Date de début</label>
+                        <input type="date" name="start_date" id="correctOngoingStartDate" required
+                            class="w-full border border-gray-300 rounded-lg px-4 py-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nombre de jours demandés</label>
+                        <input type="number" name="requested_days" id="correctOngoingDays" min="1" required
+                            class="w-full border border-gray-300 rounded-lg px-4 py-2">
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeCorrectOngoingModal()"
+                        class="flex-1 bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">Annuler</button>
+                    <button type="submit"
+                        class="flex-1 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Historical Leave Modal -->
+    <div id="deleteHistoricalModal"
+        class="fixed px-4 inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-20">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Supprimer la pause</h2>
+            <p class="text-gray-700 mb-6">Êtes-vous sûr de vouloir supprimer cette pause historique ? Cette action est
+                irréversible et mettra à jour le compteur de jours utilisés.</p>
+            <form id="deleteHistoricalForm" method="POST">
+                @csrf
+                @method('DELETE')
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeDeleteHistoricalModal()"
+                        class="flex-1 bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">Annuler</button>
+                    <button type="submit"
+                        class="flex-1 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Supprimer</button>
                 </div>
             </form>
         </div>
@@ -286,7 +381,7 @@
 
     @push('scripts')
         <script>
-            function openApproveModal(requestId, action) {
+            function openApproveModal(action) {
                 const form = document.getElementById('approveForm');
                 form.action = action;
                 document.getElementById('approveModal').classList.remove('hidden');
@@ -307,115 +402,64 @@
                 document.getElementById('rejection_reason').value = '';
             }
 
-            function openRevokeModal(date, action) {
-                const form = document.getElementById('revokeForm');
-                form.action = action;
-                document.getElementById('leave_date').value = date;
-                document.getElementById('revokeModal').classList.remove('hidden');
+            function switchLeaveTab(tab) {
+                document.getElementById('ongoingLeaveForm').classList.toggle('hidden', tab !== 'ongoing');
+                document.getElementById('historicalLeaveForm').classList.toggle('hidden', tab !== 'historical');
+                document.getElementById('tabOngoingBtn').className = tab === 'ongoing' ?
+                    'flex-1 bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium' :
+                    'flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium';
+                document.getElementById('tabHistoricalBtn').className = tab === 'historical' ?
+                    'flex-1 bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium' :
+                    'flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium';
             }
 
-            function closeRevokeModal() {
-                document.getElementById('revokeModal').classList.add('hidden');
-                document.getElementById('leave_date').value = '';
+            function openEndLeaveModal(action) {
+                document.getElementById('endLeaveForm').action = action;
+                document.getElementById('endLeaveModal').classList.remove('hidden');
+                document.getElementById('endLeaveModal').classList.add('flex');
             }
 
-            // Admin instant leave form functions
-            let adminSelectedDates = [];
-            const adminMaxDays = {{ $leaveInfo['available_leave_days'] }};
-
-            function adminSetError(message) {
-                const error = document.getElementById('adminDateError');
-                error.textContent = message;
-                error.classList.remove('hidden');
+            function closeEndLeaveModal() {
+                document.getElementById('endLeaveModal').classList.add('hidden');
+                document.getElementById('endLeaveModal').classList.remove('flex');
             }
 
-            function adminClearError() {
-                const error = document.getElementById('adminDateError');
-                error.textContent = '';
-                error.classList.add('hidden');
+            function openEditHistoricalModal(action, startDate, requestedDays) {
+                document.getElementById('editHistoricalForm').action = action;
+                document.getElementById('editHistoricalStartDate').value = startDate;
+                document.getElementById('editHistoricalDays').value = requestedDays;
+                document.getElementById('editHistoricalModal').classList.remove('hidden');
+                document.getElementById('editHistoricalModal').classList.add('flex');
             }
 
-            function adminAddDate() {
-                adminClearError();
-                const dateInput = document.getElementById('adminLeaveDate');
-                const date = dateInput.value;
-
-                if (!date) {
-                    adminSetError('Veuillez sélectionner une date.');
-                    return;
-                }
-
-                if (adminSelectedDates.includes(date)) {
-                    adminSetError('Cette date est déjà sélectionnée.');
-                    return;
-                }
-
-                /* if (adminSelectedDates.length >= adminMaxDays) {
-                    adminSetError(`Vous ne pouvez ajouter que ${adminMaxDays} jour(s) maximum.`);
-                    return;
-                } */
-
-                adminSelectedDates.push(date);
-                adminSelectedDates.sort();
-                adminUpdateDisplay();
-                dateInput.value = '';
-                dateInput.focus();
+            function closeEditHistoricalModal() {
+                document.getElementById('editHistoricalModal').classList.add('hidden');
+                document.getElementById('editHistoricalModal').classList.remove('flex');
             }
 
-            function adminRemoveDate(date) {
-                adminSelectedDates = adminSelectedDates.filter(d => d !== date);
-                adminUpdateDisplay();
+            function openDeleteHistoricalModal(action) {
+                document.getElementById('deleteHistoricalForm').action = action;
+                document.getElementById('deleteHistoricalModal').classList.remove('hidden');
+                document.getElementById('deleteHistoricalModal').classList.add('flex');
             }
 
-            function adminUpdateDisplay() {
-                const container = document.getElementById('adminSelectedDates');
-                const inputsContainer = document.getElementById('adminDatesInputs');
-                const submitBtn = document.getElementById('adminSubmitBtn');
-
-                if (adminSelectedDates.length === 0) {
-                    container.innerHTML =
-                        '<p class="text-gray-400 text-sm w-full text-center py-2">Aucune date sélectionnée</p>';
-                    inputsContainer.innerHTML = '';
-                    submitBtn.disabled = true;
-                    return;
-                }
-
-                container.innerHTML = adminSelectedDates.map(date => {
-                    const dateObj = new Date(date + 'T00:00:00');
-                    const dayName = dateObj.toLocaleDateString('fr-FR', {
-                        weekday: 'short'
-                    });
-                    return `
-                        <div class="inline-flex items-center bg-indigo-100 text-indigo-800 px-3 py-2 rounded-lg text-sm font-medium">
-                            ${dateObj.toLocaleDateString('fr-FR')} (${dayName})
-                            <button type="button" onclick="adminRemoveDate('${date}')" class="ml-2 hover:text-indigo-600 font-bold">
-                                ✕
-                            </button>
-                        </div>
-                    `;
-                }).join('');
-
-                inputsContainer.innerHTML = adminSelectedDates.map(date => `
-                    <input type="hidden" name="dates[]" value="${date}">
-                `).join('');
-
-                submitBtn.disabled = false;
+            function closeDeleteHistoricalModal() {
+                document.getElementById('deleteHistoricalModal').classList.add('hidden');
+                document.getElementById('deleteHistoricalModal').classList.remove('flex');
             }
 
-            function adminClearDates() {
-                adminSelectedDates = [];
-                document.getElementById('adminLeaveDate').value = '';
-                adminClearError();
-                adminUpdateDisplay();
+            function openCorrectOngoingModal(action, startDate, requestedDays) {
+                document.getElementById('correctOngoingForm').action = action;
+                document.getElementById('correctOngoingStartDate').value = startDate;
+                document.getElementById('correctOngoingDays').value = requestedDays;
+                document.getElementById('correctOngoingModal').classList.remove('hidden');
+                document.getElementById('correctOngoingModal').classList.add('flex');
             }
 
-            // Allow Enter key to add date
-            document.getElementById('adminLeaveDate').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    adminAddDate();
-                    e.preventDefault();
-                }
-            });
+            function closeCorrectOngoingModal() {
+                document.getElementById('correctOngoingModal').classList.add('hidden');
+                document.getElementById('correctOngoingModal').classList.remove('flex');
+            }
 
             // Close modals when clicking outside
             document.getElementById('approveModal')?.addEventListener('click', function(e) {
@@ -424,8 +468,8 @@
             document.getElementById('rejectModal')?.addEventListener('click', function(e) {
                 if (e.target === this) closeRejectModal();
             });
-            document.getElementById('revokeModal')?.addEventListener('click', function(e) {
-                if (e.target === this) closeRevokeModal();
+            document.getElementById('endLeaveModal')?.addEventListener('click', function(e) {
+                if (e.target === this) closeEndLeaveModal();
             });
         </script>
     @endpush

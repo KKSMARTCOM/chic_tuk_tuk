@@ -63,7 +63,7 @@ class VehicleContract extends Model
     // Montant total déjà payé
     public function getTotalPaidAttribute(): float
     {
-        return (float) $this->payments()->sum('amount');
+        return (float) $this->payments()->sum('net_amount');
     }
 
     // Montant restant à payer

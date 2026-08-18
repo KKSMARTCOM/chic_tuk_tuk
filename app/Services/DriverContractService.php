@@ -94,11 +94,13 @@ class DriverContractService
         $accruedDays = $contract->accrued_leave_days;
         $available   = $accruedDays - $usedDays;
         $surplus     = $available < 0 ? abs($available) : 0;
+        $remainingLeaveDays = $contract->remaining_contract_leave_days;
 
         return [
             'accrued_leave_days'  => $accruedDays,
             'used_leave_days'     => $usedDays,
             'available_leave_days' => max(0, $available),
+            'remaining_leave_days' => $remainingLeaveDays,
             'surplus_leave_days'  => $surplus,
             'months_elapsed'      => $contract->months_elapsed,
             'total_paid'          => $contract->total_paid,

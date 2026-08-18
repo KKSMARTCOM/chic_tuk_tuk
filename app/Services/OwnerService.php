@@ -147,8 +147,6 @@ class OwnerService
                 'is_active' => $data['is_active'] ?? $owner->is_active,
             ]);
 
-            //dd($data['vehicles'] ?? null);
-
             // ── 2. Véhicules existants (sans agent actif uniquement) ──
             if (!empty($data['vehicles']) && is_array($data['vehicles'])) {
                 foreach ($data['vehicles'] as $vehicleId => $vData) {

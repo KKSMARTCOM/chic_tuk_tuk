@@ -279,7 +279,7 @@
                     </button>
                     <button onclick="openPaymentModal()"
                         class="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition text-sm font-semibold">
-                        <i class="fas fa-money-bill mr-2"></i> Enregistrer un paiement
+                        <i class="fas fa-money-bill mr-2"></i> Enregistrer le pymt d'une commission
                     </button>
                     <a href="{{ route('admin.payments.driver-details', $driverProfile->id) }}"
                         class="block w-full text-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition text-sm font-semibold">

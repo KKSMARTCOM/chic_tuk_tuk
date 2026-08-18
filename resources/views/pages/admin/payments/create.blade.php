@@ -67,45 +67,6 @@
                     @enderror
                 </div>
 
-                {{-- <!-- Contrat agent -->
-    <div class="mb-6">
-        <label class="block text-gray-700 text-sm font-semibold mb-2">Contrat Agent</label>
-        <select name="driver_contract_id"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option value="">-- Aucun --</option>
-            @foreach ($driverContracts as $contract)
-                <option value="{{ $contract->id }}"
-                    {{ old('driver_contract_id') == $contract->id ? 'selected' : '' }}>
-                    {{ $contract->driver?->user?->name ?? 'N/A' }} –
-                    {{ $contract->vehicle?->vehicle_number ?? 'N/A' }}
-                    ({{ ucfirst($contract->status) }})
-                </option>
-            @endforeach
-        </select>
-        @error('driver_contract_id')
-            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-        @enderror
-    </div>
-
-    <!-- Contrat véhicule -->
-    <div class="mb-6">
-        <label class="block text-gray-700 text-sm font-semibold mb-2">Contrat Véhicule</label>
-        <select name="vehicle_contract_id"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option value="">-- Aucun --</option>
-            @foreach ($vehicleContracts as $contract)
-                <option value="{{ $contract->id }}"
-                    {{ old('vehicle_contract_id') == $contract->id ? 'selected' : '' }}>
-                    {{ $contract->vehicle?->vehicle_number ?? 'N/A' }} – {{ $contract->owner?->name ?? 'N/A' }}
-                    ({{ ucfirst($contract->status) }})
-                </option>
-            @endforeach
-        </select>
-        @error('vehicle_contract_id')
-            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-        @enderror
-    </div> --}}
-
                 <!-- Montant -->
                 <div>
                     <label class="block text-gray-700 text-sm font-semibold mb-2">Montant (FCFA) <span
@@ -151,17 +112,6 @@
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror
                 </div>
-
-                <!-- Numéro de Référence -->
-                {{-- <div class="mb-6">
-        <label class="block text-gray-700 text-sm font-semibold mb-2">Numéro de Référence</label>
-        <input type="text" name="reference_number" placeholder="Numéro de reçu ou référence"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 @error('reference_number') border-red-500 @enderror"
-            value="{{ old('reference_number') }}">
-        @error('reference_number')
-            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-        @enderror
-    </div> --}}
 
                 <!-- Notes -->
                 <div class="col-span-2">

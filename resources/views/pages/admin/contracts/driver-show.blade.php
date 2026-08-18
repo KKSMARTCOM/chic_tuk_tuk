@@ -60,20 +60,20 @@
                 </div>
                 <div class="px-6 pb-6 grid grid-cols-2 gap-4 text-sm text-gray-600">
                     <div>
-                        <p class="font-semibold text-gray-800 mb-1">Jours acquis</p>
-                        <p>{{ number_format($accruedDays, 0, ',', ' ') }} jours</p>
+                        <p class="font-semibold text-gray-800 mb-1">Disponibles</p>
+                        <p>{{ number_format(max(0, $availableDays), 0, ',', ' ') }} jours</p>
                     </div>
                     <div>
                         <p class="font-semibold text-gray-800 mb-1">Jours utilisés</p>
                         <p>{{ number_format($usedDays, 0, ',', ' ') }} jours</p>
                     </div>
                     <div>
-                        <p class="font-semibold text-gray-800 mb-1">Disponibles</p>
-                        <p>{{ number_format(max(0, $availableDays), 0, ',', ' ') }} jours</p>
-                    </div>
-                    <div>
                         <p class="font-semibold text-gray-800 mb-1">Surplus</p>
                         <p>{{ number_format($surplusDays, 0, ',', ' ') }} jours</p>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-gray-800 mb-1">Jours restants</p>
+                        <p>{{ number_format($remainingDays, 0, ',', ' ') }} jours</p>
                     </div>
                 </div>
             </div>

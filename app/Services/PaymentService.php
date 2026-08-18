@@ -50,16 +50,14 @@ class PaymentService
      */
     public function getAllPayments($filters = [])
     {
-        $query = Payment::query()
-            ->with(['driver.user'])
-            ->latest('payment_date');
+        $query = Payment::query()->with(['driver.user'])->latest('payment_date');
 
         if (isset($filters['driver_id']) && !empty($filters['driver_id'])) {
             $query->where('driver_id', $filters['driver_id']);
         }
 
-        if (isset($filters['payment_method']) && !empty($filters['payment_method'])) {
-            $query->where('payment_method', $filters['payment_method']);
+        if (isset($filters['status']) && !empty($filters['status'])) {
+            $query->where('status', $filters['status']);
         }
 
         if (isset($filters['payment_type']) && !empty($filters['payment_type'])) {
@@ -147,8 +145,8 @@ class PaymentService
     {
         $driver = Driver::with('user')->findOrFail($driverId);
 
-        $totalDue = $driver->commissions()->sum('amount');
-        $totalPaid = $driver->payments()->sum('amount');
+        $totalDue = $driver->commissions()->where('status', 'active')->sum('amount');
+        $totalPaid = $driver->payments()->where('payment_type', 'commission')->where('status', 'completed')->sum('amount');
         $balanceDue = $totalDue - $totalPaid;
 
         return [
@@ -167,6 +165,13 @@ class PaymentService
     public function update(string $paymentId, array $data)
     {
         $payment = Payment::findOrFail($paymentId);
+
+        $driver = Driver::with('activeDriverContract')->findOrFail($data['driver_id']);
+
+        if ($driver->activeDriverContract) {
+            $data['driver_contract_id'] = $driver->activeDriverContract->id;
+            $data['vehicle_contract_id'] = $driver->activeDriverContract->vehicle_contract_id;
+        }
 
         $this->validatePaymentData($data, $paymentId);
 

@@ -8,15 +8,10 @@
                 <h1 class="text-lg md:text-2xl font-bold text-gray-800">Gestion du Paiement</h1>
                 <p class="text-sm md:text-base text-gray-600">Enregistrez et gérez le paiement des Agents</p>
             </div>
-            <div class="mt-4 md:mt-0 flex gap-4">
+            <div class="mt-4 md:mt-0">
                 <a href="{{ route('admin.payments.create') }}"
                     class="bg-blue-600 hover:bg-blue-700 text-white text-nowrap font-semibold py-2 px-4 rounded-lg">
                     <i class="fas fa-plus mr-2"></i> Ajouter
-                </a>
-
-                <a href="{{ route('admin.payments.create') }}"
-                    class="bg-green-600 hover:bg-green-700 text-white text-nowrap font-semibold py-2 px-4 rounded-lg">
-                    <i class="fas fa-plus mr-2"></i> Générer
                 </a>
             </div>
         </div>
@@ -168,18 +163,14 @@
             </div>
 
             <div>
-                <label class="block text-gray-700 text-sm font-semibold mb-2">Moyen de Paiement</label>
-                <select name="payment_method"
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Statut</label>
+                <select name="status"
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="">-- Tous --</option>
-                    <option value="cash" {{ request('payment_method') == 'cash' ? 'selected' : '' }}>Espèces</option>
-                    <option value="bank_transfer" {{ request('payment_method') == 'bank_transfer' ? 'selected' : '' }}>
-                        Virement Bancaire</option>
-                    <option value="check" {{ request('payment_method') == 'check' ? 'selected' : '' }}>Chèque</option>
-                    <option value="mobile_money" {{ request('payment_method') == 'mobile_money' ? 'selected' : '' }}>
-                        Mobile
-                        Money</option>
-                    <option value="other" {{ request('payment_method') == 'other' ? 'selected' : '' }}>Autre</option>
+                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>En attente</option>
+                    <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>
+                        Validé</option>
+                    <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Annulé</option>
                 </select>
             </div>
 
@@ -246,7 +237,7 @@
                                 Montant
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Moyen
+                                Type
                                 de Paiement</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                 Statut</th>
@@ -272,13 +263,11 @@
                                 <td class="px-6 py-4 text-sm">
                                     <span
                                         class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold
-                                    {{ $payment->payment_method === 'cash' ? 'bg-green-100 text-green-800' : '' }}
-                                    {{ $payment->payment_method === 'bank_transfer' ? 'bg-blue-100 text-blue-800' : '' }}
-                                    {{ $payment->payment_method === 'check' ? 'bg-yellow-100 text-yellow-800' : '' }}
-                                    {{ $payment->payment_method === 'mobile_money' ? 'bg-purple-100 text-purple-800' : '' }}
-                                    {{ $payment->payment_method === 'other' ? 'bg-gray-100 text-gray-800' : '' }}
+                                    {{ $payment->payment_type === 'commission' ? 'bg-green-100 text-green-800' : '' }}
+                                    {{ $payment->payment_type === 'contract' ? 'bg-blue-100 text-blue-800' : '' }}
+                                    {{ $payment->payment_type === 'other' ? 'bg-gray-100 text-gray-800' : '' }}
                                 ">
-                                        {{ ucfirst(str_replace('_', ' ', $payment->payment_method)) }}
+                                        {{ ucfirst(str_replace('_', ' ', $payment->payment_type)) }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-sm">

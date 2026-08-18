@@ -14,18 +14,18 @@ class Driver extends Model
 
     protected $fillable = [
         'user_id',
-        'license_number',
-        'vehicle_number',
-        'vehicle_type',
+        //'license_number',
+        //'vehicle_number',
+        //'vehicle_type',
         'is_available',
         'rating',
         'total_trips',
         'agent_code',
         'agent_id',
-        'contract_type',
-        'start_date',
-        'tricycle_owner',
-        'owner_phone',
+        //'contract_type',
+        //'start_date',
+        //'tricycle_owner',
+        //'owner_phone',
         'leave_days_used',
         'leave_dates'
     ];
@@ -92,6 +92,22 @@ class Driver extends Model
     }
 
     // Leave management methods
+    public function ongoingLeaveRequest()
+    {
+        return $this->hasOne(LeaveRequest::class, 'driver_id', 'id')->where('status', 'ongoing');
+    }
+
+    public function isOnLeaveToday(): bool
+    {
+        $ongoing = $this->ongoingLeaveRequest()->first();
+        return $ongoing && $ongoing->start_date->lte(now()->startOfDay());
+    }
+
+    public function hasOngoingLeave(): bool
+    {
+        return $this->leaveRequests()->where('status', 'ongoing')->exists();
+    }
+
     public function getLeaveDaysPerMonth(): int
     {
         return 2; // 2 days per month
@@ -107,9 +123,7 @@ class Driver extends Model
         return $this->leaveRequests()
             ->where('status', $status)
             ->get()
-            ->sum(function ($leave) {
-                return count($leave->dates ?? []);
-            });
+            ->sum(fn($leave) => $leave->effective_days ?? $leave->requested_days ?? 0);
     }
 
     public function getTotalLeaveDays(): int
@@ -128,15 +142,15 @@ class Driver extends Model
             return 0;
         }
 
-        $start = Carbon::parse($this->activeDriverContract?->start_date)->startOfDay();
+        $start = Carbon::parse($this->activeDriverContract->start_date)->startOfDay();
+
         $now = now()->startOfDay();
 
         if ($now->lt($start)) {
             return 0;
         }
 
-        $monthsElapsed = $start->diffInMonths($now) + 1;
-        return min($monthsElapsed, $this->getContractMonths());
+        return min($start->diffInMonths($now) + 1, $this->getContractMonths());
     }
 
     public function getAccruedLeaveDays(): int
@@ -144,80 +158,19 @@ class Driver extends Model
         return $this->getLeaveDaysPerMonth() * $this->getContractMonthsElapsed();
     }
 
-    public function getAvailableLeaveDays(): int
-    {
-        $available = $this->getAccruedLeaveDays() - ($this->getLeaveRequestsByStatus('approved') ?? 0) - ($this->getLeaveRequestsByStatus('pending') ?? 0);
-        return max(0, min($available, $this->getRemainingLeaveDays()));
-    }
-
     public function getAvailableLeaveDaysAttribute(): int
     {
-        $available = $this->getAccruedLeaveDays()
-            - ($this->getLeaveRequestsByStatus('approved') ?? 0)
-            - ($this->getLeaveRequestsByStatus('pending') ?? 0);
-
-        return max(0, min($available, $this->getRemainingLeaveDays()));
+        return $this->getAccruedLeaveDays()
+            - $this->getLeaveRequestsByStatus('ongoing')
+            - $this->getLeaveRequestsByStatus('pending')
+            - $this->getLeaveRequestsByStatus('completed');
     }
 
-    public function canRequestLeave(int $days = 1): bool
+    // ── Mise à jour du compteur indicatif (appelée à la clôture d'une pause) ──
+    public function markLeaveDaysUsed(int $days): void
     {
-        return $this->getRemainingLeaveDays() >= $days;
-    }
-
-    public function canRequestLeaveNow(int $days = 1): bool
-    {
-        return $this->getAvailableLeaveDays() >= $days;
-    }
-
-    public function addLeaveDates(array $dates): void
-    {
-        $existing = $this->leave_dates ?? [];
-        $this->leave_dates = array_unique(array_merge($existing, $dates));
-        $this->leave_days_used = ($this->leave_days_used ?? 0) + count($dates);
+        $this->leave_days_used = max(0, ($this->leave_days_used ?? 0) + $days);
         $this->save();
-    }
-
-    public function hasLeaveOnDate(string $date): bool
-    {
-        return in_array($date, $this->leave_dates ?? []);
-    }
-
-    public function removeLeaveDates(array $dates): void
-    {
-        $existing = $this->leave_dates ?? [];
-        $this->leave_dates = array_values(array_diff($existing, $dates));
-        $this->leave_days_used -= count($dates);
-        $this->save();
-    }
-
-    /**
-     * Get pending leave requests for the current month
-     */
-    public function getPendingLeaveRequestsForCurrentMonth()
-    {
-        $currentMonth = now()->startOfMonth();
-        $nextMonth = now()->copy()->addMonth()->startOfMonth();
-
-        return $this->leaveRequests()
-            ->where('status', 'pending')
-            ->where('created_at', '>=', $currentMonth)
-            ->where('created_at', '<', $nextMonth)
-            ->get();
-    }
-
-    /**
-     * Get approved leave requests for the current month
-     */
-    public function getApprovedLeaveRequestsForCurrentMonth()
-    {
-        $currentMonth = now()->startOfMonth();
-        $nextMonth = now()->copy()->addMonth()->startOfMonth();
-
-        return $this->leaveRequests()
-            ->where('status', 'approved')
-            ->where('created_at', '>=', $currentMonth)
-            ->where('created_at', '<', $nextMonth)
-            ->get();
     }
 
     // Nouvelles relations
