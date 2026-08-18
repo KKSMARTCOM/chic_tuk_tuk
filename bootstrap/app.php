@@ -24,10 +24,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withSchedule(function ($schedule) {
-        $schedule->command('app:expire-bookings')->appendOutputTo(storage_path('logs/commands.log'));
-        $schedule->command('app:process-recurring-bookings')->appendOutputTo(storage_path('logs/commands.log'));
-        $schedule->command('app:generate-daily')->appendOutputTo(storage_path('logs/commands.log'));
-        $schedule->command('app:activate-leave-pauses')->appendOutputTo(storage_path('logs/commands.log'));
+        $schedule->command('app:expire-bookings')->dailyAt('01:00')->appendOutputTo(storage_path('logs/commands.log'));
+        $schedule->command('app:process-recurring-bookings')->dailyAt('01:00')->appendOutputTo(storage_path('logs/commands.log'));
+        $schedule->command('app:generate-daily')->dailyAt('23:30')->appendOutputTo(storage_path('logs/commands.log'));
+        $schedule->command('app:activate-leave-pauses')->everyTwoHours()->appendOutputTo(storage_path('logs/commands.log'));
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
