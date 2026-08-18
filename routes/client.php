@@ -12,14 +12,13 @@ Route::middleware(['auth:sanctum', 'profil:client'])->prefix('client')->name('cl
     Route::get('/leaves/history', [DashboardController::class, 'leaveHistory'])->name('leaves.history')->middleware('permission:view-leaves');
     // Ajoutez d'autres routes client ici
 
-    Route::middleware(['auth:sanctum', 'role:proprietaire'])->prefix('owner')->name('owner.')->group(function () {
-        Route::get('/dashboard', [DashboardController::class, 'client'])->name('dashboard')->middleware('permission:view-dashboard');
+});
 
-        //Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::middleware(['auth:sanctum', 'profil:owner'])->prefix('owner')->name('owner.')->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'owner'])->name('dashboard')->middleware('permission:view-dashboard');
 
-        Route::get('/vehicles', [OwnerVehicleController::class, 'index'])->name('vehicles.index');
-        Route::get('/vehicles/{vehicle}', [OwnerVehicleController::class, 'show'])->name('vehicles.show');
-        Route::get('/vehicles/{vehicle}/payments', [OwnerVehicleController::class, 'payments'])->name('vehicles.payments');
-        Route::get('/vehicles/{vehicle}/pauses', [OwnerVehicleController::class, 'pauses'])->name('vehicles.pauses');
-    });
+    Route::get('/vehicles', [OwnerVehicleController::class, 'index'])->name('vehicles.index');
+    Route::get('/vehicles/{vehicle}', [OwnerVehicleController::class, 'show'])->name('vehicles.show');
+    Route::get('/vehicles/{vehicle}/payments', [OwnerVehicleController::class, 'payments'])->name('vehicles.payments');
+    Route::get('/vehicles/{vehicle}/pauses', [OwnerVehicleController::class, 'pauses'])->name('vehicles.pauses');
 });

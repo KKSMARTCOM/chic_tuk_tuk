@@ -6,19 +6,19 @@
     <div class="bg-white rounded-lg shadow-md mb-8">
         <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
             <div>
-                <h1 class="text-lg md:text-2xl font-bold text-gray-800">Gestion des Utilisateurs</h1>
-                <p class="text-xs md:text-base text-gray-600">Gérez les comptes administrateurs et clients</p>
+                <h1 class="text-lg md:text-2xl font-bold text-gray-800">Gestion des Administrateurs</h1>
+                <p class="text-xs md:text-base text-gray-600">Gérez les comptes administrateurs</p>
             </div>
             <button onclick="openCreateModal()"
                 class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
-                <i class="fas fa-plus mr-2"></i> Nouvel Utilisateur
+                <i class="fas fa-plus mr-2"></i> Nouvel Administrateur
             </button>
         </div>
     </div>
 
     {{-- Stats --}}
-    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-        @foreach ([['label' => 'Total', 'value' => $stats['total'], 'icon' => 'fa-users', 'color' => 'blue'], ['label' => 'Actifs', 'value' => $stats['active'], 'icon' => 'fa-check-circle', 'color' => 'green'], ['label' => 'Inactifs', 'value' => $stats['inactive'], 'icon' => 'fa-times-circle', 'color' => 'red'], ['label' => 'Admins', 'value' => $stats['admins'], 'icon' => 'fa-user-shield', 'color' => 'purple'], ['label' => 'Clients', 'value' => $stats['clients'], 'icon' => 'fa-user', 'color' => 'orange']] as $stat)
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+        @foreach ([['label' => 'Total', 'value' => $stats['total'], 'icon' => 'fa-users', 'color' => 'blue'], ['label' => 'Actifs', 'value' => $stats['active'], 'icon' => 'fa-check-circle', 'color' => 'green'], ['label' => 'Inactifs', 'value' => $stats['inactive'], 'icon' => 'fa-times-circle', 'color' => 'red']] as $stat)
             <div class="bg-white rounded-lg shadow-md p-4">
                 <div class="flex items-center">
                     <div
@@ -42,14 +42,6 @@
                     <input type="text" name="search" value="{{ request('search') }}"
                         placeholder="Nom, email, téléphone..."
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-                </div>
-                <div class="w-40">
-                    <select name="profil"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-                        <option value="">Tous les profils</option>
-                        <option value="admin" {{ request('profil') === 'admin' ? 'selected' : '' }}>Admin</option>
-                        <option value="client" {{ request('profil') === 'client' ? 'selected' : '' }}>Client</option>
-                    </select>
                 </div>
                 <div class="w-40">
                     <select name="is_active"
@@ -76,7 +68,7 @@
     {{-- Table --}}
     <div class="bg-white rounded-lg shadow-md">
         <div class="px-6 py-4 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-800">Liste des Utilisateurs</h3>
+            <h3 class="text-lg font-semibold text-gray-800">Liste des Administrateurs</h3>
         </div>
         @if ($users->count() > 0)
             <div class="overflow-x-auto p-4">
@@ -85,9 +77,10 @@
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                 Ajouter le </th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Utilisateur</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Administrateur
+                            </th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Contact</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Profil / Rôle</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Rôle</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Statut</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Actions</th>
                         </tr>
@@ -171,7 +164,7 @@
         @else
             <div class="px-6 py-12 text-center">
                 <i class="fas fa-users text-4xl text-gray-300 mb-4"></i>
-                <p class="text-gray-500">Aucun utilisateur trouvé.</p>
+                <p class="text-gray-500">Aucun administrateur trouvé.</p>
             </div>
         @endif
     </div>
@@ -241,10 +234,11 @@
     <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-30">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4">
             <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-bold text-gray-800">Supprimer l'utilisateur</h3>
+                <h3 class="text-lg font-bold text-gray-800">Supprimer l'administrateur</h3>
             </div>
             <div class="p-6">
-                <p class="text-gray-600 mb-6" id="deleteMessage">Êtes-vous sûr de vouloir supprimer cet utilisateur ?</p>
+                <p class="text-gray-600 mb-6" id="deleteMessage">Êtes-vous sûr de vouloir supprimer cet administrateur ?
+                </p>
                 <form id="deleteForm" method="POST">
                     @csrf
                     @method('DELETE')
@@ -295,56 +289,9 @@
             })
 
             // ===== CRÉATION =====
-            // ── Afficher/masquer la section propriétaire ────────────
-            function onRoleChange(role, ctx) {
-                const section = document.getElementById(`${ctx}_owner_section`);
-                if (section) {
-                    if (role === 'proprietaire') {
-                        section.classList.remove('hidden');
-                    } else {
-                        section.classList.add('hidden');
-                        // Reset les champs si on change de rôle
-                        document.getElementById(`${ctx}_vehicle_id`).value = '';
-                        document.getElementById(`${ctx}_new_vehicle_form`)?.classList.add('hidden');
-                    }
-                }
-            }
-
-            // Si le profil change, reset aussi
-            function onProfilChange(profil, ctx) {
-                const roleSelect = document.getElementById(`${ctx}_role`);
-                if (roleSelect && roleSelect.value === 'proprietaire') {
-                    onRoleChange('', ctx); // masquer si profil change
-                    roleSelect.value = '';
-                }
-            }
-
-            // ── Afficher/masquer le formulaire nouveau véhicule ─────
-            function toggleNewVehicleForm() {
-                const form = document.getElementById('create_new_vehicle_form');
-                const select = document.getElementById('create_vehicle_id');
-                const isShown = !form.classList.contains('hidden');
-
-                form.classList.toggle('hidden', isShown);
-
-                // Si on affiche le formulaire nouveau véhicule,
-                // vider la sélection du véhicule existant
-                if (!isShown) {
-                    select.value = '';
-                    select.disabled = true;
-                } else {
-                    select.disabled = false;
-                    // Vider les champs du nouveau véhicule
-                    document.getElementById('create_new_vehicle_number').value = '';
-                }
-            }
-
             function openCreateModal() {
                 generatePassword();
 
-                // Reset section proprio
-                document.getElementById('create_owner_section')?.classList.add('hidden');
-                document.getElementById('create_new_vehicle_form')?.classList.add('hidden');
                 document.getElementById('create_role').value = '';
 
                 document.getElementById('createModal').classList.remove('hidden');
@@ -378,157 +325,8 @@
 
                 document.getElementById('editForm').action = `/admin/users/${user.id}`;
 
-                // Reset section proprio
-                resetOwnerSection();
-
-                // Afficher si proprio
-                if (firstRole === 'proprietaire') {
-                    document.getElementById('edit_owner_section').classList.remove('hidden');
-                    loadOwnerVehicles(user.id);
-                }
-
                 document.getElementById('editModal').classList.remove('hidden');
                 document.getElementById('editModal').classList.add('flex');
-            }
-
-            // ── Charger les véhicules actuels du proprio ─────────────
-            async function loadOwnerVehicles(userId) {
-                const container = document.getElementById('edit_current_vehicles');
-                container.innerHTML = '<p class="text-xs text-gray-400 italic">Chargement...</p>';
-
-                try {
-                    const res = await fetch(`/admin/users/${userId}/vehicles`, {
-                        headers: {
-                            'Accept': 'application/json'
-                        }
-                    });
-                    const data = await res.json();
-
-                    if (!data.length) {
-                        container.innerHTML = '<p class="text-xs text-gray-400 italic">Aucun véhicule associé.</p>';
-                        return;
-                    }
-
-                    container.innerHTML = data.map(v => `
-                <div class="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5">
-                    <div class="flex items-center gap-3">
-                        <i class="fas fa-${v.vehicle_type === 'moto' ? 'motorcycle' : v.vehicle_type === 'car' ? 'car' : 'truck-pickup'} text-[#286b41]"></i>
-                        <div>
-                            <p class="text-sm font-semibold text-gray-800">${v.vehicle_number}</p>
-                            <p class="text-xs text-gray-500">${v.vehicle_type}${v.color ? ' · ' + v.color : ''}</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        ${v.has_active_contract
-                            ? '<span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">Contrat actif</span>'
-                            : '<span class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">Sans contrat</span>'
-                        }
-                        <button type="button"
-                            onclick="confirmDetachVehicle('${v.id}', '${v.vehicle_number}')"
-                            class="text-red-400 hover:text-red-600 ml-1" title="Détacher ce véhicule">
-                            <i class="fas fa-unlink text-xs"></i>
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-
-                } catch (e) {
-                    container.innerHTML = '<p class="text-xs text-red-400">Erreur de chargement.</p>';
-                }
-            }
-
-            // ── Détacher un véhicule du propriétaire ─────────────────
-            function confirmDetachVehicle(vehicleId, vehicleNumber) {
-                if (!confirm(
-                        `Détacher le véhicule ${vehicleNumber} de ce propriétaire ?\n\nAttention : si un contrat actif existe, il sera clôturé.`
-                    )) return;
-
-                fetch(`/admin/vehicles/${vehicleId}/detach-owner`, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                            'Accept': 'application/json',
-                        },
-                    })
-                    .then(r => r.json())
-                    .then(data => {
-                        if (data.success) {
-                            showAlert('success', data.message ?? 'Véhicule détaché.');
-                            // Recharger la liste des véhicules
-                            const userId = document.getElementById('editForm').action.split('/').at(-1);
-                            loadOwnerVehicles(userId);
-                            // Remettre le véhicule dans le select des disponibles
-                            const select = document.getElementById('edit_vehicle_id');
-                            const opt = new Option(`${data.vehicle.vehicle_number} (${data.vehicle.vehicle_type})`, data
-                                .vehicle.id);
-                            select.appendChild(opt);
-                        } else {
-                            showAlert('error', data.message ?? 'Erreur lors du détachement.');
-                        }
-                    })
-                    .catch(() => showAlert('error', 'Erreur réseau.'));
-            }
-
-            // ── Afficher/masquer formulaire nouveau véhicule ─────────
-            function toggleEditVehicleForm() {
-                const form = document.getElementById('edit_new_vehicle_form');
-                const select = document.getElementById('edit_vehicle_id');
-                const shown = !form.classList.contains('hidden');
-
-                form.classList.toggle('hidden', shown);
-                document.getElementById('edit_contract_section').classList.remove('hidden');
-
-                if (!shown) {
-                    select.value = '';
-                    select.disabled = true;
-                    document.getElementById('edit_new_vehicle_number').value = '';
-                } else {
-                    select.disabled = false;
-                }
-            }
-
-            // Afficher la section contrat quand on choisit un véhicule existant
-            document.getElementById('edit_vehicle_id')?.addEventListener('change', function() {
-                const section = document.getElementById('edit_contract_section');
-                section.classList.toggle('hidden', !this.value);
-            });
-
-            // ── Callbacks rôle/profil ────────────────────────────────
-            function onRoleChange(role, ctx) {
-                const section = document.getElementById(`${ctx}_owner_section`);
-                if (!section) return;
-
-                if (role === 'proprietaire') {
-                    section.classList.remove('hidden');
-                    if (ctx === 'edit') {
-                        const userId = document.getElementById('editForm').action.split('/').at(-1);
-                        loadOwnerVehicles(userId);
-                    }
-                } else {
-                    section.classList.add('hidden');
-                    resetOwnerSection();
-                }
-            }
-
-            function onProfilChange(profil, ctx) {
-                const roleSelect = document.getElementById(`${ctx}_role`);
-                if (roleSelect?.value === 'proprietaire') {
-                    roleSelect.value = '';
-                    onRoleChange('', ctx);
-                }
-            }
-
-            function resetOwnerSection() {
-                document.getElementById('edit_owner_section')?.classList.add('hidden');
-                document.getElementById('edit_new_vehicle_form')?.classList.add('hidden');
-                document.getElementById('edit_contract_section')?.classList.add('hidden');
-                const select = document.getElementById('edit_vehicle_id');
-                if (select) {
-                    select.value = '';
-                    select.disabled = false;
-                }
-                const num = document.getElementById('edit_new_vehicle_number');
-                if (num) num.value = '';
             }
 
             function closeEditModal() {

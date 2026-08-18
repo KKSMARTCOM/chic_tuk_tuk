@@ -659,6 +659,7 @@ class BookingService
                 'driver_id'       => $driverId,
                 'booking_id'      => $bookingId,
                 'amount'          => $commission,
+                'status'          => 'active',
                 'date'            => now(),
             ];
 

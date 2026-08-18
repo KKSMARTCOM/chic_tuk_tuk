@@ -35,31 +35,12 @@ class VehicleService
     public function create(array $data): Vehicle
     {
         return DB::transaction(function () use ($data) {
-            $mode = $data['_owner_mode'] ?? 'existing';
-
-            // 1. Résoudre le propriétaire
-            $ownerId = $this->resolveOwner($mode, $data);
-
-            // 2. Créer le véhicule
+            // Créer le véhicule
             $vehicle = Vehicle::create([
-                'owner_id'       => $ownerId,
                 'vehicle_number' => $data['vehicle_number'],
                 'vehicle_type'   => $data['vehicle_type'],
-                'color'          => $data['color']  ?? null,
                 'notes'          => $data['notes']  ?? null,
                 'is_active'      => true,
-            ]);
-
-            // 3. Créer le contrat si montant renseigné
-            VehicleContract::create([
-                'vehicle_id'      => $vehicle->id,
-                'owner_id'        => $ownerId,
-                'total_amount'    => $data['contract_total_amount'] ?? 0,
-                'monthly_payment' => $data['contract_monthly_payment'] ?? 0,
-                'start_date'      => $data['contract_start_date']      ?? now(),
-                'end_date'        => $data['contract_end_date']         ?? null,
-                'notes'           => $data['contract_notes']            ?? null,
-                'status'          => 'active',
             ]);
 
             return $vehicle;
@@ -69,67 +50,13 @@ class VehicleService
     public function update(Vehicle $vehicle, array $data): Vehicle
     {
         return DB::transaction(function () use ($data, $vehicle) {
-            $mode              = $data['_owner_mode'] ?? 'existing';
-            $hasActiveContract = $data['has_active_contract'] ?? false;
-            $existingContractId = $data['existing_contract_id'] ?? null;
-
-            // Résoudre le propriétaire
-            if ($mode === 'existing') {
-                $newOwnerId = $data['owner_id'];
-
-                // Changement de proprio → clôturer le contrat actif
-                if ($vehicle->owner_id !== $newOwnerId && $vehicle->activeVehicleContract) {
-                    $this->cancelActiveContract($vehicle->activeVehicleContract, 'Changement de propriétaire.');
-                    $hasActiveContract  = false;
-                    $existingContractId = null;
-                }
-            } else {
-                $newOwnerId = $this->resolveOwner($mode, $data);
-
-                // Nouveau proprio → toujours clôturer l'éventuel contrat actif
-                if ($vehicle->activeVehicleContract) {
-                    $this->cancelActiveContract($vehicle->activeVehicleContract, 'Changement de propriétaire.');
-                    $hasActiveContract  = false;
-                    $existingContractId = null;
-                }
-            }
-
-            // 2. Mettre à jour le véhicule
+            // Mettre à jour le véhicule
             $vehicle->update([
-                'owner_id'       => $newOwnerId,
-                'vehicle_number' => $data['vehicle_number'],
-                'vehicle_type'   => $data['vehicle_type'],
+                'vehicle_number' => $data['vehicle_number'] ?? $vehicle->vehicle_number,
+                'vehicle_type'   => $data['vehicle_type'] ?? $vehicle->vehicle_type,
                 'notes'          => $data['notes'] ?? $vehicle->notes,
+                'is_active'      => $data['is_active'] ?? $vehicle->is_active,
             ]);
-
-            // 3. Gestion du contrat
-            if (!empty($data['contract_total_amount'])) {
-
-                if ($hasActiveContract && $existingContractId) {
-                    // ── Mettre à jour le contrat existant ──────────────
-                    VehicleContract::where('id', $existingContractId)
-                        ->where('vehicle_id', $vehicle->id) // sécurité
-                        ->update([
-                            'total_amount'    => $data['contract_total_amount'],
-                            'monthly_payment' => $data['contract_monthly_payment'] ?? 0,
-                            'start_date'      => $data['contract_start_date']      ?? now(),
-                            'end_date'        => $data['contract_end_date']         ?? null,
-                            'notes'           => $data['contract_notes']            ?? null,
-                        ]);
-                } else {
-                    // ── Créer un nouveau contrat ────────────────────────
-                    VehicleContract::create([
-                        'vehicle_id'      => $vehicle->id,
-                        'owner_id'        => $newOwnerId,
-                        'total_amount'    => $data['contract_total_amount'],
-                        'monthly_payment' => $data['contract_monthly_payment'] ?? 0,
-                        'start_date'      => $data['contract_start_date']      ?? now(),
-                        'end_date'        => $data['contract_end_date']         ?? null,
-                        'notes'           => $data['contract_notes']            ?? null,
-                        'status'          => 'active',
-                    ]);
-                }
-            }
 
             return $vehicle->refresh();
         });
@@ -145,6 +72,12 @@ class VehicleService
     public function pauseVehicle(Vehicle $vehicle, array $data): VehiclePause
     {
         return DB::transaction(function () use ($vehicle, $data) {
+            // Vérifier si il y a un contrat actif
+            $activeContract = $vehicle->activeVehicleContract;
+            if (!$activeContract) {
+                throw new \Exception("Impossible de mettre le véhicule en pause car il n'a pas de contrat actif.");
+            }
+
             // Clôturer la pause active si existante
             if ($vehicle->activePause) {
                 $vehicle->activePause->update(['end_date' => $data['start_date'] ?? now()->toDateString()]);
@@ -184,23 +117,23 @@ class VehicleService
     }
 
     // Créer automatiquement une pause suite à un congé agent
-    public function createAutoAgentPause(string $vehicleId, string $driverContractId, array $dates): VehiclePause
+    public function createAutoAgentPause(string $vehicleId, string $driverContractId, string $startDate, ?string $endDate = null): VehiclePause
     {
-        return DB::transaction(function () use ($vehicleId, $driverContractId, $dates) {
+        return DB::transaction(function () use ($vehicleId, $driverContractId, $startDate, $endDate) {
             $vehicle = Vehicle::findOrFail($vehicleId);
-            $startDate = Carbon::parse(min($dates))->startOfDay();
-            $endDate   = Carbon::parse(max($dates))->startOfDay();
-            $today     = Carbon::today();
+            $start   = Carbon::parse($startDate)->startOfDay();
+            $end     = $endDate ? Carbon::parse($endDate)->startOfDay() : null;
+            $today   = Carbon::today();
 
             // Déterminer si la pause est passée, présente ou future
-            $isPast    = $endDate->lt($today);
-            $isCurrent = $startDate->lte($today) && $endDate->gte($today);
+            $isPast    = $end && $end->lt($today);
+            $isCurrent = $start->lte($today) && (!$end || $end->gte($today));
             // $isFuture  = $startDate->gt($today);  // implicite
 
             // ── Clôturer la pause active éventuelle ──────────────
             // Uniquement si la nouvelle pause commence aujourd'hui ou dans le futur
             if (!$isPast && $vehicle->activePause) {
-                $vehicle->activePause->update(['end_date' => $startDate->toDateString()]);
+                $vehicle->activePause->update(['end_date' => $start->toDateString()]);
             }
 
             // ── Créer la pause véhicule ───────────────────────────
@@ -208,8 +141,8 @@ class VehicleService
                 'vehicle_id'          => $vehicle->id,
                 'vehicle_contract_id' => $vehicle->activeVehicleContract?->id,
                 'driver_contract_id'  => $driverContractId,
-                'start_date'          => $startDate->toDateString(),
-                'end_date'            => $endDate->toDateString(), // toujours renseigné car on connaît les dates
+                'start_date'          => $start->toDateString(),
+                'end_date'            => $end?->toDateString(), // toujours renseigné car on connaît les dates
                 'reason_type'         => 'agent_leave',
                 'reason_notes'        => 'Pause automatique suite à une pause agent — '
                     . ($isPast ? 'passé' : ($isCurrent ? 'en cours' : 'futur'))
@@ -226,6 +159,51 @@ class VehicleService
             }
 
             return $pause;
+        });
+    }
+
+    // Terminer la pause véhicule liée à un contrat chauffeur (appelée quand l'admin clôture la pause agent)
+    public function endAgentPause(string $driverContractId, ?string $endDate = null): ?VehiclePause
+    {
+        $pause = VehiclePause::where('driver_contract_id', $driverContractId)
+            ->whereNull('end_date')
+            ->latest('start_date')
+            ->first();
+
+        if (!$pause) {
+            return null;
+        }
+
+        return $this->endPause($pause, $endDate);
+    }
+
+    /**
+     * Corriger la date de début (et éventuellement la date de fin) d'une pause véhicule existante,
+     * sans en créer une nouvelle.
+     */
+    public function correctPauseDates(VehiclePause $pause, string $startDate, ?string $endDate = null): VehiclePause
+    {
+        return DB::transaction(function () use ($pause, $startDate, $endDate) {
+            $pause->update([
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+            ]);
+
+            $vehicle = $pause->vehicle;
+            $today = Carbon::today();
+            $start = Carbon::parse($startDate)->startOfDay();
+            $end   = $endDate ? Carbon::parse($endDate)->startOfDay() : null;
+
+            $isCurrentlyPaused = $start->lte($today) && (!$end || $end->gte($today));
+
+            // Le véhicule doit refléter l'état réel après correction
+            if ($isCurrentlyPaused) {
+                $vehicle->update(['is_active' => false]);
+            } elseif (!$vehicle->activePause) {
+                $vehicle->update(['is_active' => true]);
+            }
+
+            return $pause->refresh();
         });
     }
 

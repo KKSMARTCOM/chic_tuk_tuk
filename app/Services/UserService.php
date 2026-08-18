@@ -16,7 +16,7 @@ class UserService
     public function getAll(array $filters = [])
     {
         $query = User::with('roles')
-            ->whereIn('profil', ['admin', 'client']); // exclure les drivers
+            ->where('profil', 'admin');
 
         if (!empty($filters['search'])) {
             $search = $filters['search'];
@@ -40,14 +40,12 @@ class UserService
 
     public function getStats(): array
     {
-        $users = User::whereIn('profil', ['admin', 'client']);
+        $users = User::where('profil', 'admin');
 
         return [
             'total'    => $users->count(),
             'active'   => (clone $users)->where('is_active', true)->count(),
             'inactive' => (clone $users)->where('is_active', false)->count(),
-            'admins'   => (clone $users)->where('profil', 'admin')->count(),
-            'clients'  => (clone $users)->where('profil', 'client')->count(),
         ];
     }
 
@@ -77,17 +75,6 @@ class UserService
         return implode('', $password);
     }
 
-    /*     public function generatePassword(): string
-    {
-        
-        $upper   = strtoupper(Str::random(2));
-        $digits  = rand(10, 99);
-        $special = Str::random(2, '@$!%*#?&');
-        $lower   = Str::random(4);
-
-        return str_shuffle($upper . $digits . $special . $lower);
-    } */
-
     public function create(array $data): User
     {
         return DB::transaction(function () use ($data) {
@@ -97,7 +84,7 @@ class UserService
                 'email'     => $data['email'] ?? null,
                 'phone'     => $data['phone'],
                 'password'  => Hash::make($data['password']),
-                'profil'    => $data['profil'],
+                'profil'    => 'admin',
                 'adresse'   => $data['adresse'] ?? null,
                 'is_active' => $data['is_active'] ?? true,
             ]);
@@ -105,42 +92,6 @@ class UserService
             // 2. Assigner le rôle Spatie
             $role = !empty($data['role']) ? $data['role'] : $data['profil'];
             $user->assignRole($role);
-
-            // 3. Si rôle propriétaire → gérer véhicule + contrat
-            if ($role === 'proprietaire') {
-                $vehicle = null;
-
-                // 3a. Nouveau véhicule à créer
-                if (!empty($data['new_vehicle_number'])) {
-                    $vehicle = Vehicle::create([
-                        'owner_id'       => $user->id,
-                        'vehicle_number' => $data['new_vehicle_number'],
-                        'vehicle_type'   => $data['new_vehicle_type']  ?? 'tricycle',
-                        'color'          => $data['new_vehicle_color'] ?? null,
-                        'notes'          => $data['new_vehicle_notes'] ?? null,
-                        'is_active'      => true,
-                    ]);
-                }
-                // 3b. Véhicule existant sélectionné → changer le propriétaire
-                elseif (!empty($data['vehicle_id'])) {
-                    $vehicle = Vehicle::find($data['vehicle_id']);
-                    $vehicle?->update(['owner_id' => $user->id]);
-                }
-
-                // 4. Créer le contrat proprio-véhicule si montant renseigné
-                if ($vehicle && !empty($data['contract_total_amount'])) {
-                    VehicleContract::create([
-                        'vehicle_id'      => $vehicle->id,
-                        'owner_id'        => $user->id,
-                        'total_amount'    => $data['contract_total_amount'],
-                        'monthly_payment' => $data['contract_monthly_payment'] ?? 0,
-                        'start_date'      => $data['contract_start_date']      ?? now(),
-                        'end_date'        => $data['contract_end_date']         ?? null,
-                        'notes'           => $data['contract_notes']            ?? null,
-                        'status'          => 'active',
-                    ]);
-                }
-            }
 
             return $user;
         });
@@ -154,7 +105,7 @@ class UserService
                 'name'      => $data['name'],
                 'email'     => $data['email']   ?? $user->email,
                 'phone'     => $data['phone'],
-                'profil'    => $data['profil'],
+                'profil'    => 'admin',
                 'adresse'   => $data['adresse'] ?? $user->adresse,
                 'is_active' => $data['is_active'] ?? $user->is_active,
             ]);
@@ -162,61 +113,6 @@ class UserService
             // 2. Mettre à jour le rôle Spatie
             if (!empty($data['role'])) {
                 $user->syncRoles([$data['role']]);
-            }
-
-            // 3. Si rôle propriétaire → gérer véhicule + contrat éventuel
-            if (($data['role'] ?? '') === 'proprietaire') {
-                $vehicle = null;
-
-                // 3a. Nouveau véhicule à créer
-                if (!empty($data['new_vehicle_number'])) {
-                    $vehicle = Vehicle::create([
-                        'owner_id'       => $user->id,
-                        'vehicle_number' => $data['new_vehicle_number'],
-                        'vehicle_type'   => $data['new_vehicle_type']  ?? 'tricycle',
-                        'color'          => $data['new_vehicle_color'] ?? null,
-                        'is_active'      => true,
-                    ]);
-                }
-                // 3b. Véhicule existant sélectionné
-                elseif (!empty($data['vehicle_id'])) {
-                    $vehicle = Vehicle::find($data['vehicle_id']);
-
-                    // ⚠️ Vérifier qu'il n'a pas déjà un autre propriétaire
-                    if ($vehicle && $vehicle->owner_id && $vehicle->owner_id !== $user->id) {
-                        throw new \Exception(
-                            "Le véhicule {$vehicle->vehicle_number} appartient déjà à un autre propriétaire."
-                        );
-                    }
-
-                    $vehicle?->update(['owner_id' => $user->id]);
-                }
-
-                // 4. Créer le contrat si montant renseigné
-                if ($vehicle && !empty($data['contract_total_amount'])) {
-
-                    // Vérifier qu'il n'a pas déjà un contrat actif
-                    $existingActive = VehicleContract::where('vehicle_id', $vehicle->id)
-                        ->where('status', 'active')
-                        ->first();
-
-                    if ($existingActive) {
-                        throw new \Exception(
-                            "Le véhicule {$vehicle->vehicle_number} a déjà un contrat actif. Clôturez-le avant d'en créer un nouveau."
-                        );
-                    }
-
-                    VehicleContract::create([
-                        'vehicle_id'      => $vehicle->id,
-                        'owner_id'        => $user->id,
-                        'total_amount'    => $data['contract_total_amount'],
-                        'monthly_payment' => $data['contract_monthly_payment'] ?? 0,
-                        'start_date'      => $data['contract_start_date']      ?? now(),
-                        'end_date'        => $data['contract_end_date']         ?? null,
-                        'notes'           => $data['contract_notes']            ?? null,
-                        'status'          => 'active',
-                    ]);
-                }
             }
 
             return $user->refresh();
@@ -241,12 +137,23 @@ class UserService
             throw new \Exception('Vous ne pouvez pas supprimer votre propre compte.');
         }
 
+        // Vérifier si l'utilisateur est un propriétaire et empêcher la suppression si il a un contrat actif sur un véhicule
+        if ($user->hasRole('proprietaire')) {
+            $activeContracts = VehicleContract::where('owner_id', $user->id)
+                ->where('status', 'active')
+                ->count();
+
+            if ($activeContracts > 0) {
+                throw new \Exception('Impossible de supprimer ce propriétaire car il a des contrats actifs sur des véhicules.');
+            }
+        }
+
         $user->delete();
     }
 
     public function getAvailableRoles(): \Illuminate\Support\Collection
     {
-        // Tous les rôles sauf driver
-        return Role::where('name', '!=', 'driver')->get();
+        // Tous les rôles sauf driver, propriétaire et client
+        return Role::whereNotIn('name', ['driver', 'proprietaire', 'client'])->get();
     }
 }

@@ -61,9 +61,28 @@
                         <p class="text-lg font-semibold text-gray-800">{{ formatDateFr($payment->payment_date) }}</p>
                     </div>
                     <div>
+                        <p class="text-gray-500 text-sm">Type de Paiement</p>
+                        <p class="text-lg font-semibold text-gray-800">
+                            {{ ucfirst($payment->payment_type ?? 'commission') }}</p>
+                    </div>
+                    <div>
                         <p class="text-gray-500 text-sm">Date d'Enregistrement</p>
                         <p class="text-lg font-semibold text-gray-800">{{ formatDateTimeFr($payment->created_at) }}</p>
                     </div>
+                    @if ($payment->vehicle_contract_id || $payment->driver_contract_id)
+                        <div class="col-span-2">
+                            <p class="text-gray-500 text-sm">Contrat lié</p>
+                            <p class="text-gray-800 text-sm">
+                                @if ($payment->driver_contract_id)
+                                    Agent: {{ $payment->driverContract?->driver?->user?->name ?? 'N/A' }}
+                                    ({{ $payment->driverContract?->vehicle?->vehicle_number ?? 'N/A' }})
+                                @endif
+                                @if ($payment->vehicle_contract_id)
+                                    <br>Véhicule: {{ $payment->vehicleContract?->vehicle?->vehicle_number ?? 'N/A' }}
+                                @endif
+                            </p>
+                        </div>
+                    @endif
                     @if ($payment->reference_number)
                         <div>
                             <p class="text-gray-500 text-sm">Numéro de Référence</p>

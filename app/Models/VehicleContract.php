@@ -18,11 +18,19 @@ class VehicleContract extends Model
         'end_date',
         'status',
         'notes',
+        'contract_months',
+        'unlimited_internet',
+        'spotify_premium',
+        'manager_remuneration',
     ];
 
     protected $casts = [
         'total_amount'    => 'decimal:2',
         'monthly_payment' => 'decimal:2',
+        'contract_months' => 'integer',
+        'unlimited_internet' => 'decimal:2',
+        'spotify_premium' => 'decimal:2',
+        'manager_remuneration' => 'decimal:2',
         'start_date'      => 'date',
         'end_date'        => 'date',
     ];
@@ -55,7 +63,7 @@ class VehicleContract extends Model
     // Montant total déjà payé
     public function getTotalPaidAttribute(): float
     {
-        return (float) $this->payments()->sum('amount');
+        return (float) $this->payments()->sum('net_amount');
     }
 
     // Montant restant à payer

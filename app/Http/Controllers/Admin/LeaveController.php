@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\VehicleService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class LeaveController extends Controller
 {
@@ -40,11 +41,17 @@ class LeaveController extends Controller
             });
         }
 
-        // Get all users and build driver data
+        // Récupérer les agents qui ont un contrat actif
+        $query->whereHas('driver', function ($q) {
+            $q->whereHas('activeDriverContract');
+        });
+
         $allUsers = $query->get();
 
         $drivers = $allUsers->map(function ($user) {
             $driver = $user->driver;
+            $ongoing = $driver->leaveRequests()->where('status', 'ongoing')->first();
+
             return [
                 'id' => $user->id,
                 'name' => $user->name,
@@ -52,10 +59,11 @@ class LeaveController extends Controller
                 'leave_days_per_month' => $driver->getLeaveDaysPerMonth(),
                 'total_leave_days' => $driver->getTotalLeaveDays(),
                 'leave_days_used' => $driver->leave_days_used ?? 0,
-                'available_leave_days' => $driver->getAvailableLeaveDays(),
+                'available_leave_days' => $driver->available_leave_days,
                 'remaining_leave_days' => $driver->getRemainingLeaveDays(),
-                'leave_dates' => $driver->leave_dates ?? [],
-                'pending_requests' => $driver->getPendingLeaveRequestsForCurrentMonth()->count(),
+                'is_on_leave' => (bool) $ongoing,
+                'ongoing_since' => $ongoing?->start_date,
+                'pending_requests' => $driver->leaveRequests()->where('status', 'pending')->count(),
             ];
         });
 
@@ -103,18 +111,18 @@ class LeaveController extends Controller
             'leave_days_per_month' => $driverModel->getLeaveDaysPerMonth(),
             'total_leave_days' => $driverModel->getTotalLeaveDays(),
             'leave_days_used' => $driverModel->leave_days_used ?? 0,
-            'available_leave_days' => $driverModel->getAvailableLeaveDays(),
+            'available_leave_days' => $driverModel->available_leave_days,
             'remaining_leave_days' => $driverModel->getRemainingLeaveDays(),
-            'leave_dates' => $driverModel->leave_dates ?? [],
             'contract_start' => $driverModel->activeDriverContract->start_date ?? null,
             'contract_months' => $driverModel->activeDriverContract->contract_months ?? null,
         ];
 
         // Get pending and approved requests for this month
-        $pendingRequests = $driverModel->getPendingLeaveRequestsForCurrentMonth();
-        $approvedRequests = $driverModel->getApprovedLeaveRequestsForCurrentMonth();
+        $pendingRequests = $driverModel->leaveRequests()->where('status', 'pending')->orderBy('start_date')->get();
+        $ongoingLeave     = $driverModel->leaveRequests()->where('status', 'ongoing')->first();
+        $history          = $driverModel->leaveRequests()->where('status', 'completed')->orderByDesc('start_date')->get();
 
-        return view('pages.admin.leaves.show', compact('driver', 'leaveInfo', 'pendingRequests', 'approvedRequests'));
+        return view('pages.admin.leaves.show', compact('driver', 'leaveInfo', 'pendingRequests', 'ongoingLeave', 'history'));
     }
 
     /**
@@ -122,7 +130,7 @@ class LeaveController extends Controller
      */
     public function requests()
     {
-        $requests = LeaveRequest::with('driver.user')
+        $requests = LeaveRequest::with(['driver.user', 'driver.activeDriverContract'])
             ->where('status', 'pending')
             ->orderBy('created_at', 'desc')
             ->get();
@@ -133,59 +141,45 @@ class LeaveController extends Controller
     /**
      * Approve a leave request
      */
-    public function approveRequest(Request $request, LeaveRequest $leaveRequest)
+    public function approveRequest(LeaveRequest $leaveRequest)
     {
-        $request->validate([
-            'rejection_reason' => 'nullable|string',
-        ]);
-
         $driver = $leaveRequest->driver;
-        $dates = $leaveRequest->dates;
-        $days = count($dates);
 
-        // Validate dates are in current month
-        $currentMonth = now()->month;
-        $currentYear = now()->year;
-        foreach ($dates as $date) {
-            $dateObj = Carbon::parse($date);
-            if ($dateObj->month != $currentMonth || $dateObj->year != $currentYear) {
-                return redirect()->back()->with('error', 'Les Pauses doivent être dans le mois courant.');
-            }
+        if (!$driver->activeDriverContract) {
+            return redirect()->back()->with('error', "Cet agent n'a pas de contrat actif. Impossible d'approuver la pause.");
         }
 
-        // Check if driver has enough days
-        if (!$driver->canRequestLeave($days)) {
-            return redirect()->back()->with('error', 'L\'agent n\'a pas assez de jours de Pause disponibles.');
-        }
-
-        // Check for conflicts
-        foreach ($dates as $date) {
-            if ($driver->hasLeaveOnDate($date)) {
-                return redirect()->back()->with('error', 'L\'agent a déjà un Pause pour cette date.');
-            }
+        if ($driver->hasOngoingLeave()) {
+            return redirect()->back()->with('error', "L'agent a déjà une pause en cours.");
         }
 
         // Approve the request
         $leaveRequest->update([
-            'status' => 'approved',
+            'status' => 'ongoing',
             'rejection_reason' => null,
         ]);
 
         $activeContract = $driver->activeDriverContract;
         if ($activeContract) {
-            $this->vehicleService->createAutoAgentPause(
+            $pause = $this->vehicleService->createAutoAgentPause(
                 $activeContract->vehicle_id,
                 $activeContract->id,
-                $dates
+                $leaveRequest->start_date->toDateString()
             );
+
+            $leaveRequest->update(['vehicle_pause_id' => $pause->id]);
         }
 
         // Add leave dates to driver
-        $driver->addLeaveDates($dates);
+        if ($leaveRequest->start_date->lte(now()->startOfDay())) {
+            $driver->update(['is_available' => false]);
+        }
 
-        session()->flash('success', 'Demande de Pause approuvée avec succès.');
+        //session()->flash('success', 'Demande de Pause approuvée avec succès.');
 
-        return redirect()->away('https://docs.google.com/forms/d/e/1FAIpQLScDV8HvM0P8JaChAVhqoohp0gioFuW0OFMZRcVyMZRO2B-KbQ/viewform?pli=1&pli=1');
+        //return redirect()->away('https://docs.google.com/forms/d/e/1FAIpQLScDV8HvM0P8JaChAVhqoohp0gioFuW0OFMZRcVyMZRO2B-KbQ/viewform?pli=1&pli=1');
+
+        return redirect()->back()->with('success', 'Demande de Pause approuvée avec succès.');
     }
 
     /**
@@ -208,121 +202,213 @@ class LeaveController extends Controller
     /**
      * Add an instant leave directly for a driver
      */
-    public function addInstantLeave(Request $request, string $id)
+    public function addOngoingLeave(Request $request, string $id)
     {
-        $driver = Driver::find($id);
+        $driver = Driver::findOrFail($id);
 
         $request->validate([
-            'dates' => 'required|array|min:1',
-            'dates.*' => 'required|date',
-        ], [
-            'dates.required' => 'Veuillez sélectionner au moins une date de Pause.',
-            'dates.array' => 'Les dates de Pause doivent être un tableau.',
-            'dates.min' => 'Veuillez sélectionner au moins une date de Pause.',
-            'dates.*.date' => 'Les dates de Pause doivent être des dates valides.',
+            'start_date' => 'required|date',
+            'requested_days' => 'required|integer|min:1',
         ]);
 
-        // Dédupliquer et trier
-        $dates = collect($request->input('dates', []))
-            ->filter()
-            ->unique()
-            ->sort()
-            ->values()
-            ->all();
-
-        if (empty($dates)) {
-            return redirect()->back()->with('error', 'Veuillez sélectionner au moins une date.');
-        }
-
-        //$days = count($dates);
-
-        // Check if all dates are in current month
-        /* $currentMonth = now()->month;
-        $currentYear = now()->year;
-        foreach ($dates as $date) {
-            $dateObj = Carbon::parse($date);
-            if ($dateObj->month != $currentMonth || $dateObj->year != $currentYear) {
-                return redirect()->back()->with('error', 'Les dates de Pause doivent être dans le mois courant.');
-            }
-        } */
-
-        // Vérifier la consécutivité
-        for ($i = 1; $i < count($dates); $i++) {
-            $prev = Carbon::parse($dates[$i - 1])->startOfDay();
-            $curr = Carbon::parse($dates[$i])->startOfDay();
-            if (!$prev->copy()->addDay()->equalTo($curr)) {
-                return redirect()->back()->with('error', 'Les jours doivent être consécutifs.');
-            }
-        }
-
-        /* if (!$driver->canRequestLeaveNow($days)) {
-            return redirect()->back()->with('error', 'L\'agent n\'a pas assez de jours de pause disponibles à date.');
-        } */
-
-        // Check for existing approved or pending leaves
-        // Vérifier les doublons avec les dates déjà approuvées ou en attente
-        $existingDates = array_merge(
-            $driver->leave_dates ?? [],
-            ...($driver->getPendingLeaveRequestsForCurrentMonth()->pluck('dates')->toArray() ?: [[]])
-        );
-
-        foreach ($dates as $date) {
-            if (in_array($date, $existingDates)) {
-                return redirect()->back()->with('error', "La date {$date} est déjà utilisée ou en attente.");
-            }
+        if ($driver->hasOngoingLeave()) {
+            return redirect()->back()->with('error', "L'agent a déjà une pause en cours. Terminez-la d'abord.");
         }
 
         $activeContract = $driver->activeDriverContract;
-
         if (!$activeContract) {
             return redirect()->back()->with('error', 'Aucun contrat actif pour cet agent.');
         }
 
-        // Ajouter les dates au profil du driver
-        $driver->addLeaveDates($dates);
-
-        // Créer la demande de pause approuvée
-        LeaveRequest::create([
-            'driver_id'          => $driver->id,
+        $leaveRequest = LeaveRequest::create([
+            'driver_id' => $driver->id,
             'driver_contract_id' => $activeContract->id,
-            'dates'              => $dates,
-            'status'             => 'approved',
+            'start_date' => $request->start_date,
+            'requested_days' => $request->requested_days,
+            'status' => 'ongoing',
+            'source' => 'admin_instant',
+            'created_by' => Auth::user()->id,
         ]);
 
-        // Créer la pause véhicule (gestion passé/présent/futur dans le service)
-        $this->vehicleService->createAutoAgentPause(
+        $pause = $this->vehicleService->createAutoAgentPause(
             $activeContract->vehicle_id,
             $activeContract->id,
-            $dates
+            $request->start_date
         );
 
-        return redirect()->back()->with('success', 'Pause instantanée ajoutée avec succès.');
+        $leaveRequest->update(['vehicle_pause_id' => $pause->id]);
 
-        //session()->flash('success', 'Pause instantanée ajoutée avec succès.');
+        if (Carbon::parse($request->start_date)->lte(now()->startOfDay())) {
+            $driver->update(['is_available' => false]);
+        }
 
-        //return redirect()->away('https://docs.google.com/forms/d/e/1FAIpQLScDV8HvM0P8JaChAVhqoohp0gioFuW0OFMZRcVyMZRO2B-KbQ/viewform?pli=1&pli=1');
+        return redirect()->back()->with('success', 'Pause ajoutée et activée avec succès.');
     }
 
     /**
-     * Revoke an approved leave date (for a driver)
+     * Ajout admin : pause historique (déjà terminée)
      */
-    public function revokeLeave(Request $request, User $driver)
+    public function addHistoricalLeave(Request $request, string $id)
     {
+        $driver = Driver::findOrFail($id);
+
         $request->validate([
-            'leave_date' => 'required|date',
+            'start_date' => 'required|date|before:today',
+            'requested_days' => 'required|integer|min:1',
         ]);
 
-        $date = $request->leave_date;
-        $driverModel = $driver->driver;
-        $leaveDates = $driverModel->leave_dates ?? [];
+        $start = Carbon::parse($request->start_date)->startOfDay();
+        $end   = LeaveRequest::addBusinessDays($start, $request->requested_days);
 
-        if (!in_array($date, $leaveDates)) {
-            return redirect()->back()->with('error', 'Aucun Pause trouvé pour cette date.');
+        if ($end->gte(now()->startOfDay())) {
+            return redirect()->back()->with('error', "Une pause historique doit être entièrement terminée avant aujourd'hui.");
         }
 
-        // Remove the date
-        $driverModel->removeLeaveDates([$date]);
+        LeaveRequest::create([
+            'driver_id' => $driver->id,
+            'driver_contract_id' => $driver->activeDriverContract?->id,
+            'start_date' => $start->toDateString(),
+            'requested_days' => $request->requested_days,
+            'end_date' => $end->toDateString(),
+            'effective_days' => $request->requested_days,
+            'status' => 'completed',
+            'source' => 'admin_historical',
+            'created_by' => Auth::user()->id,
+        ]);
 
-        return redirect()->back()->with('success', 'Pause révoqué avec succès.');
+        $driver->markLeaveDaysUsed($request->requested_days);
+
+        return redirect()->back()->with('success', 'Pause historique ajoutée avec succès.');
+    }
+
+    /**
+     * Mettre fin à une pause "ongoing" (instant admin ou demande agent approuvée)
+     */
+    public function endLeave(Request $request, LeaveRequest $leaveRequest)
+    {
+        if ($leaveRequest->status !== 'ongoing') {
+            return redirect()->back()->with('error', "Cette pause n'est pas en cours.");
+        }
+
+        $request->validate(['end_date' => 'required|date']);
+
+        $end = Carbon::parse($request->end_date)->startOfDay();
+        if ($end->lt($leaveRequest->start_date)) {
+            return redirect()->back()->with('error', 'La date de fin ne peut pas précéder la date de début.');
+        }
+
+        $effectiveDays = LeaveRequest::countBusinessDays($leaveRequest->start_date, $end);
+
+        $leaveRequest->update([
+            'end_date' => $end->toDateString(),
+            'effective_days' => $effectiveDays,
+            'status' => 'completed',
+        ]);
+
+        $driver = $leaveRequest->driver;
+        $driver->markLeaveDaysUsed($effectiveDays);
+
+        if ($leaveRequest->vehiclePause) {
+            $this->vehicleService->endPause($leaveRequest->vehiclePause, $end->toDateString());
+        }
+
+        if (!$driver->hasOngoingLeave()) {
+            $driver->update(['is_available' => true]);
+        }
+
+        return redirect()->back()->with('success', "Pause terminée. Jours effectifs : {$effectiveDays}.");
+    }
+
+    /**
+     * Modifier une pause historique mal saisie
+     */
+    public function updateHistoricalLeave(Request $request, LeaveRequest $leaveRequest)
+    {
+        if (!in_array($leaveRequest->source, ['admin_historical', 'legacy']) || $leaveRequest->status !== 'completed') {
+            return redirect()->back()->with('error', "Seules les pauses historiques peuvent être modifiées.");
+        }
+
+        $request->validate([
+            'start_date' => 'required|date|before:today',
+            'requested_days' => 'required|integer|min:1',
+        ]);
+
+        $start = Carbon::parse($request->start_date)->startOfDay();
+        $end   = LeaveRequest::addBusinessDays($start, $request->requested_days);
+
+        if ($end->gte(now()->startOfDay())) {
+            return redirect()->back()->with('error', "Une pause historique doit rester entièrement terminée avant aujourd'hui.");
+        }
+
+        $driver = $leaveRequest->driver;
+
+        // On retire l'ancien décompte avant d'appliquer le nouveau
+        $driver->markLeaveDaysUsed(- ($leaveRequest->effective_days ?? 0));
+
+        $leaveRequest->update([
+            'start_date' => $start->toDateString(),
+            'requested_days' => $request->requested_days,
+            'end_date' => $end->toDateString(),
+            'effective_days' => $request->requested_days,
+        ]);
+
+        $driver->markLeaveDaysUsed($request->requested_days);
+
+        return redirect()->back()->with('success', 'Pause historique modifiée avec succès.');
+    }
+
+    /**
+     * Supprimer une pause historique mal saisie
+     */
+    public function destroyHistoricalLeave(LeaveRequest $leaveRequest)
+    {
+        if (!in_array($leaveRequest->source, ['admin_historical', 'legacy']) || $leaveRequest->status !== 'completed') {
+            return redirect()->back()->with('error', "Seules les pauses historiques peuvent être supprimées.");
+        }
+
+        $driver = $leaveRequest->driver;
+        $driver->markLeaveDaysUsed(- ($leaveRequest->effective_days ?? 0));
+
+        $leaveRequest->delete();
+
+        return redirect()->back()->with('success', 'Pause historique supprimée avec succès.');
+    }
+
+    public function updateOngoingLeave(Request $request, LeaveRequest $leaveRequest)
+    {
+        if ($leaveRequest->status !== 'ongoing') {
+            return redirect()->back()->with('error', "Seule une pause en cours peut être corrigée ici.");
+        }
+
+        $request->validate([
+            'start_date' => 'required|date',
+            'requested_days' => 'required|integer|min:1',
+        ]);
+
+        $driver = $leaveRequest->driver;
+        $newStart = Carbon::parse($request->start_date)->startOfDay();
+
+        $leaveRequest->update([
+            'start_date' => $newStart->toDateString(),
+            'requested_days' => $request->requested_days,
+        ]);
+
+        // Répercuter la correction sur la pause véhicule liée
+        if ($leaveRequest->vehiclePause) {
+            $this->vehicleService->correctPauseDates(
+                $leaveRequest->vehiclePause,
+                $newStart->toDateString()
+            );
+        }
+
+        // Réévaluer la disponibilité de l'agent selon la nouvelle date
+        if ($newStart->lte(now()->startOfDay())) {
+            $driver->update(['is_available' => false]);
+        } elseif ($driver->is_available === false && !$driver->hasOngoingLeave()) {
+            // Cas limite improbable ici puisque la pause reste ongoing, gardé par sécurité
+            $driver->update(['is_available' => true]);
+        }
+
+        return redirect()->back()->with('success', 'Pause en cours corrigée avec succès.');
     }
 }

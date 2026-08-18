@@ -96,263 +96,204 @@
             </div>
         </div>
 
-        {{-- ── Contrat Agent ── --}}
-        <div class="bg-white rounded-lg shadow-md">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-800">Contrat Agent</h3>
-            </div>
-            <div class="px-6 py-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Code Agent</label>
-                    <input type="text" name="agent_code" value="{{ old('agent_code') }}"
-                        class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-                        placeholder="Code agent">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">ID Agent</label>
-                    <input type="text" name="agent_id" value="{{ old('agent_id') }}"
-                        class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-                        placeholder="ID agent">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Durée du contrat</label>
-                    <select name="contract_months"
-                        class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500">
-                        <option value="">-- Sélectionnez --</option>
-                        <option value="24" {{ old('contract_months') == '24' ? 'selected' : '' }}>24 mois</option>
-                        <option value="30" {{ old('contract_months') == '30' ? 'selected' : '' }}>30 mois</option>
-                        <option value="36" {{ old('contract_months') == '36' ? 'selected' : '' }}>36 mois</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Date de début</label>
-                    <input type="date" name="start_date" value="{{ old('start_date') }}"
-                        class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500">
-                </div>
-            </div>
-        </div>
-
         {{-- ── Propriétaire & Véhicule ── --}}
-        <div class="bg-white rounded-lg shadow-md">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-800">Propriétaire & Véhicule</h3>
+        <div class="bg-white rounded-lg shadow-md px-6">
+            {{-- Bouton bascule Nouveau / Reconduire --}}
+            <div class="flex gap-3 mb-5 py-6">
+                <button type="button" id="btn-new-contract" onclick="setContractMode('new')"
+                    class="flex-1 py-2.5 rounded-xl border-2 border-[#286b41] bg-[#286b41]/10 text-[#286b41] font-semibold text-sm transition">
+                    <i class="fas fa-file-contract mr-2"></i> Nouveau contrat
+                </button>
+                <button type="button" id="btn-renewal" onclick="setContractMode('renewal')"
+                    class="flex-1 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-gray-500 font-semibold text-sm transition">
+                    <i class="fas fa-rotate-right mr-2"></i> Reconduire un contrat
+                </button>
             </div>
-            <div class="px-6 py-6 space-y-6">
+            <input type="hidden" name="_contract_mode" id="contract_mode" value="new">
 
-                {{-- Choix du mode --}}
-                <div class="grid grid-cols-2 gap-4">
-                    <label id="mode-existing-label"
-                        class="mode-card cursor-pointer rounded-xl border-2 border-[#286b41] bg-[#286b41]/10 p-4 flex items-center gap-3 transition">
-                        <input type="radio" name="_owner_mode" value="existing" class="sr-only" checked>
-                        <div class="w-9 h-9 rounded-full bg-[#286b41] flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-search text-white"></i>
-                        </div>
-                        <div>
-                            <p class="text-sm font-bold text-gray-800">Propriétaire existant</p>
-                            <p class="text-xs text-gray-500">Sélectionner dans la liste</p>
-                        </div>
-                    </label>
+            {{-- ── Mode : Nouveau contrat ── --}}
+            <div id="section-new-contract" class="space-y-4">
+                <h3 class="text-lg font-semibold text-gray-800">Propriétaire & Véhicule</h3>
 
-                    <label id="mode-new-label"
-                        class="mode-card cursor-pointer rounded-xl border-2 border-gray-200 bg-white p-4 flex items-center gap-3 transition">
-                        <input type="radio" name="_owner_mode" value="new" class="sr-only">
-                        <div class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-plus text-gray-400"></i>
-                        </div>
-                        <div>
-                            <p class="text-sm font-bold text-gray-800">Nouveau propriétaire</p>
-                            <p class="text-xs text-gray-500">Créer un nouveau compte</p>
-                        </div>
-                    </label>
-                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Propriétaire </label>
+                        <select name="owner_id" id="owner_id_select" onchange="onOwnerSelected(this.value)"
+                            class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('owner_id') border-red-500 @enderror">
+                            <option value="">— Sélectionnez un propriétaire —</option>
+                            @foreach ($owners as $owner)
+                                <option value="{{ $owner->id }}" {{ old('owner_id') == $owner->id ? 'selected' : '' }}>
+                                    {{ $owner->name }} — {{ $owner->phone }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('owner_id')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
 
-                {{-- ── Mode : Propriétaire existant ── --}}
-                <div id="section-existing">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Propriétaire <span
-                                    class="text-red-600">*</span></label>
-                            <select name="owner_id" id="owner_id_select" onchange="onOwnerSelected(this.value)"
-                                class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('owner_id') border-red-500 @enderror">
-                                <option value="">— Sélectionnez un propriétaire —</option>
-                                @foreach ($owners as $owner)
-                                    <option value="{{ $owner->id }}"
-                                        {{ old('owner_id') == $owner->id ? 'selected' : '' }}>
-                                        {{ $owner->name }} — {{ $owner->phone }}
-                                    </option>
-                                @endforeach
+                    {{-- Véhicules du propriétaire sélectionné --}}
+                    <div id="owner-vehicles-wrap" class="{{ old('owner_id') ? '' : 'hidden' }}">
+                        <label class="block text-sm font-medium text-gray-700">Véhicule</label>
+                        <div class="flex flex-wrap gap-2 mt-1">
+                            <select name="vehicle_id" id="vehicle_id_select" onchange="onVehicleSelected(this.value, 'new')"
+                                class="flex-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('vehicle_id') border-red-500 @enderror">
+                                <option value="">— Sélectionnez d'abord un propriétaire —</option>
                             </select>
-                            @error('owner_id')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
                         </div>
-
-                        {{-- Véhicules du propriétaire sélectionné --}}
-                        <div id="owner-vehicles-wrap" class="{{ old('owner_id') ? '' : 'hidden' }}">
-                            <label class="block text-sm font-medium text-gray-700">Véhicule <span
-                                    class="text-red-600">*</span></label>
-                            <div class="flex flex-wrap gap-2 mt-1">
-                                <select name="vehicle_id" id="vehicle_id_select"
-                                    class="flex-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('vehicle_id') border-red-500 @enderror">
-                                    <option value="">— Sélectionnez d'abord un propriétaire —</option>
-                                </select>
-                                <button type="button" id="btn-add-vehicle" onclick="toggleAddVehicleInline()" disabled
-                                    class="px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 text-sm font-semibold whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed">
-                                    <i class="fas fa-plus mr-1"></i> Nouveau véhicule
-                                </button>
-                            </div>
-                            @error('vehicle_id')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-
-                            {{-- Formulaire rapide nouveau véhicule (inline) --}}
-                            <div id="inline-vehicle-form"
-                                class="hidden mt-3 bg-green-50 border border-green-200 rounded-lg p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-700 mb-1">N° Immatriculation <span
-                                            class="text-red-500">*</span></label>
-                                    <input type="text" id="inline_vehicle_number"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:outline-none"
-                                        placeholder="BJ-0000-AB">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-700 mb-1">Type</label>
-                                    <select id="inline_vehicle_type"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:outline-none">
-                                        <option value="tricycle">Tricycle</option>
-                                        <option value="moto">Moto</option>
-                                        <option value="car">Voiture</option>
-                                    </select>
-                                </div>
-
-                                <div class="md:col-span-3 flex justify-end gap-2">
-                                    <button type="button" onclick="toggleAddVehicleInline()"
-                                        class="px-4 py-1.5 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300 transition">
-                                        Annuler
-                                    </button>
-                                    <button type="button" onclick="saveInlineVehicle()"
-                                        class="px-4 py-1.5 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 transition font-semibold">
-                                        <i class="fas fa-save mr-1"></i> Ajouter ce véhicule
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                        @error('vehicle_id')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
                     </div>
                 </div>
 
-                {{-- ── Mode : Nouveau propriétaire ── --}}
-                <div id="section-new" class="hidden space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Nom du propriétaire <span
-                                    class="text-red-600">*</span></label>
-                            <input type="text" name="new_owner_name" value="{{ old('new_owner_name') }}"
-                                class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Téléphone du propriétaire <span
-                                    class="text-red-600">*</span></label>
-                            <input type="text" name="new_owner_phone" value="{{ old('new_owner_phone') }}"
-                                class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-                                placeholder="+229 XX XX XX XX XX">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Email du propriétaire</label>
-                            <input type="email" name="new_owner_email" value="{{ old('new_owner_email') }}"
-                                class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Mot de passe du propriétaire <span
-                                    class="text-red-600">*</span></label>
-                            <div class="flex gap-2 mt-1">
-                                <input type="text" name="new_owner_password" id="new_owner_password" required
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('password') border-red-500 @enderror"
-                                    placeholder="Mot de passe sécurisé">
-                                <button type="button" onclick="generateOwnerPassword()"
-                                    class="px-3 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 text-sm font-semibold whitespace-nowrap">
-                                    <i class="fas fa-refresh mr-1"></i> Générer
-                                </button>
-                            </div>
-                            @error('new_owner_password')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-                    </div>
+                {{-- ── Contrat Agent ── --}}
+                <h3 class="text-lg font-semibold text-gray-800">Contrat Agent</h3>
 
-                    {{-- Véhicule du nouveau propriétaire --}}
-                    <div class="border-t border-gray-100 pt-4">
-                        <p class="text-sm font-semibold text-gray-700 mb-3">
-                            <i class="fas fa-truck-pickup text-[#286b41] mr-2"></i>Véhicule du propriétaire
-                        </p>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">N° Immatriculation <span
-                                        class="text-red-600">*</span></label>
-                                <input type="text" name="new_vehicle_number" value="{{ old('new_vehicle_number') }}"
-                                    class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('new_vehicle_number') border-red-500 @enderror"
-                                    placeholder="BJ-0000-AB">
-                                @error('new_vehicle_number')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Type de véhicule <span
-                                        class="text-red-600">*</span></label>
-                                <select name="new_vehicle_type"
-                                    class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500">
-                                    <option value="tricycle"
-                                        {{ old('new_vehicle_type', 'tricycle') == 'tricycle' ? 'selected' : '' }}>Tricycle
-                                    </option>
-                                    <option value="moto" {{ old('new_vehicle_type') == 'moto' ? 'selected' : '' }}>Moto
-                                    </option>
-                                    <option value="car" {{ old('new_vehicle_type') == 'car' ? 'selected' : '' }}>
-                                        Voiture</option>
-                                </select>
-                            </div>
-                        </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Code Agent</label>
+                        <input type="text" name="agent_code" value="{{ old('agent_code') }}"
+                            class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                            placeholder="Code agent">
                     </div>
-
-                    {{-- Contrat proprio-véhicule (optionnel) --}}
-                    <div class="border-t border-gray-100 pt-4">
-                        <p class="text-sm font-semibold text-gray-700 mb-3">
-                            <i class="fas fa-file-contract text-purple-600 mr-2"></i>Contrat propriétaire-véhicule
-                            <span class="text-xs text-gray-400 font-normal">(optionnel)</span>
-                        </p>
-                        <div
-                            class="bg-purple-50 border border-purple-100 rounded-lg p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Montant total (FCFA)</label>
-                                <input type="number" name="contract_total_amount"
-                                    value="{{ old('contract_total_amount') }}" min="0"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none"
-                                    placeholder="ex: 2500000">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Mensualité (FCFA)</label>
-                                <input type="number" name="contract_monthly_payment"
-                                    value="{{ old('contract_monthly_payment') }}" min="0"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none"
-                                    placeholder="ex: 104167">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Date de début contrat</label>
-                                <input type="date" name="contract_start_date"
-                                    value="{{ old('contract_start_date') }}"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Date de fin contrat</label>
-                                <input type="date" name="contract_end_date" value="{{ old('contract_end_date') }}"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none">
-                            </div>
-                        </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">ID Agent</label>
+                        <input type="text" name="agent_id" value="{{ old('agent_id') }}"
+                            class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                            placeholder="ID agent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Durée du contrat <span
+                                class="text-red-500">*</span></label>
+                        <select name="contract_months" id="contract_months_new"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 @error('contract_months') border-red-500 @enderror">
+                            <option value="">— Sélectionnez —</option>
+                            <option value="24" {{ old('contract_months') == '24' ? 'selected' : '' }}>24 mois</option>
+                            <option value="30" {{ old('contract_months') == '30' ? 'selected' : '' }}>30 mois</option>
+                            <option value="36" {{ old('contract_months') == '36' ? 'selected' : '' }}>36 mois</option>
+                        </select>
+                        @error('contract_months')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Date de début <span
+                                class="text-red-500">*</span></label>
+                        <input type="date" name="start_date" id="start_date_new"
+                            value="{{ old('start_date', date('Y-m-d')) }}"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 @error('start_date') border-red-500 @enderror">
+                        @error('start_date')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
                     </div>
                 </div>
 
-                <p class="text-sm text-blue-800 bg-blue-50 rounded-lg px-4 py-3">
+                <div class="pb-4">
+                    <p class="text-sm text-blue-800 bg-blue-50 rounded-lg px-4 py-3">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        L'agent sera créé <strong>Actif</strong> et <strong>Disponible</strong> par défaut.
+                    </p>
+                </div>
+            </div>
+
+            {{-- ── Mode : Reconduction de contrat ── --}}
+            <div id="section-renewal" class="hidden space-y-4">
+                <div class="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-sm text-blue-700">
                     <i class="fas fa-info-circle mr-2"></i>
-                    L'agent sera créé <strong>Actif</strong> et <strong>Disponible</strong> par défaut.
-                </p>
+                    La durée du contrat sera pré-remplie avec le temps restant sur le contrat du véhicule.
+                </div>
+
+                <h3 class="text-lg font-semibold text-gray-800">Propriétaire & Véhicule</h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Propriétaire <span
+                                class="text-red-500">*</span></label>
+                        <select name="renewal_owner_id" id="renewal_owner_id_select"
+                            onchange="onRenewalOwnerSelected(this.value)"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            <option value="">— Sélectionnez un propriétaire —</option>
+                            @foreach ($ownersForRenewal as $owner)
+                                <option value="{{ $owner->id }}">
+                                    {{ $owner->name }} — {{ $owner->phone }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div id="renewal-vehicles-wrap" class="hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Véhicule <span
+                                class="text-red-500">*</span></label>
+                        <select name="renewal_vehicle_id" id="renewal_vehicle_id_select"
+                            onchange="onVehicleSelected(this.value, 'renewal')"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            <option value="">— Sélectionnez d'abord un propriétaire —</option>
+                        </select>
+                    </div>
+                </div>
+
+                {{-- ── Contrat Agent ── --}}
+                <h3 class="text-lg font-semibold text-gray-800">Contrat Agent</h3>
+
+                {{-- Résumé du contrat et durée restante --}}
+                <div id="renewal-contract-summary" class="hidden bg-white border border-gray-200 rounded-xl p-4">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">
+                        <div>
+                            <p class="text-xs text-gray-500">Durée totale contrat</p>
+                            <p id="renewal-total-months" class="font-semibold text-gray-800">—</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">Mois déjà effectués</p>
+                            <p id="renewal-months-used" class="font-semibold text-orange-600">—</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">Temps restant</p>
+                            <p id="renewal-remaining-months" class="font-bold text-[#286b41]">—</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">Date de début suggérée</p>
+                            <p id="renewal-suggested-start" class="font-semibold text-gray-800">—</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Code Agent</label>
+                            <input type="text" name="renewal_agent_code" value="{{ old('renewal_agent_code') }}"
+                                class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                                placeholder="Code agent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">ID Agent</label>
+                            <input type="text" name="renewal_agent_id" value="{{ old('renewal_agent_id') }}"
+                                class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                                placeholder="ID agent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Durée du contrat (mois) <span class="text-red-500">*</span>
+                            </label>
+                            <input type="number" name="renewal_contract_months" id="renewal_contract_months"
+                                min="1"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#286b41]">
+                            <p id="renewal-months-hint" class="text-xs text-gray-400 mt-1"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Date de début <span
+                                    class="text-red-500">*</span></label>
+                            <input type="date" name="renewal_start_date" id="renewal_start_date"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#286b41]">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pb-4">
+                    <p class="text-sm text-blue-800 bg-blue-50 rounded-lg px-4 py-3">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        L'agent sera créé <strong>Actif</strong> et <strong>Disponible</strong> par défaut.
+                    </p>
+                </div>
             </div>
         </div>
 
@@ -378,149 +319,149 @@
                 document.getElementById('password').value = data.password;
             }
 
-            async function generateOwnerPassword() {
-                const res = await fetch('{{ route('admin.users.generate-password') }}');
-                const data = await res.json();
-                document.getElementById('new_owner_password').value = data.password;
-            }
-
             document.addEventListener('DOMContentLoaded', () => {
                 generatePassword();
-                generateOwnerPassword();
             });
-
-            // ── Choix du mode propriétaire ───────────────────────────
-            document.querySelectorAll('input[name="_owner_mode"]').forEach(radio => {
-                radio.addEventListener('change', () => switchOwnerMode(radio.value));
-            });
-
-            document.querySelectorAll('.mode-card').forEach(card => {
-                card.addEventListener('click', () => {
-                    const radio = card.querySelector('input[type="radio"]');
-                    radio.checked = true;
-                    switchOwnerMode(radio.value);
-                });
-            });
-
-            function switchOwnerMode(mode) {
-                const isExisting = mode === 'existing';
-
-                // Cards
-                document.getElementById('mode-existing-label').className =
-                    `mode-card cursor-pointer rounded-xl border-2 p-4 flex items-center gap-3 transition ${isExisting ? 'border-[#286b41] bg-[#286b41]/10' : 'border-gray-200 bg-white'}`;
-                document.getElementById('mode-new-label').className =
-                    `mode-card cursor-pointer rounded-xl border-2 p-4 flex items-center gap-3 transition ${!isExisting ? 'border-purple-600 bg-purple-50' : 'border-gray-200 bg-white'}`;
-
-                // Icônes
-                document.querySelector('#mode-existing-label .w-9').className =
-                    `w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${isExisting ? 'bg-[#286b41]' : 'bg-gray-100'}`;
-                document.querySelector('#mode-existing-label .w-9 i').className =
-                    `fas fa-search ${isExisting ? 'text-white' : 'text-gray-400'}`;
-                document.querySelector('#mode-new-label .w-9').className =
-                    `w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${!isExisting ? 'bg-purple-600' : 'bg-gray-100'}`;
-                document.querySelector('#mode-new-label .w-9 i').className =
-                    `fas fa-plus ${!isExisting ? 'text-white' : 'text-gray-400'}`;
-
-                // Sections
-                document.getElementById('section-existing').classList.toggle('hidden', !isExisting);
-                document.getElementById('section-new').classList.toggle('hidden', isExisting);
-            }
 
             // ── Chargement des véhicules du propriétaire ─────────────
-            async function onOwnerSelected(ownerId) {
-                const vehicleSelect = document.getElementById('vehicle_id_select');
+            const ownerVehicles = @json($ownerVehicles);
+            const ownerVehiclesRenewal = @json($ownerVehiclesForRenewal);
+
+            const oldOwnerId = "{{ old('owner_id') }}";
+            const oldVehicleId = "{{ old('vehicle_id') }}";
+
+            // ── Bascule Nouveau / Reconduction ───────────────────────
+            function setContractMode(mode) {
+                const isNew = mode === 'new';
+                document.getElementById('contract_mode').value = mode;
+
+                document.getElementById('section-new-contract').classList.toggle('hidden', !isNew);
+                document.getElementById('section-renewal').classList.toggle('hidden', isNew);
+
+                document.getElementById('btn-new-contract').className =
+                    `flex-1 py-2.5 rounded-xl border-2 font-semibold text-sm transition ${
+                isNew ? 'border-[#286b41] bg-[#286b41]/10 text-[#286b41]'
+                       : 'border-gray-200 bg-white text-gray-500'}`;
+                document.getElementById('btn-renewal').className =
+                    `flex-1 py-2.5 rounded-xl border-2 font-semibold text-sm transition ${
+                !isNew ? 'border-blue-600 bg-blue-50 text-blue-700'
+                        : 'border-gray-200 bg-white text-gray-500'}`;
+            }
+
+            function onOwnerSelected(ownerId) {
                 const wrap = document.getElementById('owner-vehicles-wrap');
-                const addBtn = document.getElementById('btn-add-vehicle');
+                const select = document.getElementById('vehicle_id_select');
 
                 if (!ownerId) {
-                    vehicleSelect.innerHTML = '<option value="">— Sélectionnez d\'abord un propriétaire —</option>';
                     wrap.classList.add('hidden');
-                    addBtn.disabled = true;
+                    select.innerHTML = '<option value="">— Sélectionnez d\'abord un propriétaire —</option>';
+                    resetContractFields('new');
                     return;
                 }
 
+                const vehicles = ownerVehicles[ownerId] ?? [];
                 wrap.classList.remove('hidden');
-                addBtn.disabled = false;
-                vehicleSelect.innerHTML = '<option value="">Chargement...</option>';
+                select.innerHTML = '<option value="">— Sélectionnez un véhicule —</option>';
 
-                try {
-                    const res = await fetch(`/admin/owners/${ownerId}/vehicles`, {
-                        headers: {
-                            'Accept': 'application/json'
-                        }
-                    });
-                    const data = await res.json();
-
-                    vehicleSelect.innerHTML = '<option value="">— Sélectionnez un véhicule —</option>';
-
-                    if (!data.length) {
-                        vehicleSelect.innerHTML +=
-                            '<option value="" disabled>Aucun véhicule — utilisez "+ Nouveau véhicule"</option>';
-                    } else {
-                        data.forEach(v => {
-                            vehicleSelect.innerHTML +=
-                                `<option value="${v.id}">${v.vehicle_number} (${v.vehicle_type})${v.color ? ' · ' + v.color : ''}</option>`;
-                        });
-                    }
-                } catch {
-                    vehicleSelect.innerHTML = '<option value="">Erreur de chargement</option>';
-                }
-            }
-
-            // ── Formulaire inline nouveau véhicule ───────────────────
-            function toggleAddVehicleInline() {
-                const form = document.getElementById('inline-vehicle-form');
-                const select = document.getElementById('vehicle_id_select');
-                const shown = !form.classList.contains('hidden');
-
-                form.classList.toggle('hidden', shown);
-                select.disabled = !shown; // désactiver le select quand on crée un véhicule
-            }
-
-            async function saveInlineVehicle() {
-                const ownerId = document.getElementById('owner_id_select').value;
-                const number = document.getElementById('inline_vehicle_number').value.trim();
-                const type = document.getElementById('inline_vehicle_type').value;
-
-                if (!number) {
-                    showAlert('error', 'Le numéro d\'immatriculation est obligatoire.');
+                if (!vehicles.length) {
+                    select.innerHTML += '<option value="" disabled>Aucun véhicule disponible</option>';
                     return;
                 }
 
-                const res = await fetch('/admin/vehicles', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'Accept': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        owner_id: ownerId,
-                        vehicle_number: number,
-                        vehicle_type: type,
-                    }),
+                vehicles.forEach(v => {
+                    const label = `${v.vehicle_number} (${v.vehicle_type}${v.color ? ' · ' + v.color : ''})`;
+                    const selected = v.id === oldVehicleId ? 'selected' : '';
+                    select.innerHTML += `<option value="${v.id}" ${selected}>${label}</option>`;
                 });
-                const data = await res.json();
 
-                if (data.success) {
-                    // Ajouter dans le select et sélectionner
-                    const label =
-                        `${data.vehicle.vehicle_number} (${data.vehicle.vehicle_type})${data.vehicle.color ? ' · ' + data.vehicle.color : ''}`;
-                    const opt = new Option(label, data.vehicle.id, true, true);
-                    const select = document.getElementById('vehicle_id_select');
-                    select.disabled = false;
-                    select.appendChild(opt);
-                    toggleAddVehicleInline();
-                    showAlert('success', 'Véhicule ajouté et sélectionné.');
-                } else {
-                    showAlert('error', data.message ?? 'Erreur lors de la création du véhicule.');
+                if (oldVehicleId) onVehicleSelected(oldVehicleId, 'new');
+            }
+
+            // ── Nouveau contrat : sélection véhicule → pré-remplir durée/date ──
+            function onVehicleSelected(vehicleId, mode) {
+                if (mode === 'new') {
+                    const ownerId = document.getElementById('owner_id_select').value;
+                    const vehicles = ownerVehicles[ownerId] ?? [];
+                    const vehicle = vehicles.find(v => v.id === vehicleId);
+
+                    if (vehicle) {
+                        // Pré-remplir durée depuis le contrat proprio-véhicule
+                        const monthsSelect = document.getElementById('contract_months_new');
+                        if (vehicle.contract_months && [24, 30, 36].includes(Number(vehicle.contract_months))) {
+                            monthsSelect.value = vehicle.contract_months;
+                        }
+                        // Pré-remplir date de début
+                        if (vehicle.contract_start_date) {
+                            document.getElementById('start_date_new').value = vehicle.contract_start_date;
+                        }
+                    }
+                } else if (mode == 'renewal') {
+                    // ── Reconduction : sélection véhicule → pré-remplir résumé ──
+                    const ownerId = document.getElementById('renewal_owner_id_select').value;
+                    const vehicles = ownerVehiclesRenewal[ownerId] ?? [];
+                    const vehicle = vehicles.find(v => v.id === vehicleId);
+                    const summary = document.getElementById('renewal-contract-summary');
+
+                    if (!vehicle) {
+                        summary.classList.add('hidden');
+                        return;
+                    }
+
+                    summary.classList.remove('hidden');
+
+                    document.getElementById('renewal-total-months').textContent = vehicle.total_months + ' mois';
+                    document.getElementById('renewal-months-used').textContent = vehicle.months_used + ' mois';
+                    document.getElementById('renewal-remaining-months').textContent = vehicle.remaining_months + ' mois';
+                    document.getElementById('renewal-suggested-start').textContent = vehicle.suggested_start_date;
+
+                    // Pré-remplir durée et date
+                    const monthsInput = document.getElementById('renewal_contract_months');
+                    monthsInput.value = vehicle.remaining_months;
+                    monthsInput.max = vehicle.remaining_months; // ne peut pas dépasser le restant
+                    document.getElementById('renewal-months-hint').textContent =
+                        `Maximum : ${vehicle.remaining_months} mois (durée restante du contrat véhicule)`;
+
+                    document.getElementById('renewal_start_date').value = vehicle.suggested_start_date;
                 }
             }
 
-            // Pré-charger si old('owner_id') présent après erreur validation
+            function resetContractFields(mode) {
+                if (mode === 'new') {
+                    document.getElementById('contract_months_new').value = '';
+                    document.getElementById('start_date_new').value = "{{ date('Y-m-d') }}";
+                }
+            }
+
+            // ── Reconduction : sélection propriétaire ────────────────
+            function onRenewalOwnerSelected(ownerId) {
+                const wrap = document.getElementById('renewal-vehicles-wrap');
+                const select = document.getElementById('renewal_vehicle_id_select');
+                const summary = document.getElementById('renewal-contract-summary');
+
+                if (!ownerId) {
+                    wrap.classList.add('hidden');
+                    summary.classList.add('hidden');
+                    return;
+                }
+
+                const vehicles = ownerVehiclesRenewal[ownerId] ?? [];
+                wrap.classList.remove('hidden');
+                summary.classList.add('hidden');
+
+                select.innerHTML = '<option value="">— Sélectionnez un véhicule —</option>';
+                vehicles.forEach(v => {
+                    const label =
+                        `${v.vehicle_number} (${v.vehicle_type}${v.color ? ' · '+v.color : ''}) — ${v.remaining_months} mois restants`;
+                    select.innerHTML += `<option value="${v.id}">${label}</option>`;
+                });
+            }
+
+            // Pré-remplir après une erreur de validation (old())
             document.addEventListener('DOMContentLoaded', () => {
-                const ownerId = document.getElementById('owner_id_select')?.value;
-                if (ownerId) onOwnerSelected(ownerId);
+                if (oldOwnerId) onOwnerSelected(oldOwnerId);
+                // Restaurer le mode si erreur de validation
+                const savedMode = "{{ old('_contract_mode', 'new') }}";
+                if (savedMode === 'renewal') setContractMode('renewal');
             });
         </script>
     @endpush

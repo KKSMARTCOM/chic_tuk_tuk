@@ -15,6 +15,7 @@ class CommissionService
             'driver_id'       => $data['driver_id'],
             'booking_id'      => $data['booking_id'],
             'amount'          => $data['amount'],
+            'status'          => $data['status'],
             'date'            => $data['date'],
         ]);
 
@@ -45,7 +46,7 @@ class CommissionService
 
     public function getCommissionStats()
     {
-        $totalRevenue = Commission::sum('amount');
+        $totalRevenue = Commission::where('status', 'active')->sum('amount');
         $totalCommissionsCount = Commission::count();
 
         return [
@@ -54,7 +55,7 @@ class CommissionService
         ];
     }
 
-    public function getDriverCommissions($driverId)
+    public function getDriverCommissions(string $driverId)
     {
         $driver = Driver::with('user')->findOrFail($driverId);
 
@@ -66,8 +67,16 @@ class CommissionService
             'driver' => $driver,
             'driver_earning' => $driverEarning,
             'commissions_count' => $driver->commissions()->count(),
-            'paid_revenue' => $driver->payments()->sum('amount'),
-            'unpaid_revenue' => $driver->commissions()->sum('amount') - $driver->payments()->sum('amount'),
+            'paid_revenue' => $driver->payments()->where('payment_type', 'commission')->sum('amount'),
+            'unpaid_revenue' => $driver->commissions()->sum('amount') - $driver->payments()->where('payment_type', 'commission')->sum('amount'),
         ];
+    }
+
+    // Annulation d'une commission
+    public function cancelCommission(string $commissionId)
+    {
+        $commission = Commission::findOrFail($commissionId);
+        $commission->update(['status' => 'cancelled']);
+        $commission->refresh();
     }
 }

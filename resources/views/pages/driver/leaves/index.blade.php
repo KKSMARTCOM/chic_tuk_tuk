@@ -37,6 +37,28 @@
             </div>
         </div>
 
+        <!-- Pause en cours -->
+        @if ($ongoingLeave)
+            <div class="bg-orange-50 rounded-lg shadow-md p-6 mb-8 border-2 border-orange-200">
+                <h2 class="text-lg font-semibold text-orange-900 mb-2">
+                    <i class="fas fa-pause-circle mr-2"></i> Pause en cours
+                </h2>
+                <p class="text-gray-700">
+                    Depuis le <strong>{{ formatDateFr($ongoingLeave->start_date) }}</strong>
+                    — {{ $ongoingLeave->requested_days }} jour(s) demandé(s)
+                </p>
+                <p class="text-sm text-gray-600 mt-1">
+                    Fin prévue le <strong>{{ formatDateFr($ongoingLeave->expected_end_date) }}</strong>
+                    ({{ $ongoingLeave->expected_end_date->locale('fr')->translatedFormat('l') }})
+                    @if ($ongoingLeave->is_overdue)
+                        <span class="text-red-600 font-semibold ml-2">— dépasse la durée prévue</span>
+                    @endif
+                </p>
+                <p class="text-xs text-orange-700 mt-2">
+                    Votre pause restera active jusqu'à ce qu'un administrateur y mette fin.
+                </p>
+            </div>
+        @endif
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- Pending Requests -->
@@ -52,19 +74,15 @@
                         <div class="space-y-3">
                             @foreach ($pendingRequests as $request)
                                 <div class="bg-white p-4 rounded border border-yellow-200">
-                                    <p class="text-xs text-gray-600 font-semibold mb-2">
-                                        {{ formatDateTimeFr($request->created_at) }}
+                                    <p class="text-sm text-gray-600">Demande du {{ formatDateFr($request->created_at) }}
                                     </p>
-                                    <div class="flex flex-wrap gap-2">
-                                        @foreach ($request->dates as $date)
-                                            <span
-                                                class="inline-block text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
-                                                {{ formatDateFr($date) }}
-                                            </span>
-                                        @endforeach
-                                    </div>
-                                    <p class="text-xs text-yellow-700 mt-2 font-semibold">
-                                        ⏳ {{ count($request->dates) }} jour(s) en attente de validation
+                                    <p class="font-semibold text-gray-800">
+                                        Du {{ formatDateFr($request->start_date) }} — {{ $request->requested_days }}
+                                        jour(s)
+                                        demandé(s)
+                                    </p>
+                                    <p class="text-xs text-gray-500 mt-1">
+                                        Fin prévue le {{ formatDateFr($request->expected_end_date) }}
                                     </p>
                                 </div>
                             @endforeach
@@ -73,31 +91,27 @@
                 </div>
             @endif
 
-            <!-- Approved Requests -->
-            @if ($approvedRequests->count() > 0)
-                <div class="{{ $pendingRequests->count() > 0 ? 'lg:col-span-1' : 'lg:col-span-2' }}">
+            <!-- History -->
+            @if ($history->count() > 0)
+                <div
+                    class="{{ $pendingRequests->count() > 0 && $rejectedRequests->count() > 0 ? 'lg:col-span-1' : 'lg:col-span-2' }}">
                     <div class="bg-green-50 rounded-lg shadow-md p-6 border-2 border-green-200">
                         <h2 class="text-lg font-semibold text-green-900 mb-4">
-                            Approuvés ce mois
+                            Historique
                             <span class="ml-2 bg-green-200 text-green-800 px-2 py-1 rounded-full text-sm">
-                                {{ $approvedRequests->sum(fn($r) => count($r->dates)) }}
+                                {{ $history->count() }}
                             </span>
                         </h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            @foreach ($approvedRequests as $request)
-                                @foreach ($request->dates as $date)
-                                    <div class="bg-white p-4 rounded border border-green-200">
-                                        <p class="font-semibold text-green-800">
-                                            {{ formatDateFr($date) }}
-                                        </p>
-                                        <p class="text-sm text-gray-600">
-                                            {{ \Carbon\Carbon::parse($date)->locale('fr')->translatedFormat('l') }}
-                                        </p>
-                                        <p class="text-xs text-green-700 mt-2">
-                                            ✓ Approuvé le {{ formatDateFr($request->updated_at) }}
-                                        </p>
-                                    </div>
-                                @endforeach
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto custom-scrollbar">
+                            @foreach ($history as $request)
+                                <div class="bg-white p-4 rounded border border-green-200">
+                                    <p class="font-semibold text-green-800">
+                                        {{ formatDateFr($request->start_date) }} → {{ formatDateFr($request->end_date) }}
+                                    </p>
+                                    <p class="text-sm text-gray-600">
+                                        {{ $request->effective_days }} jour(s) effectif(s)
+                                    </p>
+                                </div>
                             @endforeach
                         </div>
                     </div>
@@ -107,7 +121,7 @@
             <!-- Rejected Requests -->
             @if ($rejectedRequests->count() > 0)
                 <div
-                    class="{{ $pendingRequests->count() > 0 || $approvedRequests->count() > 0 ? 'lg:col-span-1' : 'lg:col-span-3' }}">
+                    class="{{ $pendingRequests->count() > 0 || $history->count() > 0 ? 'lg:col-span-1' : 'lg:col-span-3' }}">
                     <div class="bg-red-50 rounded-lg shadow-md p-6 border-2 border-red-200">
                         <h2 class="text-lg font-semibold text-red-900 mb-4">
                             Rejetés
@@ -118,18 +132,17 @@
                         <div class="space-y-3 max-h-96 overflow-y-auto custom-scrollbar">
                             @foreach ($rejectedRequests as $request)
                                 <div class="bg-white p-4 rounded border border-red-200">
-                                    <p class="text-xs text-gray-600 font-semibold mb-2">
-                                        {{ formatDateTimeFr($request->created_at) }}
+                                    <p class="text-sm text-gray-600">Demande du {{ formatDateFr($request->created_at) }}
                                     </p>
-                                    <div class="flex flex-wrap gap-1 mb-2">
-                                        @foreach ($request->dates as $date)
-                                            <span class="inline-block text-xs bg-red-100 text-red-700 px-2 py-1 rounded">
-                                                {{ formatDateFr($date) }}
-                                            </span>
-                                        @endforeach
-                                    </div>
+                                    <p class="font-semibold text-gray-800">
+                                        Du {{ formatDateFr($request->start_date) }} — {{ $request->requested_days }}
+                                        jour(s) demandé(s)
+                                    </p>
+                                    <p class="text-xs text-gray-500 mt-1">
+                                        Fin prévue le {{ formatDateFr($request->expected_end_date) }}
+                                    </p>
                                     @if ($request->rejection_reason)
-                                        <p class="text-xs text-red-700 bg-red-100 p-2 rounded">
+                                        <p class="text-xs text-red-700 bg-red-100 p-2 rounded mt-2">
                                             <strong>Motif:</strong> {{ $request->rejection_reason }}
                                         </p>
                                     @endif
@@ -142,23 +155,16 @@
         </div>
 
         <!-- Empty State -->
-        @if ($pendingRequests->isEmpty() && $approvedRequests->isEmpty() && $rejectedRequests->isEmpty())
+        @if (!$ongoingLeave && $pendingRequests->isEmpty() && $history->isEmpty() && $rejectedRequests->isEmpty())
             <div class="bg-blue-50 border-2 border-blue-200 rounded-lg p-12 text-center">
                 <p class="text-blue-800 text-lg font-semibold mb-2">Aucune demande de Pause</p>
                 <p class="text-blue-600 text-sm mb-4">
-                    Vous n'avez aucune demande de Pause en cours. Vous pouvez en créer une si vous avez des jours
-                    disponibles.
+                    Vous n'avez aucune demande de Pause en cours. Vous pouvez en créer une à tout moment.
                 </p>
-                @if ($leaveInfo['remaining_leave_days'] > 0)
-                    <a href="{{ route('driver.leaves.create') }}"
-                        class="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-medium">
-                        Faire une demande
-                    </a>
-                @else
-                    <p class="text-red-600 font-semibold text-sm">
-                        Vous n'avez plus de jours de Pause disponibles.
-                    </p>
-                @endif
+                <a href="{{ route('driver.leaves.create') }}"
+                    class="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-medium">
+                    Faire une demande
+                </a>
             </div>
         @endif
     </div>

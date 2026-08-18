@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\CommissionController;
 use App\Http\Controllers\Admin\DriverContractController;
 use App\Http\Controllers\Admin\DriverController;
 use App\Http\Controllers\Admin\LeaveController;
+use App\Http\Controllers\Admin\OwnerController;
 use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\PricingController;
 use App\Http\Controllers\Admin\PromoCodeController;
@@ -16,7 +17,6 @@ use App\Http\Controllers\Admin\TouristCircuitController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VehicleContractController;
 use App\Http\Controllers\Admin\VehicleController;
-use App\Http\Controllers\Admin\VehiclePauseController;
 use App\Http\Controllers\Web\DashboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -61,19 +61,29 @@ Route::middleware(['auth:sanctum', 'profil:admin'])->prefix('admin')->name('admi
     // Leaves
     Route::get('leaves', [LeaveController::class, 'index'])->name('leaves.index')->middleware('permission:view-leaves');
     Route::get('leaves/{driver}', [LeaveController::class, 'show'])->name('leaves.show')->middleware('permission:view-leaves');
-    Route::post('leaves/{driver}/add-instant', [LeaveController::class, 'addInstantLeave'])->name('leaves.add-instant')->middleware('permission:create-leaves');
     Route::get('leave/requests', [LeaveController::class, 'requests'])->name('leave.requests.index')->middleware('permission:view-leave-requests');
     Route::post('leave/requests/{leaveRequest}/approve', [LeaveController::class, 'approveRequest'])->name('leave.requests.approve')->middleware('permission:approve-leave-requests');
     Route::post('leave/requests/{leaveRequest}/reject', [LeaveController::class, 'rejectRequest'])->name('leave.requests.reject')->middleware('permission:reject-leave-requests');
-    Route::post('leaves/{driver}/revoke', [LeaveController::class, 'revokeLeave'])->name('leaves.revoke')->middleware('permission:delete-leaves');
+    Route::patch('leaves/{leaveRequest}/end', [LeaveController::class, 'endLeave'])->name('leaves.end');
+    Route::post('leaves/{id}/add-ongoing', [LeaveController::class, 'addOngoingLeave'])->name('leaves.add-ongoing');
+    Route::post('leaves/{id}/add-historical', [LeaveController::class, 'addHistoricalLeave'])->name('leaves.add-historical');
+    Route::patch('leaves/history/{leaveRequest}', [LeaveController::class, 'updateHistoricalLeave'])->name('leaves.history.update');
+    Route::delete('leaves/history/{leaveRequest}', [LeaveController::class, 'destroyHistoricalLeave'])->name('leaves.history.destroy');
+    Route::patch('leaves/{leaveRequest}/correct', [LeaveController::class, 'updateOngoingLeave'])->name('leaves.ongoing.update');
+    //Route::post('leaves/{driver}/add-instant', [LeaveController::class, 'addInstantLeave'])->name('leaves.add-instant')->middleware('permission:create-leaves');
+    //Route::post('leaves/{driver}/revoke', [LeaveController::class, 'revokeLeave'])->name('leaves.revoke')->middleware('permission:delete-leaves');
 
     // Commissions
     Route::get('commissions', [CommissionController::class, 'index'])->name('commissions.index')->middleware('permission:view-commissions');
     Route::get('commissions/{commission}', [CommissionController::class, 'show'])->name('commissions.show')->middleware('permission:view-commissions');
+    Route::patch('commissions/{commission}', [CommissionController::class, 'destroy'])->name('commissions.destroy');
 
     // Payments
     Route::resource('payments', PaymentController::class);
     Route::get('payments/driver/{driverId}/details', [PaymentController::class, 'driverPaymentDetails'])->name('payments.driver-details')->middleware('permission:view-payments');
+    Route::patch('payments/{payment}/validated', [PaymentController::class, 'validate'])->name('payments.validate');
+    Route::patch('payments/{payment}/cancelled', [PaymentController::class, 'cancel'])->name('payments.cancel');
+    Route::post('payments/{payment}/generated', [PaymentController::class, 'generatePayment'])->name('payments.generate');
 
     // Roles & Permissions Management - API routes first (more specific)
     Route::get('roles/{role}/data', [RoleController::class, 'getData'])->name('roles.data')->middleware('permission:view-roles');
@@ -111,4 +121,6 @@ Route::middleware(['auth:sanctum', 'profil:admin'])->prefix('admin')->name('admi
     Route::post('driver-contracts/{driverContract}/end', [DriverContractController::class, 'end'])->name('driver-contracts.end')->middleware('permission:manage-contracts');
 
     Route::get('users/{user}/vehicles', [UserController::class, 'vehicles'])->name('users.vehicles');
+
+    Route::resource('owners', OwnerController::class);
 });

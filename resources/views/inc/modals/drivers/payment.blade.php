@@ -11,14 +11,26 @@
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
             <div>
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Type de Paiement <span
+                        class="text-red-600">*</span></label>
+                <select name="payment_type" required @readonly(true)
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 @error('payment_type') border-red-500 @enderror">
+                    <option selected value="commission" {{ old('payment_type') == 'commission' ? 'selected' : '' }}>
+                        Commission
+                    </option>
+                    <option value="contract" {{ old('payment_type') == 'contract' ? 'selected' : '' }}>Contractuel
+                    </option>
+                </select>
+            </div>
+            <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Moyen de paiement <span
                         class="text-red-500">*</span></label>
                 <select name="payment_method" required
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="mobile_money">Mobile Money</option>
                     <option value="cash">Espèces</option>
                     <option value="bank_transfer">Virement</option>
                     <option value="check">Chèque</option>
-                    <option value="mobile_money">Mobile Money</option>
                     <option value="other">Autre</option>
                 </select>
             </div>

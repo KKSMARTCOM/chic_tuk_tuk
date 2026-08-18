@@ -79,17 +79,28 @@ class DriverContractService
         });
     }
 
+    public function delete(DriverContract $contract): void
+    {
+        if ($contract->status === 'active') {
+            throw new \Exception('Un contrat actif ne peut pas être supprimé. Terminez-le d\'abord.');
+        }
+
+        $contract->delete();
+    }
+
     public function getStats(DriverContract $contract): array
     {
         $usedDays    = $contract->used_leave_days;
         $accruedDays = $contract->accrued_leave_days;
         $available   = $accruedDays - $usedDays;
         $surplus     = $available < 0 ? abs($available) : 0;
+        $remainingLeaveDays = $contract->remaining_contract_leave_days;
 
         return [
             'accrued_leave_days'  => $accruedDays,
             'used_leave_days'     => $usedDays,
             'available_leave_days' => max(0, $available),
+            'remaining_leave_days' => $remainingLeaveDays,
             'surplus_leave_days'  => $surplus,
             'months_elapsed'      => $contract->months_elapsed,
             'total_paid'          => $contract->total_paid,
@@ -99,8 +110,7 @@ class DriverContractService
     public function validateVehicleAssignment(Vehicle $vehicle, ?string $excludeDriverId = null, ?string $excludeContractId = null): void
     {
         // ── Règle 1 : véhicule déjà pris par un autre agent ─────
-        $vehicleQuery = DriverContract::where('vehicle_id', $vehicle->id)
-            ->where('status', 'active');
+        $vehicleQuery = DriverContract::where('vehicle_id', $vehicle->id)->where('status', 'active');
 
         if ($excludeDriverId) {
             $vehicleQuery->where('driver_id', '!=', $excludeDriverId);
@@ -122,12 +132,9 @@ class DriverContractService
 
         if (!$owner) return;
 
-        $ownerVehicleIds = $owner->vehicles()
-            ->where('is_active', true)
-            ->pluck('id');
+        $ownerVehicleIds = $owner->vehicles()->where('is_active', true)->pluck('id');
 
-        $activeAgentsQuery = DriverContract::whereIn('vehicle_id', $ownerVehicleIds)
-            ->where('status', 'active');
+        $activeAgentsQuery = DriverContract::whereIn('vehicle_id', $ownerVehicleIds)->where('status', 'active');
 
         if ($excludeDriverId) {
             $activeAgentsQuery->where('driver_id', '!=', $excludeDriverId);

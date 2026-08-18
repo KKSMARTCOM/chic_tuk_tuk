@@ -9,10 +9,7 @@
                 <h1 class="text-lg md:text-2xl font-bold text-gray-800">Gestion des Contrats</h1>
                 <p class="text-xs md:text-base text-gray-600">Contrats agents et propriétaires-véhicules</p>
             </div>
-            <button onclick="openCreateModal()"
-                class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition flex items-center gap-2">
-                <i class="fas fa-plus"></i> Nouveau contrat
-            </button>
+
         </div>
     </div>
 
@@ -101,11 +98,10 @@
                                     </td>
                                     <td class="px-4 py-3 whitespace-nowrap">
                                         <div class="flex items-center gap-2">
-                                            <button
-                                                onclick="openDetailModal('{{ $contract->id }}', '{{ $contract->toJson() }}')"
+                                            <a href="{{ route('admin.driver-contracts.show', $contract) }}"
                                                 class="text-blue-600 hover:text-blue-800" title="Voir">
                                                 <i class="fas fa-eye"></i>
-                                            </button>
+                                            </a>
                                             <button onclick="openEditAgentModal({{ $contract->toJson() }})"
                                                 class="text-green-600 hover:text-green-800" title="Modifier">
                                                 <i class="fas fa-edit"></i>
@@ -306,139 +302,6 @@
         </div>
     </div>
 
-    {{-- ===== MODAL CRÉER ===== --}}
-    <div id="createModal" class="fixed inset-0 px-4 bg-black bg-opacity-50 hidden items-center justify-center z-30">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4">
-            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                <h3 class="text-lg font-bold text-gray-800" id="createModalTitle">Nouveau contrat</h3>
-                <button onclick="closeModal('createModal')" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="p-4 border-b border-gray-100">
-                <div class="flex gap-2">
-                    <button onclick="setCreateType('agent')" id="create-type-agent"
-                        class="flex-1 py-2 text-sm rounded-lg bg-purple-100 text-purple-700 font-medium border border-purple-200">
-                        <i class="fas fa-user mr-1"></i> Contrat agent
-                    </button>
-                    <button onclick="setCreateType('owner')" id="create-type-owner"
-                        class="flex-1 py-2 text-sm rounded-lg bg-gray-100 text-gray-600 border border-gray-200">
-                        <i class="fas fa-store mr-1"></i> Contrat propriétaire
-                    </button>
-                </div>
-            </div>
-
-            {{-- Formulaire agent --}}
-            <form id="createAgentForm" action="{{ route('admin.driver-contracts.store') }}" method="POST"
-                class="p-6 space-y-4">
-                @csrf
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Agent <span
-                                class="text-red-500">*</span></label>
-                        <select name="driver_id" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
-                            <option value="">-- Sélectionnez --</option>
-                            @foreach ($availableDrivers ?? [] as $driver)
-                                <option value="{{ $driver->id }}">{{ $driver->user->name ?? 'N/A' }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Véhicule <span
-                                class="text-red-500">*</span></label>
-                        <select name="vehicle_id" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
-                            <option value="">-- Sélectionnez --</option>
-                            @foreach ($availableVehicles ?? [] as $vehicle)
-                                <option value="{{ $vehicle->id }}">{{ $vehicle->vehicle_number }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Date de début <span
-                                class="text-red-500">*</span></label>
-                        <input type="date" name="start_date" required value="{{ now()->toDateString() }}"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Durée <span
-                                class="text-red-500">*</span></label>
-                        <select name="contract_months" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
-                            <option value="24">24 mois</option>
-                            <option value="30">30 mois</option>
-                            <option value="36">36 mois</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="flex gap-3 pt-2">
-                    <button type="button" onclick="closeModal('createModal')"
-                        class="flex-1 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
-                        Annuler
-                    </button>
-                    <button type="submit"
-                        class="flex-1 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-semibold">
-                        Créer le contrat
-                    </button>
-                </div>
-            </form>
-
-            {{-- Formulaire proprio --}}
-            <form id="createOwnerForm" action="{{ route('admin.vehicle-contracts.store') }}" method="POST"
-                class="p-6 space-y-4 hidden">
-                @csrf
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Véhicule <span
-                                class="text-red-500">*</span></label>
-                        <select name="vehicle_id" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
-                            <option value="">-- Sélectionnez --</option>
-                            @foreach ($availableVehicles ?? [] as $vehicle)
-                                <option value="{{ $vehicle->id }}">{{ $vehicle->vehicle_number }} —
-                                    {{ $vehicle->owner->name ?? '' }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Montant total (FCFA) <span
-                                class="text-red-500">*</span></label>
-                        <input type="number" name="total_amount" required placeholder="2000000"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Mensualité (FCFA) <span
-                                class="text-red-500">*</span></label>
-                        <input type="number" name="monthly_payment" required placeholder="83333"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Date de début <span
-                                class="text-red-500">*</span></label>
-                        <input type="date" name="start_date" required value="{{ now()->toDateString() }}"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    </div>
-                    <div class="col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                        <textarea name="notes" rows="2"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
-                    </div>
-                </div>
-                <div class="flex gap-3 pt-2">
-                    <button type="button" onclick="closeModal('createModal')"
-                        class="flex-1 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
-                        Annuler
-                    </button>
-                    <button type="submit"
-                        class="flex-1 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-semibold">
-                        Créer le contrat
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     @push('scripts')
         <script>
             // ── DataTable ────────────────────────────────────────────
@@ -474,51 +337,24 @@
                 document.getElementById(id).classList.remove('flex');
             }
 
-            // ===== DÉTAIL =====
-            function openDetailModal(id, contract, stats) {
-                let cont = JSON.parse(contract);
-
-                const body = document.getElementById('detailBody');
-                const title = document.getElementById('detailTitle');
-
-                title.textContent = 'Contrat agent — ' + (cont.driver?.user?.name ?? 'N/A');
-                const avail = (cont.accrued_leave_days ?? 0) - (cont.used_leave_days ?? 0);
-                body.innerHTML = detailRow('Agent', cont.driver?.user?.name ?? 'N/A') +
-                    detailRow('Véhicule', cont.vehicle?.vehicle_number ?? 'N/A') +
-                    detailRow('Début', cont.start_date) +
-                    detailRow('Durée', (cont.contract_months ?? '?') + ' mois') +
-                    detailRow('Mois écoulés', (cont.months_elapsed ?? 'N/A ') + 'm') +
-                    detailRow('Congés acquis', (cont.accrued_leave_days ?? 0) + 'j') +
-                    detailRow('Congés utilisés', (cont.used_leave_days ?? 0) + 'j') +
-                    detailRow('Congés disponibles', avail < 0 ? '<span class="text-red-500 font-medium">+' + Math.abs(
-                        avail) + 'j surplus</span>' : '<span class="text-green-600">' + avail + 'j</span>') +
-                    detailRow('Total payé', formatAmount(cont.total_paid ?? 0)) +
-                    detailRow('Statut', cont.status === 'active' ?
-                        '<span class="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium">Actif</span>' :
-                        '<span class="px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-xs font-medium">Terminé</span>'
-                    );
-
-                openModal('detailModal');
-            }
-
-            function detailRow(label, value) {
-                return `<div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-            <span class="text-sm text-gray-500">${label}</span>
-            <span class="text-sm font-medium text-gray-900">${value}</span>
-        </div>`;
-            }
-
             function formatAmount(n) {
                 return Number(n).toLocaleString('fr-FR') + ' FCFA';
             }
 
             // ===== MODIFIER AGENT =====
             function openEditAgentModal(contract) {
-                document.getElementById('edit_agent_start_date').value = contract.start_date ?? '';
+                document.getElementById('edit_agent_start_date').value = contract.start_date ?
+                    new Date(contract.start_date).toISOString().split('T')[0] :
+                    '';
+
+                document.getElementById('edit_agent_end_date').value = contract.start_date ?
+                    new Date(contract.start_date).toISOString().split('T')[0] :
+                    '';
+
                 document.getElementById('edit_agent_months').value = contract.contract_months ?? 24;
                 document.getElementById('edit_agent_status').value = contract.status ?? 'active';
-                document.getElementById('edit_agent_end_date').value = contract.end_date ?? '';
                 document.getElementById('editAgentForm').action = `/admin/driver-contracts/${contract.id}`;
+
                 openModal('editAgentModal');
             }
 
@@ -534,31 +370,6 @@
                 document.getElementById('deleteContractName').textContent = name;
                 document.getElementById('deleteForm').action = `/admin/${resource}/${id}`;
                 openModal('deleteModal');
-            }
-
-            // ===== CRÉER =====
-            function openCreateModal() {
-                setCreateType('agent');
-                openModal('createModal');
-            }
-
-            function setCreateType(type) {
-                const isOwner = type === 'owner';
-                document.getElementById('createAgentForm').classList.toggle('hidden', isOwner);
-                document.getElementById('createOwnerForm').classList.toggle('hidden', !isOwner);
-
-                const agentBtn = document.getElementById('create-type-agent');
-                const ownerBtn = document.getElementById('create-type-owner');
-
-                if (isOwner) {
-                    agentBtn.className = 'flex-1 py-2 text-sm rounded-lg bg-gray-100 text-gray-600 border border-gray-200';
-                    ownerBtn.className =
-                        'flex-1 py-2 text-sm rounded-lg bg-purple-100 text-purple-700 font-medium border border-purple-200';
-                } else {
-                    agentBtn.className =
-                        'flex-1 py-2 text-sm rounded-lg bg-purple-100 text-purple-700 font-medium border border-purple-200';
-                    ownerBtn.className = 'flex-1 py-2 text-sm rounded-lg bg-gray-100 text-gray-600 border border-gray-200';
-                }
             }
         </script>
     @endpush

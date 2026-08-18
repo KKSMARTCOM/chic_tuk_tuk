@@ -33,7 +33,7 @@
                             </div>
                         </div>
                         <div class="flex justify-start">
-                            <a href="https://wa.me/22956141438?text=Bonjour%0AJ'aimerais%20avoir%20plus%20d'informations"
+                            <a href="https://wa.me/2290144429017?text=Bonjour%0AJ'aimerais%20avoir%20plus%20d'informations"
                                 target="_blank" rel="noopener noreferrer"
                                 class="px-6 py-3 rounded-md bg-[#FFB230] font-semibold text-black flex items-center gap-2">
                                 <i class="fa-brands fa-whatsapp font-bold text-lg block"></i> Contactez-nous

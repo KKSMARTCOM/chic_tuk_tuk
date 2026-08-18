@@ -50,7 +50,7 @@
                             <i class="fas fa-play mr-1"></i> Terminer la pause
                         </button>
                     </form>
-                @else
+                @elseif($vehicle->activeVehicleContract)
                     <button onclick="openPauseModal('{{ $vehicle->id }}', '{{ $vehicle->vehicle_number }}')"
                         class="px-4 py-2 bg-yellow-100 text-yellow-700 hover:bg-yellow-200 rounded-lg text-sm font-semibold transition">
                         <i class="fas fa-pause mr-1"></i> Mettre en pause
@@ -425,84 +425,23 @@
         </div>
     </div>
 
-    {{-- ===== MODAL EDIT ===== --}}
-    @include('inc.modals.vehicles.add')
+    {{-- ===== MODAL CONTRAT ===== --}}
+    @include('inc.modals.vehicles.contract')
 
     {{-- ===== MODAL PAUSE ===== --}}
     @include('inc.modals.vehicles.pause')
 
-    {{-- ===== MODAL CONTRAT ===== --}}
-    <div id="modal-contract" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-30">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 p-6">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-bold text-gray-800">Créer un contrat · {{ $vehicle->vehicle_number }}</h3>
-                <button onclick="closeContractModal()" class="text-gray-400 hover:text-gray-600"><i
-                        class="fas fa-times"></i></button>
-            </div>
-            <form action="{{ route('admin.vehicle-contracts.store') }}" method="POST" class="space-y-4">
-                @csrf
-                <input type="hidden" name="vehicle_id" value="{{ $vehicle->id }}">
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Montant total (FCFA) <span
-                                class="text-red-500">*</span></label>
-                        <input type="number" name="total_amount" min="1" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            placeholder="ex: 2500000">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Mensualité (FCFA) <span
-                                class="text-red-500">*</span></label>
-                        <input type="number" name="monthly_payment" min="0" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            placeholder="ex: 104167">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Date de début <span
-                                class="text-red-500">*</span></label>
-                        <input type="date" name="start_date" required value="{{ date('Y-m-d') }}"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Date de fin</label>
-                        <input type="date" name="end_date"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    </div>
-                    <div class="col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                        <textarea name="notes" rows="2"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            placeholder="Conditions particulières..."></textarea>
-                    </div>
-                </div>
-                <div class="flex gap-3 pt-2">
-                    <button type="button" onclick="closeContractModal()"
-                        class="flex-1 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">Annuler</button>
-                    <button type="submit"
-                        class="flex-1 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-semibold">
-                        <i class="fas fa-save mr-1"></i> Créer le contrat
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+    {{-- ===== MODAL EDIT ===== --}}
+    @include('inc.modals.vehicles.add')
 
     @push('scripts')
         <script>
-            function openPauseModal() {
-                document.getElementById('modal-pause').classList.replace('hidden', 'flex');
-            }
-
-            function closePauseModal() {
-                document.getElementById('modal-pause').classList.replace('flex', 'hidden');
-            }
-
             function openContractModal() {
-                document.getElementById('modal-contract').classList.replace('hidden', 'flex');
+                document.getElementById('contractModal').classList.replace('hidden', 'flex');
             }
 
             function closeContractModal() {
-                document.getElementById('modal-contract').classList.replace('flex', 'hidden');
+                document.getElementById('contractModal').classList.replace('flex', 'hidden');
             }
 
             // ── Modal Edit ──────────────────────────────────────────
@@ -510,112 +449,25 @@
                 const form = document.getElementById('vehicle-form');
                 document.getElementById('modal-title').textContent = 'Modifier le véhicule';
                 form.action = `/admin/vehicles/${vehicle.id}`;
-                document.getElementById('method-field').innerHTML =
-                    '<input type="hidden" name="_method" value="PUT">';
+                document.getElementById('method-field').innerHTML = '<input type="hidden" name="_method" value="PUT">';
 
                 // Champs véhicule
                 document.getElementById('f_vehicle_number').value = vehicle.vehicle_number ?? '';
                 document.getElementById('f_vehicle_type').value = vehicle.vehicle_type ?? 'tricycle';
                 document.getElementById('f_notes').value = vehicle.notes ?? '';
-                document.getElementById('f_owner_id').value = vehicle.owner_id ?? '';
 
-                // Reset mode proprio sur "existing"
-                document.querySelector('input[name="_owner_mode"][value="existing"]').checked = true;
-                switchOwnerMode('existing');
-
-                const badge = document.getElementById('contract-badge');
-
-                console.log(vehicle);
-                if (vehicle.active_vehicle_contract) {
-                    const c = vehicle.active_vehicle_contract;
-
-
-                    // Afficher le résumé du contrat actif
-                    const summary = document.getElementById('existing-contract-summary');
-                    summary.classList.remove('hidden');
-
-                    document.getElementById('ec-total').textContent = formatFcfa(c.total_amount);
-                    document.getElementById('ec-monthly').textContent = formatFcfa(c.monthly_payment);
-                    document.getElementById('ec-paid').textContent = formatFcfa(c.total_paid);
-                    document.getElementById('ec-remaining').textContent = c.surplus > 0 ?
-                        '+' + formatFcfa(c.surplus) + ' surplus' :
-                        formatFcfa(c.remaining_amount);
-
-                    const pct = Math.min(100, c.progress_percentage || 0);
-                    document.getElementById('ec-progress-bar').style.width = pct + '%';
-                    document.getElementById('ec-progress-bar').className =
-                        `h-2 rounded-full ${pct >= 100 ? 'bg-orange-500' : 'bg-emerald-500'}`;
-                    document.getElementById('ec-progress-pct').textContent = pct + '%';
-                    document.getElementById('ec-link').href =
-                        `/admin/vehicle-contracts/${c.id}`;
-
-                    // Pré-remplir le formulaire avec les valeurs du contrat existant
-                    document.getElementById('f_existing_contract_id').value = c.id;
-                    document.getElementById('f_contract_total').value = c.total_amount ?? '';
-                    document.getElementById('f_contract_monthly').value = c.monthly_payment ?? '';
-                    document.getElementById('f_contract_start').value = new Date(c.start_date).toISOString().split('T')[0] ??
-                        '';
-                    document.getElementById('f_contract_end').value = c.end_date ?
-                        new Date(c.end_date).toISOString().split('T')[0] :
-                        '';
-                    document.getElementById('f_contract_notes').value = c.notes ?? '';
-
-                    // Badge
-                    badge.textContent = 'Contrat actif';
-                    badge.className = 'text-xs px-2 py-0.5 rounded-full font-semibold bg-emerald-100 text-emerald-700';
-                    badge.classList.remove('hidden');
-
-                } else {
-                    // Pas de contrat → mode ajout
-                    document.getElementById('existing-contract-summary').classList.add('hidden');
-                    document.getElementById('f_existing_contract_id').value = '';
-                    document.getElementById('f_contract_total').value = '';
-                    document.getElementById('f_contract_monthly').value = '';
-                    document.getElementById('f_contract_start').value = '';
-                    document.getElementById('f_contract_end').value = '';
-                    document.getElementById('f_contract_notes').value = '';
-
-                    badge.textContent = 'Aucun contrat';
-                    badge.className = 'text-xs px-2 py-0.5 rounded-full font-semibold bg-gray-100 text-gray-500';
-                    badge.classList.remove('hidden');
-                }
-
-                document.getElementById('modal-form').classList.remove('hidden');
-                document.getElementById('modal-form').classList.add('flex');
+                document.getElementById('formModal').classList.remove('hidden');
+                document.getElementById('formModal').classList.add('flex');
             }
 
             function closeFormModal() {
-                document.getElementById('modal-form').classList.add('hidden');
-                document.getElementById('modal-form').classList.remove('flex');
+                document.getElementById('formModal').classList.add('hidden');
+                document.getElementById('formModal').classList.remove('flex');
             }
-
-            // ── Mode propriétaire ────────────────────────────────────
-            document.querySelectorAll('input[name="_owner_mode"]').forEach(r => {
-                r.addEventListener('change', () => switchOwnerMode(r.value));
-            });
-            document.querySelectorAll('.owner-mode-card').forEach(card => {
-                card.addEventListener('click', () => {
-                    const r = card.querySelector('input');
-                    r.checked = true;
-                    switchOwnerMode(r.value);
-                });
-            });
 
             // ── Utilitaire ───────────────────────────────────────────────
             function formatFcfa(n) {
                 return new Intl.NumberFormat('fr-FR').format(Math.round(n || 0)) + ' FCFA';
-            }
-
-            function switchOwnerMode(mode) {
-                const isExisting = mode === 'existing';
-
-                document.getElementById('owner-mode-existing-label').className =
-                    `owner-mode-card cursor-pointer rounded-xl border-2 p-3 flex items-center gap-2 transition ${isExisting ? 'border-[#286b41] bg-[#286b41]/10' : 'border-gray-200 bg-white'}`;
-                document.getElementById('owner-mode-new-label').className =
-                    `owner-mode-card cursor-pointer rounded-xl border-2 p-3 flex items-center gap-2 transition ${!isExisting ? 'border-purple-600 bg-purple-50' : 'border-gray-200 bg-white'}`;
-
-                document.getElementById('section-owner-existing').classList.toggle('hidden', !isExisting);
-                document.getElementById('section-owner-new').classList.toggle('hidden', isExisting);
             }
 
             // ── Modal Pause ──────────────────────────────────────────
@@ -623,13 +475,14 @@
                 document.getElementById('pause_vehicle_id').value = id;
                 document.getElementById('pause-vehicle-label').textContent = number;
                 document.getElementById('pause-form').action = `/admin/vehicles/${id}/add-pause`;
-                document.getElementById('modal-pause').classList.remove('hidden');
-                document.getElementById('modal-pause').classList.add('flex');
+
+                document.getElementById('pauseModal').classList.remove('hidden');
+                document.getElementById('pauseModal').classList.add('flex');
             }
 
             function closePauseModal() {
-                document.getElementById('modal-pause').classList.add('hidden');
-                document.getElementById('modal-pause').classList.remove('flex');
+                document.getElementById('pauseModal').classList.add('hidden');
+                document.getElementById('pauseModal').classList.remove('flex');
             }
         </script>
     @endpush
