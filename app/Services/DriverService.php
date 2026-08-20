@@ -258,7 +258,7 @@ class DriverService
             // 2. Mettre à jour le profil Driver
             if ($user->driver) {
                 $user->driver->update([
-                    'license_number' => $data['license_number'],
+                    'license_number' => $data['license_number'] ?? $user->driver->license_number,
                     'is_available'   => $data['is_available'] ?? $user->driver->is_available,
                     'agent_code'     => $data['agent_code']   ?? $user->driver->agent_code,
                     'agent_id'       => $data['agent_id']     ?? $user->driver->agent_id,

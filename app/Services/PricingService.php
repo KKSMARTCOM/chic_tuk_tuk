@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Consts\Price;
-use App\Models\Pricing;
 use Illuminate\Support\Facades\Http;
 
 class PricingService
@@ -53,5 +52,38 @@ class PricingService
         $price = $distance * Price::PRICE_PER_KM;
 
         return (int) max($price, Price::MINIMUM_PRICE);
+    }
+
+    /**
+     * Applique la majoration horaire à un prix donné, selon l'heure de la course.
+     * Accepte une heure sous forme de string "H:i" ou d'instance Carbon.
+     */
+    public function applyTimeSurcharge(int $price, $time): int
+    {
+        if (!$time) {
+            return $price;
+        }
+
+        return $this->isNormalPriceWindow($time) ? $price : $price + Price::TIME_SURCHARGE;
+    }
+
+    private function isNormalPriceWindow($time): bool
+    {
+        $minutes = $this->extractMinutesSinceMidnight($time);
+
+        $start = Price::NORMAL_WINDOW_START_HOUR * 60;
+        $end   = Price::NORMAL_WINDOW_END_HOUR * 60;
+
+        return $minutes >= $start && $minutes <= $end;
+    }
+
+    private function extractMinutesSinceMidnight($time): int
+    {
+        if ($time instanceof \Carbon\Carbon) {
+            return $time->hour * 60 + $time->minute;
+        }
+
+        [$h, $m] = array_pad(explode(':', (string) $time), 2, 0);
+        return ((int) $h) * 60 + ((int) $m);
     }
 }
