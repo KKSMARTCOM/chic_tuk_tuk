@@ -168,6 +168,15 @@
                         step="0.01"
                         class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#286b41] focus:border-[#286b41]">
                     <span class="mt-1 text-red-500 hidden" id="price-error"></span>
+                    <p class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2 mt-2">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Ce montant doit être le prix <strong>brut</strong> (calculé selon la distance uniquement),
+                        <strong>sans la majoration horaire</strong> de 1 000 FCFA. La majoration est appliquée
+                        automatiquement à l'enregistrement si l'heure de départ (ou de retour) est en dehors de la tranche
+                        7h–10h.
+                        Ne saisissez pas manuellement un prix qui inclut déjà cette majoration, sinon elle sera comptée deux
+                        fois.
+                    </p>
                 </div>
 
                 <!-- Statut -->
