@@ -36,14 +36,22 @@ class BookingService
             throw new \Exception('Erreur lors du calcul de l\'itinéraire.');
         }
 
+        // Prix brut sans majoration
         $basePrice = $data['base_price'] ?? $this->pricingService->getPrice($distance);
-
-        // Gestion promo
 
         $isRecurring = isset($data['days']) && $data['days'] > 1;
         $isRound      = !empty($data['round_trip']);
-        $tripPrice    = $isRound ? $basePrice * 2 : $basePrice;
         $days         = $data['days'] ?? 1;
+
+        // Prix de l'aller, avec majoration selon l'heure de départ
+        $goPrice = $this->pricingService->applyTimeSurcharge($basePrice, $data['pickup_time']);
+
+        // Prix du retour, avec majoration selon l'heure de retour (si aller-retour)
+        $returnPrice = ($isRound && !empty($data['return_time']))
+            ? $this->pricingService->applyTimeSurcharge($basePrice, $data['return_time'])
+            : $goPrice;
+
+        $tripPrice    = $isRound ? $goPrice + $returnPrice : $goPrice;
         $totalPrice   = $tripPrice * ($isRecurring ? $days : 1);
 
         // Calcul de la date du prochain passage du cron pour les courses récurrentes
@@ -74,7 +82,7 @@ class BookingService
             'pickup_time'         => $data['pickup_time'],
             'special_requests'    => $data['special_requests'] ?? null,
             'distance'            => $distance,
-            'base_price'          => $basePrice,
+            'base_price'          => $goPrice,
             'total_price'         => $totalPrice,
             'is_recurring'        => $isRecurring,
             'next_recurring_date' => $isRecurring ? $nextRecurringDate : null,
@@ -107,7 +115,7 @@ class BookingService
                 'tourist_circuit_id'     => $data['tourist_circuit_id'] ?? null,
                 'promo_code_id'          => $data['promo_code_id'] ?? null,
                 'discount'               => $data['discount'] ?? 0,
-                'base_price'             => $basePrice,
+                'base_price'             => $returnPrice,
                 'total_price'            => $tripPrice,
                 'status'                 => 'pending',
                 'is_recurring'           => false,
@@ -138,7 +146,7 @@ class BookingService
                 'pickup_date'            => $data['pickup_date'],
                 'pickup_time'            => $data['return_time'],
                 'special_requests'       => $data['special_requests'] ?? null,
-                'base_price'             => $basePrice,
+                'base_price'             => $returnPrice,
                 'total_price'            => $totalPrice,
                 'status'                 => 'pending',
                 'is_recurring'           => false, // ne recrée pas
@@ -423,6 +431,14 @@ class BookingService
 
             // CAS 2 — Abonnement parent → annulation + recréation sans agent
             if ($booking->is_subscription_parent && $booking->is_recurring) {
+                // Capturer le prix propre à la course retour AVANT toute suppression/écrasement
+                $oldReturn = Booking::where('parent_booking_id', $booking->id)
+                    ->where('trip_type', 'return')
+                    ->first();
+
+                $returnBasePrice  = $oldReturn->base_price  ?? $booking->base_price;
+                $returnTotalPrice = $oldReturn->total_price ?? $booking->total_price;
+
                 $booking->update([
                     'status'              => 'cancelled',
                     'cancelled_at'        => now(),
@@ -497,8 +513,8 @@ class BookingService
                         'tourist_circuit_id'     => $booking->tourist_circuit_id,
                         'discount'               => $booking->discount,
                         'promo_code_id'          => $booking->promo_code_id,
-                        'base_price'             => $booking->base_price,
-                        'total_price'            => $booking->total_price,
+                        'base_price'             => $returnBasePrice,
+                        'total_price'            => $returnTotalPrice,
                         'status'                 => 'pending',
                         'is_recurring'           => false, // ne recrée pas
                         'parent_booking_id'      => $newParent->id,
@@ -513,6 +529,14 @@ class BookingService
             }
 
             // CAS 3 — Course unique → annulation + recréation simple
+            // Capturer le prix propre à la course retour AVANT toute suppression
+            $oldReturn = Booking::where('parent_booking_id', $booking->id)
+                ->where('trip_type', 'return')
+                ->first();
+
+            $returnBasePrice  = $oldReturn->base_price  ?? $booking->base_price;
+            $returnTotalPrice = $oldReturn->total_price ?? $booking->total_price;
+
             $booking->update([
                 'status'               => 'cancelled',
                 'cancelled_at'         => now(),
@@ -576,8 +600,8 @@ class BookingService
                     'tourist_circuit_id'     => $booking->tourist_circuit_id,
                     'discount'               => $booking->discount,
                     'promo_code_id'          => $booking->promo_code_id,
-                    'base_price'             => $booking->base_price,
-                    'total_price'            => $booking->total_price,
+                    'base_price'             => $returnBasePrice,
+                    'total_price'            => $returnTotalPrice,
                     'status'                 => 'pending',
                     'is_recurring'           => false, // ne recrée pas
                     'parent_booking_id'      => $newBooking->id,
@@ -755,7 +779,18 @@ class BookingService
             $isRound    = (bool) ($data['round_trip'] ?? $booking->round_trip ?? false);
             $days       = (int)  ($data['days']       ?? $booking->days       ?? 1);
             $weekDays   = $data['week_days'] ?? $booking->week_days ?? 'lun_dim';
-            $tripPrice  = $isRound ? $basePrice * 2 : $basePrice;
+
+            // Heures effectives (nouvelles si fournies, sinon celles déjà en base)
+            $pickupTime = $data['pickup_time'] ?? $booking->pickup_time;
+            $returnTime = $isRound ? ($data['return_time'] ?? $booking->return_time) : null;
+
+            // Prix par trajet, avec majoration selon l'heure propre à chacun
+            $goPrice     = $this->pricingService->applyTimeSurcharge($basePrice, $pickupTime);
+            $returnPrice = $returnTime
+                ? $this->pricingService->applyTimeSurcharge($basePrice, $returnTime)
+                : $goPrice;
+
+            $tripPrice  = $isRound ? $goPrice + $returnPrice : $goPrice;
             $totalPrice = $days > 1 ? $tripPrice * $days : $tripPrice;
 
             // Recalcul récurrence
@@ -808,7 +843,7 @@ class BookingService
                     'status'              => $data['status'] ?? $booking->status,
                     'special_requests'    => $data['special_requests'] ?? $booking->special_requests,
                     'distance'            => $distance,
-                    'base_price'          => $basePrice,
+                    'base_price'          => $goPrice,
                     'total_price'         => $totalPrice,
                     'is_recurring'        => $isRecurring,
                     'next_recurring_date' => $nextRecurringDate,
@@ -850,7 +885,7 @@ class BookingService
                             'remaining_days'        => $days,
                             'week_days'             => $data['week_days']     ?? $booking->week_days,
                             'distance'              => $distance,
-                            'base_price'            => $basePrice,
+                            'base_price'            => $returnPrice,
                             'total_price'           => $totalPrice,
                             'special_requests'      => $data['special_requests'] ?? $booking->special_requests,
                             'client_name'           => $data['client_name']   ?? $booking->client_name,
@@ -877,7 +912,7 @@ class BookingService
                             'pickup_date'            => $data['pickup_date']   ?? $booking->pickup_date,
                             'pickup_time'            => $data['return_time'],
                             'special_requests'       => $data['special_requests'] ?? $booking->special_requests,
-                            'base_price'             => $basePrice,
+                            'base_price'             => $returnPrice,
                             'total_price'            => $totalPrice,
                             'status'                 => 'pending',
                             'is_recurring'           => false,

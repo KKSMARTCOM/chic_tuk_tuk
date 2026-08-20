@@ -145,8 +145,8 @@ class DriverController extends Controller
         // ── Règles communes ──────────────────────────────────────
         $rules = [
             'name'            => 'required|string|max:255',
-            'email'           => 'nullable|email|unique:users,email,' . $request->input('email') . ',id,profil,driver',
-            'phone'           => 'required|string|unique:users,phone,' . $request->input('phone') . ',id,profil,driver',
+            'email'           => 'nullable|email|unique:users,email,NULL,id,profil,driver',
+            'phone'           => 'required|string|unique:users,phone,NULL,id,profil,driver',
             'password'        => ['required', 'string', 'min:8', 'regex:/[A-Z]/', 'regex:/[0-9]/', 'regex:/[@$!%*#?&]/'],
             'adresse'         => 'nullable|string|max:255',
             'license_number'  => 'required|string',
@@ -277,7 +277,7 @@ class DriverController extends Controller
             'adresse'        => 'nullable|string|max:255',
             'license_number' => 'required|string',
             'is_available'   => 'nullable|boolean',
-            'agent_code'     => 'nullable|string|max:255',
+            'agent_code'     => 'nullable|string|max:255|unique:drivers,agent_code,' . $driver->driver?->id . ',id',
             'agent_id'       => 'nullable|string|max:255',
         ];
 
@@ -307,6 +307,7 @@ class DriverController extends Controller
         $messages = [
             'phone.unique'               => 'Ce numéro de téléphone est déjà utilisé.',
             'email.unique'               => 'Cet email est déjà utilisé.',
+            'agent_code.unique'          => 'Ce code agent est déjà utilisé.',
             'license_number.required'    => 'La catégorie de permis est requise.',
             'owner_id.required'          => 'Le propriétaire est requis.',
             'vehicle_id.required_with'        => 'Le véhicule est requis lorsque le propriétaire est sélectionné.',

@@ -12,46 +12,46 @@
         </div>
 
         <!-- Formulaire de recherche et filtre -->
-        @if ($bookings && $bookings->count() > 0)
-            <div class="py-4 border-b border-gray-200 bg-gray-50">
-                <form method="GET" action="{{ route('admin.bookings.index') }}" class="flex flex-col md:flex-row gap-4">
-                    <div class="flex-1">
-                        <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Rechercher</label>
-                        <input type="text" name="search" id="search" value="{{ request('search') }}"
-                            placeholder="N° réservation, téléphone, ville de départ ou d'arrivée..."
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    </div>
-                    <div class="md:w-48">
-                        <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Statut</label>
-                        <select name="status" id="status"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-                            <option value="">Tous les statuts</option>
-                            <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>En attente
-                            </option>
-                            <option value="confirmed" {{ request('status') == 'confirmed' ? 'selected' : '' }}>Confirmé
-                            </option>
-                            <option value="in_progress" {{ request('status') == 'in_progress' ? 'selected' : '' }}>En cours
-                            </option>
-                            <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Terminé
-                            </option>
-                            <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Annulé
-                            </option>
-                            <option value="expired" {{ request('status') == 'expired' ? 'selected' : '' }}>Expirée</option>
-                        </select>
-                    </div>
-                    <div class="flex items-end space-x-2">
-                        <button type="submit"
-                            class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
-                            <i class="fas fa-search mr-2"></i> Rechercher
-                        </button>
-                        <a href="{{ route('admin.bookings.index') }}"
-                            class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition">
-                            <i class="fas fa-times mr-2"></i> Effacer
-                        </a>
-                    </div>
-                </form>
-            </div>
+        <div class="py-4 border-b border-gray-200 bg-gray-50">
+            <form method="GET" action="{{ route('admin.bookings.index') }}" class="flex flex-col md:flex-row gap-4">
+                <div class="flex-1">
+                    <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Rechercher</label>
+                    <input type="text" name="search" id="search" value="{{ request('search') }}"
+                        placeholder="N° réservation, téléphone, ville de départ ou d'arrivée..."
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+                <div class="md:w-48">
+                    <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Statut</label>
+                    <select name="status" id="status"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <option value="">Tous les statuts</option>
+                        <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>En attente
+                        </option>
+                        <option value="confirmed" {{ request('status') == 'confirmed' ? 'selected' : '' }}>Confirmé
+                        </option>
+                        <option value="in_progress" {{ request('status') == 'in_progress' ? 'selected' : '' }}>En cours
+                        </option>
+                        <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Terminé
+                        </option>
+                        <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Annulé
+                        </option>
+                        <option value="expired" {{ request('status') == 'expired' ? 'selected' : '' }}>Expirée</option>
+                    </select>
+                </div>
+                <div class="flex items-end space-x-2">
+                    <button type="submit"
+                        class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
+                        <i class="fas fa-search mr-2"></i> Rechercher
+                    </button>
+                    <a href="{{ route('admin.bookings.index') }}"
+                        class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition">
+                        <i class="fas fa-times mr-2"></i> Effacer
+                    </a>
+                </div>
+            </form>
+        </div>
 
+        @if ($bookings && $bookings->count() > 0)
             <div class="overflow-x-auto p-4">
                 <table class="min-w-full divide-y divide-gray-200 display" id="datatable1">
                     <thead class="bg-gray-50">

@@ -174,6 +174,9 @@
                             <div id="step2" class="step-content hidden">
                                 <div class="mb-4">
                                     <!-- Carte -->
+                                    <p class="text-xs text-gray-500 mb-1">
+                                        ℹ️ Une majoration de 1 000 FCFA s'applique en dehors de la tranche 7h–10h.
+                                    </p>
 
                                     <label class="block text-gray-700 font-semibold mb-2">Date et heure <span
                                             class="text-red-500">*</span></label>
@@ -204,7 +207,6 @@
                                             class="w-4 h-4 accent-[#286b41] cursor-pointer">
                                         <label for="simple_round_trip" class="text-gray-700 font-semibold cursor-pointer">
                                             Aller-Retour
-                                            <span class="text-sm font-normal text-gray-500 ml-1">(prix × 2)</span>
                                         </label>
                                     </div>
 
@@ -265,7 +267,6 @@
                                                 <label for="round_trip"
                                                     class="text-gray-700 font-semibold cursor-pointer">
                                                     Aller-Retour
-                                                    <span class="text-sm font-normal text-gray-500 ml-1">(prix × 2)</span>
                                                 </label>
                                             </div>
 
@@ -400,11 +401,11 @@
                                             </span>
                                         </div>
                                         <div class="flex justify-between text-sm text-gray-600">
-                                            <span class="text-gray-500">Prix par trajet</span>
+                                            <span class="text-gray-500">Prix par trajet (Aller)</span>
                                             <span id="recap-sub-unit" class="font-medium text-gray-700">-- FCFA</span>
                                         </div>
                                         <div class="flex justify-between text-sm text-gray-600" id="recap-sub-round-row">
-                                            <span class="text-gray-500">Aller-Retour</span>
+                                            <span class="text-gray-500">Retour</span>
                                             <span class="font-medium text-gray-700">× 2</span>
                                         </div>
                                         <div class="flex justify-between text-sm text-gray-600">
@@ -833,11 +834,6 @@
                     } else {
                         setIndicator(step);
                     }
-
-                    // recalcul à l’entrée de l’étape 3 (si nécessaire)
-                    /* if (step === 3 && typeof calculateRoute === 'function') {
-                        calculateRoute();
-                    } */
                 }
 
                 window.nextStep = function(step) {
@@ -926,13 +922,27 @@
                     'lun_dim': 'Lun → Dim (7j/7)',
                 };
 
+                function timeSurcharge(price, time) {
+                    if (!time) return price;
+                    const [h, m] = time.split(':').map(Number);
+                    const minutes = h * 60 + m;
+                    const start = 7 * 60;
+                    const end = 10 * 60;
+                    const inNormalWindow = minutes >= start && minutes <= end;
+                    return inNormalWindow ? price : price + 1000;
+                }
+
                 function updateRecap() {
                     var isSubscription = $('#multi_day').is(':checked');
                     var days = parseInt($('#days_hidden').val()) || 1;
                     var isRound = isSubscription ?
                         $('#round_trip').is(':checked') :
                         $('#simple_round_trip').is(':checked');
-                    var tripPrice = isRound ? unitPrice * 2 : unitPrice;
+                    var pickupTime = $('#pickup_time').val();
+                    var returnTime = isSubscription ? $('#return_time').val() : $('#simple_return_time').val();
+                    var goPrice = timeSurcharge(unitPrice, pickupTime);
+                    var returnPrice = isRound ? timeSurcharge(unitPrice, returnTime) : goPrice;
+                    var tripPrice = isRound ? (goPrice + returnPrice) : goPrice;
                     var total = isSubscription ? tripPrice * days : tripPrice;
 
                     // Trajet & horaire
@@ -946,7 +956,7 @@
                         $('#recap-single').addClass('hidden');
                         $('#recap-subscription').removeClass('hidden');
 
-                        $('#recap-sub-unit').text(unitPrice.toLocaleString() + ' FCFA');
+                        $('#recap-sub-unit').text(goPrice.toLocaleString() + ' FCFA');
                         $('#recap-sub-days').text(days + ' jour(s)');
                         $('#recap-sub-weekdays').text(weekDaysLabels[$('#week_days').val()] || '--');
 
@@ -955,9 +965,9 @@
                             // Ajouter l'heure de retour dans le récap
                             var returnTime = $('#return_time').val();
                             $('#recap-sub-round-row').html(`
-                                <span class="text-gray-500">Aller-Retour</span>
+                                <span class="text-gray-500">Retour</span>
                                 <span class="font-medium text-gray-700">
-                                    × 2 ${returnTime ? '— retour à ' + returnTime : ''}
+                                    ${returnPrice.toLocaleString()} FCFA ${returnTime ? '— retour à ' + returnTime : ''}
                                 </span>
                             `);
                         } else {
@@ -970,16 +980,19 @@
 
                         // Afficher aller-retour dans le récap course simple
                         if (isRound) {
-                            var returnTime = $('#simple_return_time').val();
                             $('#recap-single-type').text('Trajet unique — Aller-Retour');
-                            $('#recap-single-base-price').text(unitPrice ? unitPrice.toLocaleString() + ' FCFA' :
+                            $('#recap-single-base-price').text(goPrice ? goPrice.toLocaleString() + ' FCFA' :
                                 '-- FCFA');
                             $('#recap-single-round-row').removeClass('hidden');
+                            $('#recap-single-round-row').html(`
+                                    <span class="text-gray-500">Retour</span>
+                                    <span class="font-medium text-gray-700">${returnPrice.toLocaleString()} FCFA</span>
+                                `);
                             $('#recap-single-return-row').removeClass('hidden');
                             $('#recap-single-return-time').text(returnTime || '--');
                         } else {
                             $('#recap-single-type').text('Trajet unique');
-                            $('#recap-single-base-price').text(unitPrice ? unitPrice.toLocaleString() + ' FCFA' :
+                            $('#recap-single-base-price').text(goPrice ? goPrice.toLocaleString() + ' FCFA' :
                                 '-- FCFA');
                             $('#recap-single-round-row').addClass('hidden');
                             $('#recap-single-return-row').addClass('hidden');
@@ -1030,21 +1043,16 @@
                         $('#simpleRoundTripWrapper').addClass('hidden');
                         $('#simple_round_trip').prop('checked', false);
                         $('#simpleReturnTimeWrapper').addClass('hidden');
+                        $('#simple_return_time').removeAttr('required').val('');
+                        $('#simple_return_time_error').addClass('hidden');
 
                         $('#daysWrapper').removeClass('hidden');
                         $('#days_hidden').val($('#days_input').val());
-                        //updateSubscriptionSummary();
                     } else {
                         $('#simpleRoundTripWrapper').removeClass('hidden');
 
                         $('#daysWrapper').addClass('hidden');
                         $('#days_hidden').val(1);
-                        //$('#subscriptionSummary').addClass('hidden');
-
-                        // Rétablir le prix simple
-                        /* if (unitPrice) {
-                            $('#total-price').text(unitPrice.toLocaleString() + ' FCFA');
-                        } */
                     }
                     updateSubscriptionSummary()
                 });

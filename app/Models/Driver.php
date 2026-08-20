@@ -14,7 +14,7 @@ class Driver extends Model
 
     protected $fillable = [
         'user_id',
-        //'license_number',
+        'license_number',
         //'vehicle_number',
         //'vehicle_type',
         'is_available',
