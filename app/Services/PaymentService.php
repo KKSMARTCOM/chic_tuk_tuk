@@ -327,6 +327,11 @@ class PaymentService
     {
         $today = $date ?? Carbon::today();
 
+        // Ne pas générer le week-end (samedi=6, dimanche=0)
+        if ($today->isWeekend()) {
+            return false;
+        }
+
         // Déjà généré aujourd'hui pour ce contrat
         $alreadyExists = Payment::where('driver_contract_id', $contract->id)
             ->where('payment_type', 'contract')

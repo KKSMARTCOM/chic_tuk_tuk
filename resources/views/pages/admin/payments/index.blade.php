@@ -240,6 +240,8 @@
                                 Type
                                 de Paiement</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Type de contrat</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                 Statut</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                 Date du paiement
@@ -269,6 +271,9 @@
                                 ">
                                         {{ ucfirst(str_replace('_', ' ', $payment->payment_type)) }}
                                     </span>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-700">
+                                    {{ ($payment->vehicleContract->contract_months ?? '--') . ' mois' }}
                                 </td>
                                 <td class="px-6 py-4 text-sm">
                                     <span

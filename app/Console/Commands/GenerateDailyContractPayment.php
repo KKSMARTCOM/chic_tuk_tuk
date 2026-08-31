@@ -37,6 +37,11 @@ class GenerateDailyContractPayment extends Command
             ? Carbon::parse($this->option('date'))
             : Carbon::today();
 
+        if ($date->isWeekend()) {
+            $this->warn("[{$date->toDateString()}] Jour de week-end — aucun paiement généré.");
+            return self::SUCCESS;
+        }
+
         $this->info("[{$date->toDateString()}] Génération des paiements journaliers...");
 
         $result = $this->paymentService->generateDailyContractPayments($date);
