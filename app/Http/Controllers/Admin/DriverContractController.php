@@ -146,6 +146,7 @@ class DriverContractController extends Controller
         ]);
 
         $vehicle = Vehicle::findOrFail($validated['vehicle_id']);
+
         $driver  = $driverContract->driver;
 
         // Valider uniquement si le véhicule a changé

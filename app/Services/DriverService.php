@@ -137,8 +137,8 @@ class DriverService
                 'user_id'        => $user->id,
                 'license_number' => $data['license_number'],
                 'is_available'   => true,
-                'agent_code'     => $data['agent_code'] ?? null,
-                'agent_id'       => $data['agent_id']   ?? null,
+                'agent_code'     => $data['agent_code'] ?? $data['renewal_agent_code'] ?? null,
+                'agent_id'       => $data['agent_id']   ?? $data['renewal_agent_id'] ?? null,
             ]);
 
             // 3. Résoudre le véhicule selon le mode
@@ -187,7 +187,6 @@ class DriverService
         ]);
     }
 
-
     // ── Reconduction ─────────────────────────────────────────────
 
     private function createRenewalContract(Driver $driver, array $data): void
@@ -208,7 +207,12 @@ class DriverService
         // Calculer les mois déjà utilisés sur ce contrat proprio-véhicule
         $monthsUsed = DriverContract::where('vehicle_id', $vehicle->id)
             ->where('status', 'ended')
-            ->sum('contract_months');
+            ->get(['start_date', 'end_date'])
+            ->sum(function ($contract) {
+                return ($contract->end_date->year * 12 + $contract->end_date->month)
+                    - ($contract->start_date->year * 12 + $contract->start_date->month)
+                    + 1;
+            });
 
         $remainingMonths = max(0, $vehicleContract->contract_months - $monthsUsed);
 
@@ -216,11 +220,15 @@ class DriverService
             throw new \Exception('Ce contrat véhicule ne dispose plus de temps restant pour une reconduction.');
         }
 
-        // La durée demandée ne peut pas dépasser le temps restant
+        // La durée demandée ne peut pas être inférieure à 1 mois et ne peut pas dépasser le temps restant sur le contrat
         $requestedMonths = (int) $data['renewal_contract_months'];
-        if ($requestedMonths > $remainingMonths) {
+        if ($requestedMonths < 1) {
+            throw new \Exception("La durée demandée ({$requestedMonths} mois) est inférieure à 1 mois.");
+        }
+
+        if ($requestedMonths < $remainingMonths) {
             throw new \Exception(
-                "La durée demandée ({$requestedMonths} mois) dépasse le temps restant ({$remainingMonths} mois) sur ce contrat."
+                "La durée demandée ({$requestedMonths} mois) est inférieure au temps restant ({$remainingMonths} mois) sur ce contrat."
             );
         }
 
@@ -229,6 +237,9 @@ class DriverService
 
         // Clôturer la pause active du véhicule si existante
         $vehicle->activePause?->update(['end_date' => $data['renewal_start_date']]);
+
+        //Mettre le status du véhicule à actif
+        $vehicle->update(['is_active' => true]);
 
         DriverContract::create([
             'driver_id'           => $driver->id,
@@ -260,29 +271,38 @@ class DriverService
                 $user->driver->update([
                     'license_number' => $data['license_number'] ?? $user->driver->license_number,
                     'is_available'   => $data['is_available'] ?? $user->driver->is_available,
-                    'agent_code'     => $data['agent_code']   ?? $user->driver->agent_code,
-                    'agent_id'       => $data['agent_id']     ?? $user->driver->agent_id,
+                    'agent_code'     => $data['agent_code'] ?? $data['renewal_agent_code'] ?? $user->driver->agent_code,
+                    'agent_id'       => $data['agent_id']   ?? $data['renewal_agent_id']   ?? $user->driver->agent_id,
                 ]);
             }
 
             // 3. Si pas de contrat actif → créer un nouveau contrat
             if (!($data['_has_active_contract'] ?? true)) {
 
-                $mode    = $data['_owner_mode'] ?? 'existing';
-                $vehicle = null;
+                $mode = $data['_owner_mode'] ?? 'existing';
 
-                if ($mode === 'existing') {
+                if ($mode === 'renewal') {
+                    // Réutilise exactement la même logique que pour la création
+                    $this->createRenewalContract($user->driver, $data);
+                } elseif ($mode === 'existing') {
                     $vehicle = Vehicle::findOrFail($data['vehicle_id']);
 
-                    // Vérifier que le véhicule appartient bien au propriétaire sélectionné
                     if ($vehicle->owner_id !== $data['owner_id']) {
                         throw new \Exception('Ce véhicule n\'appartient pas au propriétaire sélectionné.');
                     }
 
-                    // ✅ Validation des règles métier
                     $this->driverContractService->validateVehicleAssignment($vehicle);
+
+                    DriverContract::create([
+                        'driver_id'           => $user->driver->id,
+                        'vehicle_id'          => $vehicle->id,
+                        'vehicle_contract_id' => $vehicle->activeVehicleContract?->id,
+                        'start_date'          => $data['existing_start_date'],
+                        'contract_months'     => $data['existing_contract_months'],
+                        'status'              => 'active',
+                    ]);
                 } else {
-                    // Créer le propriétaire
+                    // ── mode 'new' : code existant inchangé ──
                     $ownerRole = \Spatie\Permission\Models\Role::firstOrCreate(
                         ['name' => 'proprietaire', 'guard_name' => 'web'],
                         ['label' => 'Propriétaire']
@@ -298,7 +318,6 @@ class DriverService
                     ]);
                     $owner->assignRole($ownerRole);
 
-                    // Créer le véhicule
                     $vehicle = Vehicle::create([
                         'owner_id'       => $owner->id,
                         'vehicle_number' => $data['new_vehicle_number'],
@@ -307,7 +326,6 @@ class DriverService
                         'is_active'      => true,
                     ]);
 
-                    // Contrat proprio-véhicule (optionnel)
                     if (!empty($data['contract_total_amount'])) {
                         VehicleContract::create([
                             'vehicle_id'      => $vehicle->id,
@@ -319,17 +337,16 @@ class DriverService
                             'status'          => 'active',
                         ]);
                     }
-                }
 
-                // Créer le contrat Driver-Véhicule
-                DriverContract::create([
-                    'driver_id'           => $user->driver->id,
-                    'vehicle_id'          => $vehicle->id,
-                    'vehicle_contract_id' => $vehicle->activeVehicleContract?->id,
-                    'start_date'          => $mode === 'existing' ? $data['existing_start_date'] : $data['new_start_date'],
-                    'contract_months'     => $mode === 'existing' ? $data['existing_contract_months'] : $data['new_contract_months'],
-                    'status'              => 'active',
-                ]);
+                    DriverContract::create([
+                        'driver_id'           => $user->driver->id,
+                        'vehicle_id'          => $vehicle->id,
+                        'vehicle_contract_id' => $vehicle->activeVehicleContract?->id,
+                        'start_date'          => $data['new_start_date'],
+                        'contract_months'     => $data['new_contract_months'],
+                        'status'              => 'active',
+                    ]);
+                }
             }
 
             return $user->load('driver');
