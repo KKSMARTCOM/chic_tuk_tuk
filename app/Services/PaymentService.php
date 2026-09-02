@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Consts\VehicleContractConsts;
 use App\Models\Commission;
 use App\Models\Driver;
 use App\Models\DriverContract;
@@ -254,7 +255,7 @@ class PaymentService
 
                 $contractMonths = (int) $vehicleContract->contract_months;
 
-                $taxe = \App\Consts\VehicleContract::TAXE[$contractMonths] ?? 0;
+                $taxe = VehicleContractConsts::TAXE[$contractMonths] ?? 0;
 
                 $data['net_amount'] = $data['amount'] - $taxe;
             }
@@ -346,9 +347,9 @@ class PaymentService
         // Montant journalier
         $contractMonths = (int) $vehicleContract->contract_months;
 
-        $dailyAmount = \App\Consts\VehicleContract::AMOUNTS[$contractMonths] ?? 0;
+        $dailyAmount = VehicleContractConsts::AMOUNTS[$contractMonths] ?? 0;
 
-        $taxe = \App\Consts\VehicleContract::TAXE[$contractMonths] ?? 0;
+        $taxe = VehicleContractConsts::TAXE[$contractMonths] ?? 0;
 
         $netAmount = $dailyAmount - $taxe;
 

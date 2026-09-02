@@ -2,6 +2,8 @@
 
 // Client Routes
 
+use App\Http\Controllers\Client\OwnerLeaveController;
+use App\Http\Controllers\Client\OwnerPaymentController;
 use App\Http\Controllers\Client\OwnerVehicleController;
 use App\Http\Controllers\Web\DashboardController;
 use Illuminate\Support\Facades\Route;
@@ -15,10 +17,10 @@ Route::middleware(['auth:sanctum', 'profil:client'])->prefix('client')->name('cl
 });
 
 Route::middleware(['auth:sanctum', 'profil:owner'])->prefix('owner')->name('owner.')->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'owner'])->name('dashboard')->middleware('permission:view-dashboard');
-
-    Route::get('/vehicles', [OwnerVehicleController::class, 'index'])->name('vehicles.index');
+    Route::get('/dashboard', [OwnerVehicleController::class, 'index'])->name('dashboard')->middleware('permission:view-dashboard');
     Route::get('/vehicles/{vehicle}', [OwnerVehicleController::class, 'show'])->name('vehicles.show');
-    Route::get('/vehicles/{vehicle}/payments', [OwnerVehicleController::class, 'payments'])->name('vehicles.payments');
-    Route::get('/vehicles/{vehicle}/pauses', [OwnerVehicleController::class, 'pauses'])->name('vehicles.pauses');
+
+    Route::get('payments/{vehicle}', [OwnerVehicleController::class, 'payments'])->name('payments.show');
+
+    Route::get('leaves/{vehicle}', [OwnerVehicleController::class, 'leaves'])->name('leaves.show');
 });

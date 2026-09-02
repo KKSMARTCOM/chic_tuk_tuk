@@ -6,7 +6,7 @@
 
 namespace App\Consts;
 
-class VehicleContract
+class VehicleContractConsts
 {
     // Montants totaux par durée de contrat (FCFA)
     public const TOTAL_AMOUNTS = [
