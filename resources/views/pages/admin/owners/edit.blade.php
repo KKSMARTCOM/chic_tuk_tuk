@@ -331,7 +331,7 @@
 
     @push('scripts')
         <script>
-            const CONTRACT_AMOUNTS = @json(\App\Consts\VehicleContract::TOTAL_AMOUNTS);
+            const CONTRACT_AMOUNTS = @json(\App\Consts\VehicleContractConsts::TOTAL_AMOUNTS);
 
             // ── Cards de choix du mode ajout ────────────────────────
             document.querySelectorAll('input[name="_add_vehicle_mode"]').forEach(r => {

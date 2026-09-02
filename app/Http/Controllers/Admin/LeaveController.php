@@ -257,7 +257,14 @@ class LeaveController extends Controller
             'requested_days' => 'required|integer|min:1',
         ]);
 
+        $contract = $driver->activeDriverContract;
+
         $start = Carbon::parse($request->start_date)->startOfDay();
+
+        if ($start->lt(Carbon::parse($contract->start_date)->startOfDay())) {
+            return redirect()->back()->with('error', "La date de début de la pause ne peut pas être antérieure à la date de début du contrat (" . Carbon::parse($contract->start_date)->format('d/m/Y') . ").");
+        }
+
         $end   = LeaveRequest::addBusinessDays($start, $request->requested_days);
 
         if ($end->gte(now()->startOfDay())) {

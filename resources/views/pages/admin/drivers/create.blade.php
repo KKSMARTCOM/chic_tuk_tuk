@@ -417,9 +417,9 @@
                     // Pré-remplir durée et date
                     const monthsInput = document.getElementById('renewal_contract_months');
                     monthsInput.value = vehicle.remaining_months;
-                    monthsInput.max = vehicle.remaining_months; // ne peut pas dépasser le restant
+                    monthsInput.min = vehicle.remaining_months; // ne peut pas dépasser le restant
                     document.getElementById('renewal-months-hint').textContent =
-                        `Maximum : ${vehicle.remaining_months} mois (durée restante du contrat véhicule)`;
+                        `Minimum : ${vehicle.remaining_months} mois (durée restante du contrat véhicule)`;
 
                     document.getElementById('renewal_start_date').value = vehicle.suggested_start_date;
                 }

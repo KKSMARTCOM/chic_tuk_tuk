@@ -110,7 +110,11 @@ class DriverController extends Controller
                 // = somme des contract_months de tous les contrats agents terminés
                 $monthsUsed = $v->driverContracts
                     ->where('status', 'ended')
-                    ->sum('contract_months');
+                    ->sum(function ($contract) {
+                        return ($contract->end_date->year * 12 + $contract->end_date->month)
+                            - ($contract->start_date->year * 12 + $contract->start_date->month)
+                            + 1;
+                    });
 
                 $totalMonths     = $vehicleContract->contract_months;
                 $remainingMonths = max(0, $totalMonths - $monthsUsed);
@@ -162,6 +166,8 @@ class DriverController extends Controller
             $rules['start_date']      = 'nullable|date';
         } else {
             // Reconduction
+            $rules['renewal_agent_code']      = 'nullable|unique:drivers,agent_code|string|max:255';
+            $rules['renewal_agent_id']        = 'nullable|string|max:255|unique:drivers,agent_id';
             $rules['renewal_owner_id']        = 'required|exists:users,id';
             $rules['renewal_vehicle_id']      = 'required|exists:vehicles,id';
             $rules['renewal_contract_months'] = 'required|integer|min:1';
@@ -185,6 +191,7 @@ class DriverController extends Controller
             'renewal_owner_id.required'        => 'Le propriétaire est requis.',
             'renewal_vehicle_id.required'      => 'Le véhicule est requis.',
             'renewal_contract_months.required' => 'La durée du contrat est requise.',
+            'renewal_contract_months.min'      => 'La durée du contrat doit être d\'au moins 1 mois.',
             'renewal_start_date.required'      => 'La date de début est requise.',
         ];
 
@@ -229,36 +236,89 @@ class DriverController extends Controller
             // ── Propriétaires avec véhicule disponible (nouveau contrat) ──
             $owners = User::whereHas('roles', fn($q) => $q->where('name', 'proprietaire'))
                 ->where('is_active', true)
-                ->whereHas(
-                    'vehicles',
-                    fn($q) =>
-                    $q->where('is_active', true)->whereDoesntHave('activeDriverContract')
-                )
+                ->whereHas('vehicles', fn($q) =>
+                $q->where('is_active', true)->whereDoesntHave('activeDriverContract'))
                 ->with([
                     'vehicles' => fn($q) =>
                     $q->where('is_active', true)
                         ->whereDoesntHave('activeDriverContract')
-                        ->with('activeVehicleContract') // pour pré-remplir durée + date
+                        ->with('activeVehicleContract')
                 ])
                 ->orderBy('name')
                 ->get(['id', 'name', 'phone']);
 
-            // Mapping owner_id → véhicules avec infos contrat pour le JS
             $ownerVehicles = $owners->mapWithKeys(fn($owner) => [
                 $owner->id => $owner->vehicles->map(fn($v) => [
-                    'id'                      => $v->id,
-                    'vehicle_number'          => $v->vehicle_number,
-                    'vehicle_type'            => $v->vehicle_type,
-                    'color'                   => $v->color,
-                    // Infos contrat proprio-véhicule pour pré-remplissage
-                    'contract_months'         => $v->activeVehicleContract?->contract_months,
-                    'contract_start_date'     => $v->activeVehicleContract?->start_date?->format('Y-m-d'),
+                    'id'                  => $v->id,
+                    'vehicle_number'      => $v->vehicle_number,
+                    'vehicle_type'        => $v->vehicle_type,
+                    'contract_months'     => $v->activeVehicleContract?->contract_months,
+                    'contract_start_date' => $v->activeVehicleContract?->start_date?->format('Y-m-d'),
                 ])->values(),
             ]);
 
-            return view('pages.admin.drivers.edit', compact('driver', 'owners', 'ownerVehicles'));
+            // ── Propriétaires pour reconduction ──────────────────────
+            $ownersForRenewal = User::whereHas('roles', fn($q) => $q->where('name', 'proprietaire'))
+                ->where('is_active', true)
+                ->whereHas('vehicles.driverContracts', fn($q) => $q->where('status', 'ended'))
+                ->whereHas('vehicles.activeVehicleContract')
+                ->whereDoesntHave('vehicles.activeDriverContract')
+                ->with([
+                    'vehicles' => fn($q) =>
+                    $q->whereHas('driverContracts', fn($q2) => $q2->where('status', 'ended'))
+                        ->whereHas('activeVehicleContract')
+                        ->whereDoesntHave('activeDriverContract')
+                        ->with([
+                            'activeVehicleContract',
+                            'driverContracts' => fn($q2) => $q2->where('status', 'ended')->latest('end_date'),
+                        ])
+                ])
+                ->orderBy('name')
+                ->get(['id', 'name', 'phone']);
+
+            $ownerVehiclesForRenewal = $ownersForRenewal->mapWithKeys(fn($owner) => [
+                $owner->id => $owner->vehicles->map(function ($v) {
+                    $vehicleContract = $v->activeVehicleContract;
+                    if (!$vehicleContract) return null;
+
+                    $monthsUsed = $v->driverContracts
+                        ->where('status', 'ended')
+                        ->sum(function ($contract) {
+                            return ($contract->end_date->year * 12 + $contract->end_date->month)
+                                - ($contract->start_date->year * 12 + $contract->start_date->month)
+                                + 1;
+                        });
+
+                    $totalMonths     = $vehicleContract->contract_months;
+                    $remainingMonths = max(0, $totalMonths - $monthsUsed);
+
+                    $lastDriverContract = $v->driverContracts->first();
+                    $suggestedStartDate = $lastDriverContract?->end_date
+                        ? $lastDriverContract->end_date->addDay()->format('Y-m-d')
+                        : now()->toDateString();
+
+                    return [
+                        'id'                   => $v->id,
+                        'vehicle_number'       => $v->vehicle_number,
+                        'vehicle_type'         => $v->vehicle_type,
+                        'total_months'         => $totalMonths,
+                        'months_used'          => $monthsUsed,
+                        'remaining_months'     => $remainingMonths,
+                        'suggested_start_date' => $suggestedStartDate,
+                        'vehicle_contract_id'  => $vehicleContract->id,
+                    ];
+                })->filter()->values(),
+            ]);
+
+            return view('pages.admin.drivers.edit', compact(
+                'driver',
+                'owners',
+                'ownerVehicles',
+                'ownersForRenewal',
+                'ownerVehiclesForRenewal'
+            ));
         } catch (\Exception $e) {
-            Log::error('Erreur lors de l’affichage du formulaire d’édition de l’agent : ' . $e->getMessage(), ['exception' => $e]);
+            Log::error('Erreur lors de l\'affichage du formulaire d\'édition de l\'agent : ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()->withInput()->with('error', $e->getMessage());
         }
     }
@@ -283,12 +343,20 @@ class DriverController extends Controller
 
         // ── Règles du nouveau contrat (si pas de contrat actif) ─
         if (!$hasActiveContract) {
-            if ($mode === 'existing') {
-                $rules['owner_id']        = 'required|exists:users,id';
-                $rules['vehicle_id']      = 'required_with:owner_id|exists:vehicles,id';
+            if ($mode === 'renewal') {
+                $rules['renewal_agent_code']       = 'nullable|string|max:255|unique:drivers,agent_code,' . $driver->driver?->id . ',id';
+                $rules['renewal_agent_id']         = 'nullable|string|max:255|unique:drivers,agent_id,' . $driver->driver?->id . ',id';
+                $rules['renewal_owner_id']         = 'required|exists:users,id';
+                $rules['renewal_vehicle_id']       = 'required|exists:vehicles,id';
+                $rules['renewal_contract_months']  = 'required|integer|min:1';
+                $rules['renewal_start_date']       = 'required|date';
+            } elseif ($mode === 'existing') {
+                $rules['owner_id']                 = 'required|exists:users,id';
+                $rules['vehicle_id']               = 'required_with:owner_id|exists:vehicles,id';
                 $rules['existing_contract_months'] = 'required|integer|in:24,30,36';
                 $rules['existing_start_date']      = 'required|date';
             } else {
+                // ── mode 'new' : inchangé ──
                 $rules['new_owner_name']           = 'required|string|max:255';
                 $rules['new_owner_phone']          = 'required|string|unique:users,phone';
                 $rules['new_owner_email']          = 'nullable|email|unique:users,email';
@@ -296,7 +364,7 @@ class DriverController extends Controller
                 $rules['new_vehicle_number']       = 'required|string|unique:vehicles,vehicle_number';
                 $rules['new_vehicle_type']         = 'required|in:moto,tricycle,car';
                 $rules['new_contract_months']      = 'required|integer|in:24,30,36';
-                $rules['new_start_date']               = 'required|date';
+                $rules['new_start_date']           = 'required|date';
                 $rules['contract_total_amount']    = 'nullable|numeric|min:1';
                 $rules['contract_monthly_payment'] = 'nullable|numeric|min:0';
                 $rules['contract_start_date']      = 'nullable|date';
@@ -305,24 +373,29 @@ class DriverController extends Controller
         }
 
         $messages = [
-            'phone.unique'               => 'Ce numéro de téléphone est déjà utilisé.',
-            'email.unique'               => 'Cet email est déjà utilisé.',
-            'agent_code.unique'          => 'Ce code agent est déjà utilisé.',
-            'license_number.required'    => 'La catégorie de permis est requise.',
-            'owner_id.required'          => 'Le propriétaire est requis.',
-            'vehicle_id.required_with'        => 'Le véhicule est requis lorsque le propriétaire est sélectionné.',
+            'phone.unique'                        => 'Ce numéro de téléphone est déjà utilisé.',
+            'email.unique'                        => 'Cet email est déjà utilisé.',
+            'agent_code.unique'                   => 'Ce code agent est déjà utilisé.',
+            'license_number.required'             => 'La catégorie de permis est requise.',
+            'owner_id.required'                   => 'Le propriétaire est requis.',
+            'vehicle_id.required_with'            => 'Le véhicule est requis lorsque le propriétaire est sélectionné.',
             'existing_contract_months.required'   => 'La durée du contrat est requise.',
-            'new_contract_months.required'      => 'La durée du contrat est requise.',
+            'new_contract_months.required'        => 'La durée du contrat est requise.',
             'existing_start_date.required'        => 'La date de début est requise.',
-            'new_start_date.required'               => 'La date de début est requise.',
-            'new_owner_name.required'    => 'Le nom du propriétaire est requis.',
-            'new_owner_phone.required'   => 'Le téléphone du propriétaire est requis.',
-            'new_owner_phone.unique'     => 'Ce numéro est déjà utilisé.',
-            'new_owner_password.required' => 'Le mot de passe du propriétaire est requis.',
-            'new_owner_password.min'      => 'Le mot de passe du propriétaire doit contenir au moins 8 caractères.',
-            'new_owner_password.regex'    => 'Le mot de passe du propriétaire doit contenir une majuscule, un chiffre et un caractère spécial.',
-            'new_vehicle_number.required' => 'Le numéro d\'immatriculation est requis.',
-            'new_vehicle_number.unique'  => 'Ce numéro de véhicule existe déjà.',
+            'renewal_owner_id.required'           => 'Le propriétaire est requis.',
+            'renewal_vehicle_id.required'         => 'Le véhicule est requis.',
+            'renewal_contract_months.required'    => 'La durée du contrat est requise.',
+            'renewal_contract_months.min'         => 'La durée du contrat doit être d\'au moins 1 mois.',
+            'renewal_start_date.required'         => 'La date de début est requise.',
+            'new_start_date.required'             => 'La date de début est requise.',
+            'new_owner_name.required'             => 'Le nom du propriétaire est requis.',
+            'new_owner_phone.required'            => 'Le téléphone du propriétaire est requis.',
+            'new_owner_phone.unique'              => 'Ce numéro est déjà utilisé.',
+            'new_owner_password.required'         => 'Le mot de passe du propriétaire est requis.',
+            'new_owner_password.min'              => 'Le mot de passe du propriétaire doit contenir au moins 8 caractères.',
+            'new_owner_password.regex'            => 'Le mot de passe du propriétaire doit contenir une majuscule, un chiffre et un caractère spécial.',
+            'new_vehicle_number.required'         => 'Le numéro d\'immatriculation est requis.',
+            'new_vehicle_number.unique'           => 'Ce numéro de véhicule existe déjà.',
         ];
 
         $validated = $request->validate($rules, $messages);
