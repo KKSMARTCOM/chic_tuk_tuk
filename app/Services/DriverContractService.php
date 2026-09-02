@@ -132,7 +132,8 @@ class DriverContractService
 
         if (!$owner) return;
 
-        $ownerVehicleIds = $owner->vehicles()->where('is_active', true)->pluck('id');
+        //Récupérer les véhicules disponibles du propriétaire
+        $ownerVehicleIds = $owner->vehicles()->pluck('id');
 
         $activeAgentsQuery = DriverContract::whereIn('vehicle_id', $ownerVehicleIds)->where('status', 'active');
 

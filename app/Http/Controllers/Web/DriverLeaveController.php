@@ -83,11 +83,13 @@ class DriverLeaveController extends Controller
     {
         $driver = Auth::user()->driver;
 
+        $contract = $driver->activeDriverContract;
+
         if (!$driver) {
             return redirect()->route('driver.dashboard')->with('error', 'Profil Agent non trouvé.');
         }
 
-        if (!$driver->activeDriverContract) {
+        if (!$contract) {
             return redirect()->back()->with('error', "Vous devez être sous contrat actif pour demander une pause.");
         }
 
@@ -97,6 +99,12 @@ class DriverLeaveController extends Controller
         ], [
             'start_date.after_or_equal' => "La pause doit être demandée au moins 24 heures à l'avance.",
         ]);
+
+        $start = Carbon::parse($request->start_date)->startOfDay();
+
+        if ($start->lt(Carbon::parse($contract->start_date)->startOfDay())) {
+            return redirect()->back()->with('error', "La date de début de la pause ne peut pas être antérieure à la date de début du contrat (" . Carbon::parse($contract->start_date)->format('d/m/Y') . ").");
+        }
 
         if ($driver->leaveRequests()->whereIn('status', ['pending', 'ongoing'])->exists()) {
             return redirect()->back()->with('error', 'Vous avez déjà une demande en attente ou une pause en cours.');

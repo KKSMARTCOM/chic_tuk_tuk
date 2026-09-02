@@ -47,17 +47,22 @@ class DashboardController extends Controller
         $driverRevenues = Driver::with('user')
 
             ->whereHas('bookings', function ($query) {
-                $query->where('status', 'completed');
-                $query->where('driver_earning', '>', 0);
+                $query->where('status', 'completed')
+                    ->where('driver_earning', '>', 0);
             })
 
-            ->withSum('bookings', 'driver_earning')
+            ->withSum(['bookings' => function ($query) {
+                $query->where('status', 'completed')
+                    ->where('driver_earning', '>', 0);
+            }], 'driver_earning')
 
             ->withSum('commissions', 'amount')
 
-            ->withSum('payments', 'amount')
+            ->withSum(['payments' => function ($query) {
+                $query->where('payment_type', 'commission');
+            }], 'amount')
 
-            ->orderBy('bookings_sum_driver_earning')
+            ->orderByDesc('bookings_sum_driver_earning')
 
             ->limit(5)
 

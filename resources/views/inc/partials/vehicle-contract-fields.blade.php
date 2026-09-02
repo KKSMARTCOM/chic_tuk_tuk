@@ -54,19 +54,19 @@
         <div>
             <label class="block text-xs font-medium text-gray-700 mb-1">Internet illimité (FCFA)</label>
             <input type="number" name="{{ $prefix }}[unlimited_internet]" min="0"
-                value="{{ old("{$prefix}.unlimited_internet", $contract?->unlimited_internet ?? \App\Consts\VehicleContract::DEFAULT_UNLIMITED_INTERNET) }}"
+                value="{{ old("{$prefix}.unlimited_internet", $contract?->unlimited_internet ?? \App\Consts\VehicleContractConsts::DEFAULT_UNLIMITED_INTERNET) }}"
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none">
         </div>
         <div>
             <label class="block text-xs font-medium text-gray-700 mb-1">Spotify Premium (FCFA)</label>
             <input type="number" name="{{ $prefix }}[spotify_premium]" min="0"
-                value="{{ old("{$prefix}.spotify_premium", $contract?->spotify_premium ?? \App\Consts\VehicleContract::DEFAULT_SPOTIFY_PREMIUM) }}"
+                value="{{ old("{$prefix}.spotify_premium", $contract?->spotify_premium ?? \App\Consts\VehicleContractConsts::DEFAULT_SPOTIFY_PREMIUM) }}"
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none">
         </div>
         <div>
             <label class="block text-xs font-medium text-gray-700 mb-1">Rémunération manager (FCFA)</label>
             <input type="number" name="{{ $prefix }}[manager_remuneration]" min="0"
-                value="{{ old("{$prefix}.manager_remuneration", $contract?->manager_remuneration ?? \App\Consts\VehicleContract::DEFAULT_MANAGER_REMUNERATION) }}"
+                value="{{ old("{$prefix}.manager_remuneration", $contract?->manager_remuneration ?? \App\Consts\VehicleContractConsts::DEFAULT_MANAGER_REMUNERATION) }}"
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none">
         </div>
     </div>

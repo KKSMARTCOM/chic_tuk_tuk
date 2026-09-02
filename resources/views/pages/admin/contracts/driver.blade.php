@@ -167,6 +167,7 @@
                 @csrf
                 @method('PUT')
                 <div class="grid grid-cols-2 gap-4">
+                    <input type="hidden" name="vehicle_id" id="vehicle_id">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Date de début</label>
                         <input type="date" name="start_date" id="edit_agent_start_date"
@@ -351,6 +352,7 @@
                     new Date(contract.start_date).toISOString().split('T')[0] :
                     '';
 
+                document.getElementById('vehicle_id').value = contract.vehicle.id;
                 document.getElementById('edit_agent_months').value = contract.contract_months ?? 24;
                 document.getElementById('edit_agent_status').value = contract.status ?? 'active';
                 document.getElementById('editAgentForm').action = `/admin/driver-contracts/${contract.id}`;
