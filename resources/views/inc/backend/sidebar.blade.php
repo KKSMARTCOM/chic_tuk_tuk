@@ -205,11 +205,21 @@
         @endif
 
         @hasrole('proprietaire')
-            <a href="{{ route('owner.vehicles.index') }}"
+            <a href="{{ route('owner.dashboard') }}"
                 class="flex items-center px-6 py-3 hover:bg-green-600 transition
-                {{ request()->routeIs('owner.vehicles*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
+                {{ request()->routeIs('owner.*') || request()->routeIs('owner.dashboard') ? 'bg-green-600 border-l-4 border-white' : '' }}">
                 <i class="fas fa-car-side mr-3"></i> Mes Véhicules
             </a>
+            {{-- <a href="{{ route('owner.payments.index') }}"
+                class="flex items-center px-6 py-3 hover:bg-green-600 transition
+                {{ request()->routeIs('owner.payments.*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
+                <i class="fas fa-money-bill mr-3"></i> Paiements
+            </a>
+            <a href="{{ route('owner.leaves.index') }}"
+                class="flex items-center px-6 py-3 hover:bg-green-600 transition
+                {{ request()->routeIs('owner.leaves.*') ? 'bg-green-600 border-l-4 border-white' : '' }}">
+                <i class="fas fa-calendar-alt mr-3"></i> Pauses
+            </a> --}}
         @endhasrole
 
         @hasanyrole('admin|driver')

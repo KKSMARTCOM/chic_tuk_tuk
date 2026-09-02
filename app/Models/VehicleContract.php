@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Consts\VehicleContractConsts;
 use App\Traits\HasUuid;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 class VehicleContract extends Model
@@ -63,7 +65,7 @@ class VehicleContract extends Model
     // Montant total déjà payé
     public function getTotalPaidAttribute(): float
     {
-        return (float) $this->payments()->sum('net_amount');
+        return (float) $this->payments()->where('status', 'completed')->sum('net_amount');
     }
 
     // Montant restant à payer
@@ -84,5 +86,101 @@ class VehicleContract extends Model
     {
         if ($this->total_amount <= 0) return 0;
         return (int) min(100, round(($this->total_paid / $this->total_amount) * 100));
+    }
+
+    // ── Charges du contrat ──
+    public function getTotalChargesAttribute(): float
+    {
+        return (float) ($this->unlimited_internet ?? 0)
+            + (float) ($this->spotify_premium ?? 0)
+            + (float) ($this->manager_remuneration ?? 0);
+    }
+
+    // ── Mois écoulés / restants sur le contrat véhicule ──
+    public function getMonthsElapsedAttribute(): int
+    {
+        if (!$this->start_date) {
+            return 0;
+        }
+
+        $end = $this->end_date ?? now();
+        $elapsed = $this->start_date->diffInMonths($end) + 1;
+
+        return min($elapsed, $this->contract_months);
+    }
+
+    public function getMonthsRemainingAttribute(): int
+    {
+        return max(0, $this->contract_months - $this->months_elapsed);
+    }
+
+    // ── Montant journalier (déterminé par la durée du contrat, indépendant de l'agent) ──
+    public function getDailyPaymentAttribute(): float
+    {
+        return (float) (VehicleContractConsts::AMOUNTS[$this->contract_months] ?? 0);
+    }
+
+    public function getDailyTaxAttribute(): float
+    {
+        return (float) (VehicleContractConsts::TAXE[$this->contract_months] ?? 0);
+    }
+
+    public function getDailyNetAmountAttribute(): float
+    {
+        return $this->daily_payment - $this->daily_tax;
+    }
+
+    // ── Interprétation A : pauses cumulées de TOUS les agents ayant travaillé sur ce contrat ──
+    public function getTotalContractDaysAttribute(): int
+    {
+        if ($this->start_date && $this->end_date) {
+            return $this->start_date->diffInDays($this->end_date) + 1;
+        }
+        return $this->contract_months * 30;
+    }
+
+    public function getTotalPauseDaysTakenAttribute(): int
+    {
+        $driverContractIds = $this->driverContracts()->pluck('id');
+
+        $completed = LeaveRequest::whereIn('driver_contract_id', $driverContractIds)
+            ->where('status', 'completed')
+            ->sum('effective_days');
+
+        $ongoing = LeaveRequest::whereIn('driver_contract_id', $driverContractIds)
+            ->where('status', 'ongoing')
+            ->get()
+            ->sum(fn($lr) => LeaveRequest::countBusinessDays($lr->start_date, now()));
+
+        return (int) ($completed + $ongoing);
+    }
+
+    public function getRemainingContractDaysAttribute(): int
+    {
+        return max(0, $this->total_contract_days - $this->total_pause_days_taken);
+    }
+
+    public function getPauseUsagePercentageAttribute(): int
+    {
+        if ($this->total_contract_days <= 0) return 0;
+        return (int) min(100, round(($this->total_pause_days_taken / $this->total_contract_days) * 100));
+    }
+
+    // ── Date de fin ajustée par le cumul des pauses (tous agents), jours ouvrés uniquement ──
+    public function getPlannedEndDateAttribute(): ?Carbon
+    {
+        if (!$this->start_date || !$this->contract_months) {
+            return null;
+        }
+
+        return $this->start_date->copy()->addMonths($this->contract_months)->subDay();
+    }
+
+    public function getExtendedEndDateAttribute(): ?Carbon
+    {
+        if (!$this->planned_end_date) {
+            return null;
+        }
+        return LeaveRequest::addBusinessDays($this->planned_end_date, $this->total_pause_days_taken);
     }
 }

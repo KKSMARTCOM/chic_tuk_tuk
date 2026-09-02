@@ -214,7 +214,7 @@
                                 <i class="fas fa-wifi mr-1"></i> Internet illimité (FCFA)
                             </label>
                             <input type="number" name="unlimited_internet" id="unlimited_internet"
-                                value="{{ old('unlimited_internet', \App\Consts\VehicleContract::DEFAULT_UNLIMITED_INTERNET) }}"
+                                value="{{ old('unlimited_internet', \App\Consts\VehicleContractConsts::DEFAULT_UNLIMITED_INTERNET) }}"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
                         </div>
                         <div>
@@ -222,7 +222,7 @@
                                 <i class="fab fa-spotify mr-1"></i> Spotify Premium (FCFA)
                             </label>
                             <input type="number" name="spotify_premium" id="spotify_premium"
-                                value="{{ old('spotify_premium', \App\Consts\VehicleContract::DEFAULT_SPOTIFY_PREMIUM) }}"
+                                value="{{ old('spotify_premium', \App\Consts\VehicleContractConsts::DEFAULT_SPOTIFY_PREMIUM) }}"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
                         </div>
                         <div>
@@ -230,7 +230,7 @@
                                 <i class="fas fa-user-tie mr-1"></i> Rémunération manager (FCFA)
                             </label>
                             <input type="number" name="manager_remuneration" id="manager_remuneration"
-                                value="{{ old('manager_remuneration', \App\Consts\VehicleContract::DEFAULT_MANAGER_REMUNERATION) }}"
+                                value="{{ old('manager_remuneration', \App\Consts\VehicleContractConsts::DEFAULT_MANAGER_REMUNERATION) }}"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
                         </div>
                     </div>
@@ -342,7 +342,7 @@
 
                     // Déclencher le préremplissage automatique du montant si la durée change
                     monthsSelect.addEventListener('change', function() {
-                        const AMOUNTS = @json(\App\Consts\VehicleContract::TOTAL_AMOUNTS);
+                        const AMOUNTS = @json(\App\Consts\VehicleContractConsts::TOTAL_AMOUNTS);
                         const m = parseInt(this.value);
                         if (AMOUNTS[m]) {
                             document.getElementById('contract_total_amount').value = AMOUNTS[m];

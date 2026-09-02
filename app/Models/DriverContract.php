@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Consts\VehicleContractConsts;
 use App\Traits\HasUuid;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 class DriverContract extends Model
@@ -108,5 +110,76 @@ class DriverContract extends Model
     public function getTotalPaidAttribute(): float
     {
         return (float) $this->payments()->sum('amount');
+    }
+
+    // Nombre total de jours de pause alloués sur toute la durée du contrat (2j/mois)
+    public function getTotalAllottedLeaveDaysAttribute(): int
+    {
+        return 2 * $this->contract_months;
+    }
+
+    // Pourcentage de jours de pause déjà consommés sur le total alloué
+    public function getLeaveUsagePercentageAttribute(): int
+    {
+        if ($this->total_allotted_leave_days <= 0) {
+            return 0;
+        }
+        return (int) min(100, round(($this->used_leave_days / $this->total_allotted_leave_days) * 100));
+    }
+
+    public function getPlannedEndDateAttribute(): ?Carbon
+    {
+        if (!$this->start_date || !$this->contract_months) {
+            return null;
+        }
+        return $this->start_date->copy()->addMonths($this->contract_months)->subDay();
+    }
+
+    public function getMonthsRemainingAttribute(): int
+    {
+        return max(0, $this->contract_months - $this->months_elapsed);
+    }
+
+    // Date de fin réellement prévue, décalée par les jours de pause pris (jours ouvrés uniquement)
+    public function getExtendedEndDateAttribute(): ?Carbon
+    {
+        $planned = $this->planned_end_date;
+        if (!$planned) {
+            return null;
+        }
+        return $this->addBusinessDays($planned, $this->used_leave_days);
+    }
+
+    // Montant journalier approximatif payé par l'agent (basé sur le paiement mensuel du contrat véhicule)
+    public function getDailyPaymentAttribute(): float
+    {
+        $contractMonths = (int) $this->vehicleContract?->contract_months;
+
+        return (float) (VehicleContractConsts::AMOUNTS[$contractMonths] ?? 0);
+    }
+
+    public function getDailyTaxAttribute(): float
+    {
+        $contractMonths = (int) $this->vehicleContract?->contract_months;
+
+        return (float) (VehicleContractConsts::TAXE[$contractMonths] ?? 0);
+    }
+
+    public function getDailyNetAmountAttribute(): float
+    {
+        return $this->daily_payment - $this->daily_tax;
+    }
+
+    private function addBusinessDays(Carbon $date, int $days): Carbon
+    {
+        $cursor = $date->copy();
+        $remaining = $days;
+        while ($remaining > 0) {
+            $cursor->addDay();
+            if (!$cursor->isWeekend()) {
+                $remaining--;
+            }
+        }
+        return $cursor;
     }
 }
