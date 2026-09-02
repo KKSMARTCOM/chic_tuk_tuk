@@ -28,7 +28,7 @@ class VehicleContractService
 
     public function getStats(VehicleContract $contract): array
     {
-        $totalPaid     = (float) $contract->payments()->sum('net_amount');
+        $totalPaid     = (float) $contract->payments()->where('status', 'completed')->sum('net_amount');
         $totalAmount   = (float) $contract->total_amount;
         $remaining     = $totalAmount - $totalPaid;
         $surplus       = $remaining < 0 ? abs($remaining) : 0;

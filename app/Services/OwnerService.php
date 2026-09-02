@@ -2,15 +2,12 @@
 
 namespace App\Services;
 
-use App\Consts\VehicleContract as ConstsVehicleContract;
-use App\Models\Role;
+use App\Consts\VehicleContractConsts;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleContract;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class OwnerService
 {
@@ -228,9 +225,9 @@ class OwnerService
             'monthly_payment'      => $data['contract_monthly_payment']  ?? 0,
             'start_date'           => $data['contract_start_date']       ?? now()->toDateString(),
             'end_date'             => $data['contract_end_date']          ?? null,
-            'unlimited_internet'   => $data['unlimited_internet']        ?? ConstsVehicleContract::DEFAULT_UNLIMITED_INTERNET,
-            'spotify_premium'      => $data['spotify_premium']           ?? ConstsVehicleContract::DEFAULT_SPOTIFY_PREMIUM,
-            'manager_remuneration' => $data['manager_remuneration']      ?? ConstsVehicleContract::DEFAULT_MANAGER_REMUNERATION,
+            'unlimited_internet'   => $data['unlimited_internet']        ?? VehicleContractConsts::DEFAULT_UNLIMITED_INTERNET,
+            'spotify_premium'      => $data['spotify_premium']           ?? VehicleContractConsts::DEFAULT_SPOTIFY_PREMIUM,
+            'manager_remuneration' => $data['manager_remuneration']      ?? VehicleContractConsts::DEFAULT_MANAGER_REMUNERATION,
         ];
 
         $activeContract = $vehicle->activeVehicleContract;
