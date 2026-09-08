@@ -11,6 +11,7 @@ use App\Models\Zone;
 use App\Services\BookingService;
 use App\Services\PricingService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 class BookingController extends Controller
@@ -93,6 +94,7 @@ class BookingController extends Controller
         try {
             $createData = [
                 'client_name' => $request->client_name,
+                'user_id' => Auth::user()->id,
                 'from_location' => $request->from_location,
                 'to_location' => $request->to_location,
                 'from_lng' => $request->from_lng,

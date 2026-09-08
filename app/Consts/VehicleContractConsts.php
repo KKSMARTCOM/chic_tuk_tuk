@@ -1,7 +1,7 @@
 <?php
 
 // ============================================================
-// app/Consts/VehicleContract.php
+// app/Consts/VehicleContractConsts.php
 // ============================================================
 
 namespace App\Consts;

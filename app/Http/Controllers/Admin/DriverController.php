@@ -9,7 +9,6 @@ use App\Models\User;
 use App\Services\CommissionService;
 use App\Services\DriverService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -154,7 +153,7 @@ class DriverController extends Controller
             'password'        => ['required', 'string', 'min:8', 'regex:/[A-Z]/', 'regex:/[0-9]/', 'regex:/[@$!%*#?&]/'],
             'adresse'         => 'nullable|string|max:255',
             'license_number'  => 'required|string',
-            'agent_code'      => 'nullable|unique:drivers,agent_code|string|max:255',
+            'agent_code'      => 'nullable|string|max:255',
             'agent_id'        => 'nullable|string|max:255|unique:drivers,agent_id',
         ];
 
@@ -166,7 +165,7 @@ class DriverController extends Controller
             $rules['start_date']      = 'nullable|date';
         } else {
             // Reconduction
-            $rules['renewal_agent_code']      = 'nullable|unique:drivers,agent_code|string|max:255';
+            $rules['renewal_agent_code']      = 'nullable|string|max:255';
             $rules['renewal_agent_id']        = 'nullable|string|max:255|unique:drivers,agent_id';
             $rules['renewal_owner_id']        = 'required|exists:users,id';
             $rules['renewal_vehicle_id']      = 'required|exists:vehicles,id';
@@ -337,14 +336,14 @@ class DriverController extends Controller
             'adresse'        => 'nullable|string|max:255',
             'license_number' => 'required|string',
             'is_available'   => 'nullable|boolean',
-            'agent_code'     => 'nullable|string|max:255|unique:drivers,agent_code,' . $driver->driver?->id . ',id',
+            'agent_code'     => 'nullable|string|max:255',
             'agent_id'       => 'nullable|string|max:255',
         ];
 
         // ── Règles du nouveau contrat (si pas de contrat actif) ─
         if (!$hasActiveContract) {
             if ($mode === 'renewal') {
-                $rules['renewal_agent_code']       = 'nullable|string|max:255|unique:drivers,agent_code,' . $driver->driver?->id . ',id';
+                $rules['renewal_agent_code']       = 'nullable|string|max:255';
                 $rules['renewal_agent_id']         = 'nullable|string|max:255|unique:drivers,agent_id,' . $driver->driver?->id . ',id';
                 $rules['renewal_owner_id']         = 'required|exists:users,id';
                 $rules['renewal_vehicle_id']       = 'required|exists:vehicles,id';
@@ -378,12 +377,14 @@ class DriverController extends Controller
             'agent_code.unique'                   => 'Ce code agent est déjà utilisé.',
             'license_number.required'             => 'La catégorie de permis est requise.',
             'owner_id.required'                   => 'Le propriétaire est requis.',
+            'vehicle_id.exists'                   => 'Le véhicule sélectionné est invalide.',
             'vehicle_id.required_with'            => 'Le véhicule est requis lorsque le propriétaire est sélectionné.',
             'existing_contract_months.required'   => 'La durée du contrat est requise.',
             'new_contract_months.required'        => 'La durée du contrat est requise.',
             'existing_start_date.required'        => 'La date de début est requise.',
             'renewal_owner_id.required'           => 'Le propriétaire est requis.',
             'renewal_vehicle_id.required'         => 'Le véhicule est requis.',
+            'renewal_vehicle_id.exists'           => 'Le véhicule sélectionné est invalide.',
             'renewal_contract_months.required'    => 'La durée du contrat est requise.',
             'renewal_contract_months.min'         => 'La durée du contrat doit être d\'au moins 1 mois.',
             'renewal_start_date.required'         => 'La date de début est requise.',
