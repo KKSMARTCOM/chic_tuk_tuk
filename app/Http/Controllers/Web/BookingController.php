@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\PromoCode;
 use App\Services\BookingService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class BookingController extends Controller
 {
@@ -60,7 +62,8 @@ class BookingController extends Controller
     public function store(Request $request)
     {
         // Validation par étape
-        $request->validate(
+        $validator = Validator::make(
+            $request->all(),
             [
                 'from_location' => 'required',
                 'to_location' => 'required',
@@ -69,7 +72,7 @@ class BookingController extends Controller
                 'to_lat' => 'required_with:to_location|numeric',
                 'to_lng' => 'required_with:to_location|numeric',
 
-                'pickup_date' => 'required|date|after:today' /* . now()->addDay()->toDateString() */,
+                'pickup_date' => 'required|date',
                 'pickup_time' => 'required|date_format:H:i',
                 'days' => 'nullable|integer|min:1',
 
@@ -87,7 +90,6 @@ class BookingController extends Controller
                 'to_lat.required_with' => 'Ville de destination manquantes.',
 
                 'pickup_date.required' => 'La date de prise en charge est obligatoire.',
-                'pickup_date.after' => 'La réservation doit être effectuée au moins 24 heures à l\'avance.',
                 'pickup_time.required' => 'L\'heure de prise en charge est obligatoire.',
                 'days.min' => 'Le nombre de jours est obligatoire pour les réservations multi-jours.',
 
@@ -100,6 +102,23 @@ class BookingController extends Controller
                 'phone.required' => 'Le numéro de téléphone est obligatoire.',
             ]
         );
+
+        $validator->after(function ($validator) use ($request) {
+            if (! $request->pickup_date || ! $request->pickup_time) {
+                return;
+            }
+
+            $pickupAt = Carbon::parse($request->pickup_date . ' ' . $request->pickup_time);
+
+            if ($pickupAt->lt(now()->addHours(24))) {
+                $validator->errors()->add(
+                    'pickup_date',
+                    'La réservation doit être effectuée au moins 24 heures à l\'avance.'
+                );
+            }
+        });
+
+        $validator->validate();
 
         try {
 
