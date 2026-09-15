@@ -1,0 +1,132 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Styles repris de la page Blade d'origine :
+ *   - le <style> inline de inc/frontend/head.blade.php (police, .gradient-bg, .step-active) ;
+ *   - public/assets/css/custom.css (animations, confettis, barre de défilement).
+ * Les règles « slick » de custom.css ne sont pas reprises : le carrousel est désormais
+ * géré par embla (components/AdvantagesSection.vue), sans jQuery.
+ */
+
+body {
+    font-family: 'Poppins', sans-serif;
+}
+
+.gradient-bg {
+    background: #286b41;
+}
+
+.step-active {
+    background: #FFB230;
+    color: white;
+}
+
+.primary-green {
+    color: #286b41;
+}
+
+/* Pop animation */
+@keyframes popIn {
+    0% {
+        transform: scale(0.7);
+        opacity: 0;
+    }
+    60% {
+        transform: scale(1.05);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.success-pop {
+    animation: popIn 0.55s ease-out both;
+}
+
+/* Confetti container */
+.confetti {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+}
+
+/* Confetti pieces */
+.confetti-piece {
+    position: absolute;
+    top: -10%;
+    width: 10px;
+    height: 14px;
+    border-radius: 3px;
+    opacity: 0.9;
+    animation: confettiFall 1.2s ease-out forwards;
+}
+
+.confetti-piece:nth-child(1)  { left: 5%;  background: #10b981; animation-delay: 0.02s; transform: rotate(10deg); }
+.confetti-piece:nth-child(2)  { left: 12%; background: #f59e0b; animation-delay: 0.06s; transform: rotate(30deg); }
+.confetti-piece:nth-child(3)  { left: 18%; background: #34d399; animation-delay: 0.1s;  transform: rotate(55deg); }
+.confetti-piece:nth-child(4)  { left: 26%; background: #60a5fa; animation-delay: 0.03s; transform: rotate(15deg); }
+.confetti-piece:nth-child(5)  { left: 33%; background: #f472b6; animation-delay: 0.08s; transform: rotate(40deg); }
+.confetti-piece:nth-child(6)  { left: 40%; background: #10b981; animation-delay: 0.12s; transform: rotate(70deg); }
+.confetti-piece:nth-child(7)  { left: 47%; background: #f59e0b; animation-delay: 0.05s; transform: rotate(20deg); }
+.confetti-piece:nth-child(8)  { left: 54%; background: #34d399; animation-delay: 0.09s; transform: rotate(35deg); }
+.confetti-piece:nth-child(9)  { left: 61%; background: #60a5fa; animation-delay: 0.13s; transform: rotate(60deg); }
+.confetti-piece:nth-child(10) { left: 68%; background: #f472b6; animation-delay: 0.07s; transform: rotate(45deg); }
+.confetti-piece:nth-child(11) { left: 74%; background: #10b981; animation-delay: 0.11s; transform: rotate(80deg); }
+.confetti-piece:nth-child(12) { left: 79%; background: #f59e0b; animation-delay: 0.04s; transform: rotate(25deg); }
+.confetti-piece:nth-child(13) { left: 84%; background: #34d399; animation-delay: 0.14s; transform: rotate(50deg); }
+.confetti-piece:nth-child(14) { left: 88%; background: #60a5fa; animation-delay: 0.1s;  transform: rotate(65deg); }
+.confetti-piece:nth-child(15) { left: 92%; background: #f472b6; animation-delay: 0.06s; transform: rotate(35deg); }
+.confetti-piece:nth-child(16) { left: 96%; background: #10b981; animation-delay: 0.12s; transform: rotate(55deg); }
+.confetti-piece:nth-child(17) { left: 22%; background: #f59e0b; animation-delay: 0.15s; transform: rotate(75deg); }
+.confetti-piece:nth-child(18) { left: 58%; background: #60a5fa; animation-delay: 0.16s; transform: rotate(15deg); }
+
+@keyframes confettiFall {
+    0% {
+        transform: translateY(0) rotate(0);
+        opacity: 0;
+    }
+    10% {
+        opacity: 0.95;
+    }
+    100% {
+        transform: translateY(120vh) rotate(260deg);
+        opacity: 0;
+    }
+}
+
+/* Scrollbar personnalisée pour les éléments avec la classe custom-scrollbar */
+.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(156, 163, 175, 0.6) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 12px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, rgba(156, 163, 175, 0.6), rgba(107, 114, 128, 0.8));
+    border-radius: 12px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+    transition: all 0.2s ease-in-out;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, rgba(107, 114, 128, 0.8), rgba(75, 85, 99, 0.9));
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.custom-scrollbar::-webkit-scrollbar-corner {
+    background: transparent;
+}
