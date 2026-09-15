@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Transposition de resources/views/inc/frontend/header.blade.php.
+// Transposition de backend/resources/views/inc/frontend/header.blade.php.
 const { public: { appUrl } } = useRuntimeConfig()
 const loginUrl = `${appUrl}/login`
 

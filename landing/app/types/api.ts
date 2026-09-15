@@ -2,7 +2,7 @@
  * Contrats de l'API Laravel consommés par le landing.
  *
  * Écrits à la main pour l'instant : ils reflètent les classes Data du backend
- * (backend : app/Domains/Booking/Application/Data/*). Ils seront remplacés par des
+ * (backend/app/Domains/Booking/Application/Data/*). Ils seront remplacés par des
  * types générés depuis ces classes (spatie/laravel-typescript-transformer) — toute
  * modification d'un côté doit être répercutée de l'autre d'ici là.
  */

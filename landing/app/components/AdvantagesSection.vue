@@ -1,4 +1,4 @@
-<!-- Transposition de resources/views/pages/components/advantages.blade.php. -->
+<!-- Transposition de backend/resources/views/pages/components/advantages.blade.php. -->
 <script setup lang="ts">
 import emblaCarouselVue from 'embla-carousel-vue'
 import Autoplay from 'embla-carousel-autoplay'

@@ -1,4 +1,4 @@
-<!-- Transposition de resources/views/pages/components/partners.blade.php (partenaires + investisseurs). -->
+<!-- Transposition de backend/resources/views/pages/components/partners.blade.php (partenaires + investisseurs). -->
 <script setup lang="ts">
 const partners = [
   { name: 'Gozem', logo: '/assets/images/png/gozem.png' },

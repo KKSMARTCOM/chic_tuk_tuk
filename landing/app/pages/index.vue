@@ -1,4 +1,4 @@
-<!-- Transposition de resources/views/pages/index.blade.php. -->
+<!-- Transposition de backend/resources/views/pages/index.blade.php. -->
 <template>
   <div>
     <!-- Hero Section avec Formulaire de Réservation -->

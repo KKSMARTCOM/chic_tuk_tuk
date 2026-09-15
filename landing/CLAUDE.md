@@ -16,11 +16,11 @@ node .output/server/index.mjs
 
 Variables d'environnement (lues à l'exécution, sans rebuild) : voir `.env.example`.
 En local, le backend doit autoriser l'origine du landing : `FRONT_LANDING_URL=http://localhost:3000`
-dans le `.env` Laravel.
+dans `backend/.env`.
 
 ## Règle principale : design identique
 
-Ce projet est une **transposition** de `resources/views/pages/index.blade.php` et de ses
+Ce projet est une **transposition** de `backend/resources/views/pages/index.blade.php` et de ses
 composants Blade, pas une refonte. Le markup et les classes Tailwind sont repris tels quels.
 Chaque composant indique en tête le fichier Blade dont il provient.
 

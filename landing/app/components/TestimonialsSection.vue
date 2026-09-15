@@ -1,4 +1,4 @@
-<!-- Transposition de resources/views/pages/components/testimonials.blade.php. -->
+<!-- Transposition de backend/resources/views/pages/components/testimonials.blade.php. -->
 <script setup lang="ts">
 /*
  * Témoignages statiques, comme dans la page d'origine (la boucle sur les témoignages

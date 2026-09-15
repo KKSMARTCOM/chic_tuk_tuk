@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /**
  * Formulaire de réservation en 3 étapes + écran de succès.
- * Transposition du formulaire et du script jQuery de resources/views/pages/index.blade.php.
+ * Transposition du formulaire et du script jQuery de backend/resources/views/pages/index.blade.php.
  *
  * Différence de fond avec l'original : aucun prix n'est calculé ici. Le récapitulatif
  * affiche le devis renvoyé par l'API (GET /public/pricing/quote), qui applique la

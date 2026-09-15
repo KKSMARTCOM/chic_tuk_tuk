@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /**
  * Champ de lieu avec autocomplétion Nominatim (OpenStreetMap), restreinte au Bénin.
- * Transposition de setupAutocomplete() de resources/views/pages/index.blade.php.
+ * Transposition de setupAutocomplete() de backend/resources/views/pages/index.blade.php.
  */
 interface NominatimPlace {
   place_id: number

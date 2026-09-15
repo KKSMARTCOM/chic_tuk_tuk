@@ -1,4 +1,4 @@
-<!-- Transposition de resources/views/inc/frontend/footer.blade.php. -->
+<!-- Transposition de backend/resources/views/inc/frontend/footer.blade.php. -->
 <template>
   <footer class="gradient-bg text-white py-12">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

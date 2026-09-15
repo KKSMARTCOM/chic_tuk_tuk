@@ -1,4 +1,4 @@
-<!-- Transposition de resources/views/pages/components/how_it_work.blade.php. -->
+<!-- Transposition de backend/resources/views/pages/components/how_it_work.blade.php. -->
 <script setup lang="ts">
 const steps = [
   {
