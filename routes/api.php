@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::prefix('v1')->name('api.v1.')->group(function () {
+    require __DIR__ . '/api/v1/public.php';
+
     // Sonde applicative : sert à valider la chaîne CORS + déploiement depuis le front.
     Route::get('/health', fn () => response()->json([
         'status'  => 'ok',
