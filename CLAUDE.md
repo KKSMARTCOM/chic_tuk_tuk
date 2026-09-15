@@ -83,7 +83,7 @@ Remarque : `tests/` ne contient actuellement que les tests d'exemple par défaut
 - Colonnes clés : is_recurring, parent_booking_id, subscription_driver_id,
   trip_type (go/return), round_trip, return_time, week_days,
   remaining_days, next_recurring_date, subscription_end_date,
-  is_revoked, revoked_at, expired_at, status (pending/confirmed/in_progress/completed/cancelled/expired/suspended)
+  is_revoked, revoked_at, expired_at, status (pending/confirmed/in_progress/completed/cancelled/expired)
 - Accessors : is_subscription_parent, is_subscription_child, is_simple_return,
   subscription_label, subscription_index, commission_preview, driver_earning_preview
 - Méthode : isVisibleToDriver(driverId)
@@ -122,12 +122,15 @@ Remarque : `tests/` ne contient actuellement que les tests d'exemple par défaut
 ### Payment
 
 - Colonnes : driver_id, vehicle_contract_id, driver_contract_id,
-  payment_month, payment_type (contract/manual), net_amount, amount, status
+  payment_month, payment_type (commission/contract/bonus/other), net_amount, amount,
+  status (pending/completed/cancelled/failed)
 - Paiements journaliers auto via commande `app:generate-daily` (lun-ven uniquement)
 
 ### LeaveRequest
 
-- Colonnes : driver_id, driver_contract_id, dates (array), status, rejection_reason
+- Colonnes : driver_id, driver_contract_id, dates (array), rejection_reason,
+  status (pending/ongoing/completed/rejected — « approved » a été retiré par la migration
+  2026_08_12_220013 : une demande acceptée passe directement à `ongoing`)
 
 ## Logique booking — points critiques
 
@@ -146,7 +149,9 @@ Remarque : `tests/` ne contient actuellement que les tests d'exemple par défaut
 - next_recurring_date = veille du jour J+1 à 1h
 - subscription_driver_id propagé depuis le parent sur tous les enfants
 - Révocation : is_revoked=true, subscription_driver_id=null sur la course révoquée uniquement
-- Suspension : status=suspended (abonnement commencé puis résilié)
+- Résiliation : il n'existe PAS de statut `suspended` (ni en base, ni dans le code).
+  Un abonnement résilié est annulé : `cancel()` sur le parent passe le parent et ses
+  enfants pending en `cancelled`, la suppression se fait ensuite si besoin.
 
 ### take() — Acceptation
 
@@ -212,6 +217,38 @@ Gating par groupe de routes (voir "Architecture auth") :
 - /fcm/token → POST (enregistrement token FCM)
 - /install → page installation PWA
 - /admin/owners/{owner}/vehicles → AJAX véhicules d'un propriétaire
+
+## API v1 (migration vers front Nuxt)
+
+Le projet migre vers trois applications séparées : `landing` (Nuxt, chictuktuk.com),
+`client` (Nuxt, app.chictuktuk.com) et ce backend réduit à une API (api.chictuktuk.com).
+Authentification par **token Bearer** Sanctum, pas de cookie stateful.
+
+Conventions du nouveau code — ne pas réintroduire les anciennes :
+
+- **Pas de FormRequest ni de JsonResource.** Une classe `Data` (spatie/laravel-data)
+  porte à la fois les règles de validation en entrée et la sérialisation en sortie.
+  Base commune : `App\Shared\Data\BaseData` (mapping snake_case dans les deux sens).
+- **Découpage DDD** sous `app/Domains/{Contexte}/` : `Domain/` (modèles, Enums, règles),
+  `Application/` (Data, Actions, Queries), `Presentation/Api/V1/`. Contextes retenus :
+  Booking, Identity, Fleet, Workforce, Finance, Notification, Content.
+- **Enums plutôt que `app/Consts`** pour les valeurs contraintes. Leurs valeurs reflètent
+  les contraintes CHECK PostgreSQL — les modifier impose une migration de données.
+- **Morph map obligatoire** (`AppServiceProvider::MORPH_MAP`) : la base stocke des alias
+  (`user`, `booking`…) et non des FQCN, pour que les classes puissent être déplacées sans
+  invalider rôles, permissions et tokens Sanctum.
+- **Erreurs JSON** normalisées par `App\Shared\Http\ApiExceptionRenderer`
+  (`{message, code, errors?}`). Le chemin web/Blade conserve son rendu historique.
+- **Endpoints publics** (`routes/api/v1/public.php`) : throttlés, sans champ de prix en
+  entrée — le tarif est toujours recalculé côté serveur.
+
+Routes existantes : `GET /api/v1/health`, `GET /api/v1/public/pricing/quote`,
+`POST /api/v1/public/bookings`.
+
+⚠️ Le formulaire Blade du landing recalcule la majoration horaire en JavaScript
+(`pages/index.blade.php`) sur la tranche **7h–10h**, alors que
+`Price::NORMAL_WINDOW_START_HOUR` vaut **6**. L'API renvoie le prix déjà majoré
+(`PriceQuoteData`) pour que le front n'ait plus rien à recalculer.
 
 ## Commandes artisan
 

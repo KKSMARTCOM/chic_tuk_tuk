@@ -46,10 +46,11 @@ final class ApiExceptionRenderer
         if ($e instanceof HttpExceptionInterface) {
             $status = $e->getStatusCode();
 
-            // Sur 404 et 405, le message est généré par le routeur : il est en anglais
-            // et divulgue les chemins de l'API. On lui préfère toujours le message
-            // générique. Ailleurs, un message explicite passé à abort() est conservé.
-            $message = in_array($status, [404, 405], true)
+            // Sur 404, 405 et 429, le message vient du framework : il est en anglais
+            // (« Too Many Attempts. ») et, pour 404/405, divulgue les chemins de l'API.
+            // On lui préfère le message générique. Ailleurs, un message explicite passé
+            // à abort() est conservé.
+            $message = in_array($status, [404, 405, 429], true)
                 ? self::messageForStatus($status)
                 : ($e->getMessage() ?: self::messageForStatus($status));
 
