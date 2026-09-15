@@ -6,6 +6,7 @@ use App\Consts\Price;
 use App\Domains\Booking\Application\Data\CalculatePriceData;
 use App\Domains\Booking\Application\Data\PriceQuoteData;
 use App\Services\PricingService;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Calcule le devis d'une course.
@@ -21,7 +22,16 @@ final class QuotePrice
 
     public function execute(CalculatePriceData $data): PriceQuoteData
     {
-        $distance  = $this->pricing->getDistance($data->fromLng, $data->fromLat, $data->toLng, $data->toLat);
+        // Le front redemande un devis à chaque changement d'horaire, d'aller-retour ou de
+        // durée, mais la distance ne dépend que du trajet : elle est mise en cache pour ne
+        // consommer le quota OpenRouteService qu'une fois par couple de coordonnées.
+        // (Arrondi à 5 décimales ≈ 1 m.) La création de la réservation, elle, recalcule
+        // toujours la distance via BookingService::create().
+        $distance = Cache::remember(
+            sprintf('pricing:distance:%.5f,%.5f:%.5f,%.5f', $data->fromLng, $data->fromLat, $data->toLng, $data->toLat),
+            now()->addDays(7),
+            fn () => $this->pricing->getDistance($data->fromLng, $data->fromLat, $data->toLng, $data->toLat),
+        );
         $basePrice = $this->pricing->getPrice($distance);
 
         $goPrice = $this->pricing->applyTimeSurcharge($basePrice, $data->pickupTime);

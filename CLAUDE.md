@@ -5,6 +5,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ChicTukTuk — plateforme de réservation de courses (tuk-tuk) avec gestion de chauffeurs, véhicules,
 contrats et propriétaires.
 
+## Structure du dépôt (migration en cours)
+
+Le dépôt devient un monorepo : `landing/` (Nuxt, chictuktuk.com) puis `client/` (Nuxt,
+app.chictuktuk.com), à côté du backend Laravel qui sera déplacé dans `backend/`.
+
+- `landing/` — site vitrine + tunnel de réservation, projet Nuxt autonome.
+  Voir `landing/CLAUDE.md` (Node 22 obligatoire, Tailwind v3 volontairement).
+- Tout le reste du dépôt est, pour l'instant encore, le backend Laravel décrit ci-dessous.
+
 ## Commandes
 
 ```bash
@@ -261,13 +270,24 @@ Routes existantes : `GET /api/v1/health`, `GET /api/v1/public/pricing/quote`,
 
 Laravel 11 sans Kernel.php : le scheduler est déclaré directement dans `bootstrap/app.php`, pas dans routes/console.php.
 
-⚠️ Dans le code actuel, les 4 commandes (`app:expire-bookings`, `app:process-recurring-bookings`,
-`app:generate-daily`, `app:activate-leave-pauses`) sont enregistrées **sans fréquence explicite**
-(pas de `->everyFifteenMinutes()`, `->dailyAt()`, etc. — seulement `->appendOutputTo(storage_path('logs/commands.log'))`),
-ce qui les fait tourner à chaque minute par défaut. Si le comportement voulu est "toutes les 15 min"
-pour expire-bookings, "1h du matin" pour process-recurring-bookings et "lun-ven 6h" pour generate-daily
-(cohérent avec la logique métier décrite plus haut), vérifier si une régression a supprimé ces appels
-avant de modifier ce fichier.
+| Commande                         | Fréquence                     |
+| -------------------------------- | ----------------------------- |
+| `app:expire-bookings`            | tous les jours à 01:00        |
+| `app:process-recurring-bookings` | tous les jours à 01:00        |
+| `app:generate-daily`             | lun-ven à 23:30 (`weekdays()`) |
+| `app:activate-leave-pauses`      | toutes les 2 heures           |
+
+Sortie ajoutée à `storage/logs/commands.log`. En conteneur, `schedule:run` est lancé chaque
+minute par une boucle supervisord (`docker/supervisord.conf`), pas par un cron système.
+
+## Déploiement (Coolify)
+
+Image Docker construite depuis `Dockerfile` (build pack Dockerfile de Coolify) :
+nginx + php-fpm + 2 workers `queue:work` + boucle scheduler, orchestrés par supervisord.
+`docker/start.sh` attend PostgreSQL, puis lance **`migrate --force` à chaque démarrage**
+et reconstruit les caches (config, routes, vues) — les variables d'environnement
+n'existent pas au build. Une migration est donc exécutée en production dès que l'image
+est déployée : elle doit être compatible avec l'image précédente (rollback).
 
 ## PWA & Firebase
 
