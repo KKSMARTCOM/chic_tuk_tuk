@@ -60,7 +60,7 @@ class AppServiceProvider extends ServiceProvider
         // plutôt que de réintroduire silencieusement un FQCN en base.
         Relation::enforceMorphMap(self::MORPH_MAP);
 
-        /* if (env(key: 'APP_ENV') !== 'local') {
+        if (env(key: 'APP_ENV') !== 'local') {
             URL::forceScheme(scheme: 'https');
         }
     }
