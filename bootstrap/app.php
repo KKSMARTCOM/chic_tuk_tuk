@@ -31,7 +31,27 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission'    => \App\Http\Middleware\CheckPermission::class,
             'profil'        => \App\Http\Middleware\CheckProfil::class,
             'turnstile'     => \App\Shared\Http\Middleware\VerifyTurnstile::class,
+            'token.fresh'   => \App\Shared\Http\Middleware\EnforceTokenFreshness::class,
         ]);
+
+        // EnforceTokenFreshness doit s'exécuter AVANT l'authentification : le garde de
+        // Sanctum écrit `last_used_at` à now() pendant qu'il authentifie, et lu après
+        // lui ce champ vaut toujours « à l'instant » — la fenêtre d'inactivité
+        // n'expirerait jamais personne. Le déclarer avant `auth:sanctum` sur la route
+        // ne suffit pas : l'authentification figure dans la liste de priorité de
+        // Laravel et s'y trouve hissée devant tout middleware qui n'y figure pas.
+        // prependToPriorityList insère dans cette liste sans la remplacer, et ne
+        // change donc l'ordre que des piles contenant ce middleware — le chemin Blade
+        // n'est pas affecté.
+        //
+        // ⚠️ Le repère est l'INTERFACE AuthenticatesRequests, et non la classe
+        // concrète Authenticate : c'est l'interface qui figure dans la liste. Viser la
+        // classe ne correspond à rien, et le middleware se retrouve silencieusement
+        // relégué en fin de liste, donc après l'authentification.
+        $middleware->prependToPriorityList(
+            before: \Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests::class,
+            prepend: \App\Shared\Http\Middleware\EnforceTokenFreshness::class,
+        );
     })
     ->withSchedule(function ($schedule) {
         $schedule->command('app:expire-bookings')->dailyAt('01:00')->appendOutputTo(storage_path('logs/commands.log'));
