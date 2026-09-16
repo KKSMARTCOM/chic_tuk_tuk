@@ -27,6 +27,23 @@ final class ApiExceptionRenderer
 {
     public static function render(Throwable $e, bool $debug = false): JsonResponse
     {
+        // En tête : une ApiException porte déjà son statut, son code et ses champs
+        // supplémentaires. Rien à traduire, contrairement aux exceptions du framework.
+        if ($e instanceof ApiException) {
+            $payload = array_merge(
+                ['message' => $e->getMessage(), 'code' => $e->errorCode],
+                $e->extra,
+            );
+
+            $response = response()->json($payload, $e->status);
+
+            foreach ($e->headers as $header => $value) {
+                $response->headers->set($header, $value);
+            }
+
+            return $response;
+        }
+
         if ($e instanceof ValidationException) {
             return self::json(422, 'VALIDATION_FAILED', $e->getMessage(), $e->errors());
         }
