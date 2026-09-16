@@ -51,8 +51,14 @@ php artisan app:generate-daily
 php artisan app:activate-leave-pauses
 ```
 
-Remarque : `tests/` ne contient actuellement que les tests d'exemple par défaut de Laravel
-(`ExampleTest.php` en Unit et Feature) — pas encore de suite de tests métier.
+Les tests tournent sur une base PostgreSQL **dédiée** (`chic_tuktuk_db_test`, réglée dans
+`phpunit.xml`) : SQLite n'est pas utilisable, les migrations et requêtes du projet étant
+spécifiques à PostgreSQL. Création : `createdb -U postgres chic_tuktuk_db_test`.
+
+⚠️ **Le dépôt n'a jamais été formaté par Laravel Pint** : `vendor/bin/pint --test` échoue
+sur plus de 130 fichiers existants. Toujours lui passer explicitement les fichiers
+nouvellement créés — un `vendor/bin/pint` sans argument, ou appliqué à un fichier
+préexistant, produit un diff massif sans rapport avec la livraison en cours.
 
 ## Stack technique
 
@@ -82,7 +88,8 @@ Remarque : `tests/` ne contient actuellement que les tests d'exemple par défaut
 ### User
 
 - profil : admin | client | driver | owner
-- Rôles Spatie : admin, driver, client, proprietaire
+- Rôles Spatie : admin (62 permissions), lecteur (41), driver (7), client (6),
+  proprietaire (5) — 66 permissions au total. `lecteur` est un admin en lecture seule.
 - Relations : driver(), vehicles(), vehicleContracts(), fcmTokens(), pushSubscriptions()
 
 ### Booking
@@ -250,7 +257,35 @@ Conventions du nouveau code — ne pas réintroduire les anciennes :
   entrée — le tarif est toujours recalculé côté serveur.
 
 Routes existantes : `GET /api/v1/health`, `GET /api/v1/public/pricing/quote`,
-`POST /api/v1/public/bookings`.
+`POST /api/v1/public/bookings`, et l'authentification : `POST /api/v1/auth/login`,
+`POST /api/v1/auth/logout`, `GET /api/v1/auth/me`, `POST /api/v1/auth/password`,
+`POST /api/v1/auth/password/forgot`, `POST /api/v1/auth/password/reset`.
+
+**Authentification de l'API.** Jeton Bearer Sanctum nommé `api` — jamais du nom du
+profil, car `AuthService::login()` (chemin Blade) supprime les jetons ainsi nommés et
+tuerait les sessions du front Nuxt. Plafond absolu de 90 jours posé sur `expires_at` à la
+création, et fenêtre d'inactivité de 14 jours appliquée par le middleware `token.fresh`
+(`EnforceTokenFreshness`) sur le seul groupe de routes API : `config/sanctum.php` reste à
+`'expiration' => null` pour ne pas toucher au Blade. Seuils dans `config/identity.php`.
+
+⚠️ `token.fresh` s'exécute **avant** `auth:sanctum` et résout le jeton lui-même : le garde
+de Sanctum écrit `last_used_at` à `now()` pendant qu'il authentifie, donc lu après lui ce
+champ vaut toujours « à l'instant ». L'ordre est garanti par un
+`prependToPriorityList()` dans `bootstrap/app.php` visant l'**interface**
+`AuthenticatesRequests` — déclarer l'ordre sur la route ne suffit pas.
+
+La connexion **ne demande pas le profil** : il est résolu en vérifiant le mot de passe
+contre tous les comptes portant l'email (l'unicité est sur `(email, profil)`). Une
+ambiguïté ressort en `409 PROFIL_AMBIGUOUS` avec la liste des profils, et le front
+rappelle l'endpoint en précisant celui choisi. Les échecs incrémentent le compteur de
+tous les comptes de l'email, mais un compte verrouillé est écarté des candidats au lieu
+de faire échouer la requête entière — sinon s'acharner sur un compte bloquerait l'autre.
+
+La réinitialisation de mot de passe s'appuie sur `password_reset_tokens` **réindexée par
+`user_id`** (la table de Laravel, à clé primaire `email`, ne peut pas distinguer deux
+comptes partageant une adresse). Un seul email est envoyé, avec un lien par compte ; le
+jeton a la forme `{user_id}.{aléa}` pour rester résoluble tout en étant haché en base.
+Les liens sont construits sur `FRONT_APP_URL`, qui a donc un second rôle au-delà du CORS.
 
 `POST /public/bookings` est en plus protégée par **Cloudflare Turnstile**
 (`App\Shared\Http\Middleware\VerifyTurnstile`, alias de middleware `turnstile`) : le
