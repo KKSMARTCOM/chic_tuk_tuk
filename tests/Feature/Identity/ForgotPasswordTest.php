@@ -69,8 +69,8 @@ class ForgotPasswordTest extends TestCase
             ->assertOk()
             ->assertJsonStructure(['message']);
 
-        Mail::assertSentCount(1);
-        Mail::assertSent(PasswordResetLinksMail::class, function (PasswordResetLinksMail $mail) {
+        Mail::assertQueuedCount(1);
+        Mail::assertQueued(PasswordResetLinksMail::class, function (PasswordResetLinksMail $mail) {
             return count($mail->links) === 2
                 && $mail->links[0]['label'] === 'Administrateur'
                 && $mail->links[1]['label'] === 'Propriétaire'
@@ -95,7 +95,7 @@ class ForgotPasswordTest extends TestCase
         $this->assertSame($reponseConnue->status(), $reponseInconnue->status());
         $this->assertSame($reponseConnue->json(), $reponseInconnue->json());
 
-        Mail::assertSentCount(1);
+        Mail::assertQueuedCount(1);
     }
 
     public function test_un_compte_desactive_ne_recoit_pas_de_lien(): void
@@ -107,7 +107,7 @@ class ForgotPasswordTest extends TestCase
         $this->postJson('/api/v1/auth/password/forgot', ['email' => 'desactive@chictuktuk.com'])
             ->assertOk();
 
-        Mail::assertNothingSent();
+        Mail::assertNothingQueued();
     }
 
     public function test_une_nouvelle_demande_remplace_le_jeton_precedent(): void

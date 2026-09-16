@@ -3,6 +3,7 @@
 namespace App\Shared\Http;
 
 use RuntimeException;
+use Throwable;
 
 /**
  * Erreur métier de l'API, porteuse de son propre code et de champs supplémentaires.
@@ -25,7 +26,10 @@ final class ApiException extends RuntimeException
         string $message,
         public readonly array $extra = [],
         public readonly array $headers = [],
+        // Chaînage de l'exception d'origine : quand une action convertit un échec
+        // technique en erreur d'API, la trace initiale doit rester atteignable.
+        ?Throwable $previous = null,
     ) {
-        parent::__construct($message);
+        parent::__construct($message, 0, $previous);
     }
 }

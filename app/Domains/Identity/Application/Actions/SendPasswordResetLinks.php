@@ -34,7 +34,13 @@ final class SendPasswordResetLinks
             'url' => $this->linkFor($user),
         ])->all();
 
-        Mail::to($data->email)->send(new PasswordResetLinksMail($links));
+        // Mise en file plutôt qu'envoi synchrone : la poignée de main SMTP est lente
+        // sur un endpoint public, et le projet fait déjà tourner deux `queue:work`,
+        // qui réessaieront en cas de panne passagère.
+        //
+        // Une panne SMTP est attrapée par le filet de __invoke, comme tout le reste :
+        // la réponse reste identique et l'incident part au journal.
+        Mail::to($data->email)->queue(new PasswordResetLinksMail($links));
     }
 
     private function linkFor(User $user): string

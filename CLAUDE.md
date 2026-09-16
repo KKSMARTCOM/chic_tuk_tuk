@@ -253,6 +253,37 @@ Conventions du nouveau code — ne pas réintroduire les anciennes :
   invalider rôles, permissions et tokens Sanctum.
 - **Erreurs JSON** normalisées par `App\Shared\Http\ApiExceptionRenderer`
   (`{message, code, errors?}`). Le chemin web/Blade conserve son rendu historique.
+- **Erreurs métier : on lève.** `ValidationException` donne un 422 avec ses `errors` ;
+  `App\Shared\Http\ApiException` porte un statut, un code et des champs choisis
+  (par ex. `ACCOUNT_LOCKED` avec `retry_after`, `PROFIL_AMBIGUOUS` avec `profils`).
+- **Échecs imprévus : chaque méthode de contrôleur les attrape**, dans un `try/catch`
+  explicite, comme les contrôleurs Blade du projet. Le rendu branché dans
+  `bootstrap/app.php` couvre déjà toute exception, mais il ne sert que de dernier
+  recours : le contrôleur journalise avec son contexte métier et renvoie un **code
+  propre à l'opération** (`LOGIN_FAILED`, `LOGOUT_FAILED`, `PROFILE_READ_FAILED`,
+  `PASSWORD_CHANGE_FAILED`, `PASSWORD_RESET_FAILED`) plutôt qu'un `SERVER_ERROR`
+  générique, ce qui donne au front de quoi réagir et au support de quoi filtrer les
+  journaux.
+
+  Trois règles dans chacun de ces `try/catch` :
+
+  1. ⚠️ **Relancer d'abord `ValidationException` et `ApiException` intactes**, dans un
+     `catch` placé avant le général — sans quoi un refus d'identifiants (422) ou un
+     verrou de compte (423) se transformerait en 500.
+  2. Attraper **`\Throwable`**, pas `\Exception` : les `\Error` (TypeError,
+     ValueError) n'héritent pas d'`Exception` et passeraient sous le nez du `catch`.
+  3. Le message de l'exception va **au journal seulement**. Contrairement au chemin
+     Blade où il finit en message flash, ici il partirait au client, et il contient
+     régulièrement un fragment SQL ou un chemin de fichier.
+
+  `tests/Feature/Identity/InternalFailureTest.php` verrouille les trois.
+
+  Exception unique : `PasswordController::forgot` journalise **sans renvoyer d'erreur**.
+  Un échec ne peut y survenir que pour une adresse existante, donc toute réponse
+  distinguable rouvrirait l'énumération des comptes.
+- Les traces ne fuitent jamais quand `APP_DEBUG` est à `false`
+  (`tests/Feature/Identity/ErrorHandlingTest.php`). Le chemin Blade, lui, conserve son
+  rendu historique.
 - **Endpoints publics** (`routes/api/v1/public.php`) : throttlés, sans champ de prix en
   entrée — le tarif est toujours recalculé côté serveur.
 
