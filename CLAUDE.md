@@ -5,8 +5,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ChicTukTuk — plateforme de réservation de courses (tuk-tuk) avec gestion de chauffeurs, véhicules,
 contrats et propriétaires.
 
-Ce fichier décrit le projet Laravel du dossier `backend/` : toutes les commandes ci-dessous
-se lancent **depuis `backend/`**. Organisation du monorepo : voir `../CLAUDE.md`.
+Ce dépôt est le **backend** (`api.chictuktuk.com`) : l'API v1 et l'interface Blade
+historique encore en service. Les fronts Nuxt vivent dans leurs propres dépôts —
+`landing` (vitrine + réservation publique, `chictuktuk.com`), puis `client` (espaces
+authentifiés, `app.chictuktuk.com`). Le seul lien entre eux est l'API : un changement
+de contrat se livre **ici d'abord**, et de façon rétrocompatible, puisque l'ancien front
+continue d'appeler la nouvelle API le temps de son propre déploiement.
 
 ## Commandes
 
