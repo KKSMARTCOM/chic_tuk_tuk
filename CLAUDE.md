@@ -252,10 +252,19 @@ Conventions du nouveau code — ne pas réintroduire les anciennes :
 Routes existantes : `GET /api/v1/health`, `GET /api/v1/public/pricing/quote`,
 `POST /api/v1/public/bookings`.
 
+`POST /public/bookings` est en plus protégée par **Cloudflare Turnstile**
+(`App\Shared\Http\Middleware\VerifyTurnstile`, alias de middleware `turnstile`) : le
+throttling seul ne protège pas un endpoint anonyme, puisque le partage d'IP des
+opérateurs mobiles (CGNAT) interdit de serrer la limite. Le front envoie le champ
+`cf_turnstile_token` ; un refus ressort en 422 sur ce champ. **Sans `TURNSTILE_SECRET`,
+le middleware se retire** : le local et les tests ne le subissent pas, mais la
+production doit impérativement avoir la variable. Si Cloudflare est injoignable, le
+choix retenu est de laisser passer la réservation plutôt que de la perdre.
+
 ⚠️ Le formulaire Blade du landing recalcule la majoration horaire en JavaScript
-(`pages/index.blade.php`) sur la tranche **7h–10h**, alors que
-`Price::NORMAL_WINDOW_START_HOUR` vaut **6**. L'API renvoie le prix déjà majoré
-(`PriceQuoteData`) pour que le front n'ait plus rien à recalculer.
+(`pages/index.blade.php`), en recopiant les constantes de `Price` : toute modification
+de la fenêtre horaire ou du montant doit être reportée dans les deux. L'API, elle,
+renvoie le prix déjà majoré (`PriceQuoteData`) pour que le front n'ait rien à recalculer.
 
 ## Commandes artisan
 

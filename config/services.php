@@ -39,4 +39,14 @@ return [
         'key' => env('OPEN_ROUTE_SERVICE_API_KEY'),
     ],
 
+    /*
+     * Cloudflare Turnstile — protège les endpoints publics (POST /api/v1/public/bookings)
+     * contre les robots. Tant que TURNSTILE_SECRET est vide, la vérification est
+     * entièrement désactivée : le développement local et les tests ne la subissent pas.
+     */
+    'turnstile' => [
+        'site_key' => env('TURNSTILE_SITE_KEY'),
+        'secret' => env('TURNSTILE_SECRET'),
+    ],
+
 ];

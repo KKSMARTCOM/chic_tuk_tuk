@@ -30,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role'          => \App\Http\Middleware\CheckRole::class,
             'permission'    => \App\Http\Middleware\CheckPermission::class,
             'profil'        => \App\Http\Middleware\CheckProfil::class,
+            'turnstile'     => \App\Shared\Http\Middleware\VerifyTurnstile::class,
         ]);
     })
     ->withSchedule(function ($schedule) {

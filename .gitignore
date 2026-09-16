@@ -21,5 +21,6 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+# Comptes de service Firebase : jamais dans le dépôt, une clé privée versionnée
+# reste lisible dans l'historique. En production, passer par FIREBASE_CREDENTIALS_BASE64.
 firebase/*.json
-!firebase/chictuktuk-firebase-adminsdk-fbsvc-dad1fa7fe5.json

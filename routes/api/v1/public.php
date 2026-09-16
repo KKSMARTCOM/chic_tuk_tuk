@@ -32,7 +32,10 @@ Route::prefix('public')->name('public.')->group(function () {
         ->middleware('throttle:60,1')
         ->name('pricing.quote');
 
+    // Turnstile en plus du throttling : le partage d'IP (CGNAT) interdit de serrer la
+    // limite, et un robot distribué la contournerait. Sans TURNSTILE_SECRET configuré,
+    // le middleware se retire de lui-même.
     Route::post('/bookings', [BookingController::class, 'store'])
-        ->middleware('throttle:10,60')
+        ->middleware(['throttle:10,60', 'turnstile'])
         ->name('bookings.store');
 });

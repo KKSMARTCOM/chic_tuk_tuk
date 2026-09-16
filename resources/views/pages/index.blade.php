@@ -175,7 +175,7 @@
                                 <div class="mb-4">
                                     <!-- Carte -->
                                     <p class="text-xs text-gray-500 mb-1">
-                                        ℹ️ Une majoration de 1 000 FCFA s'applique en dehors de la tranche 7h–10h.
+                                        ℹ️ Une majoration de 1 000 FCFA s'applique en dehors de la tranche 6h–10h.
                                     </p>
 
                                     <label class="block text-gray-700 font-semibold mb-2">Date et heure <span

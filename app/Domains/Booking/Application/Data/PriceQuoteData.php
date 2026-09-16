@@ -10,10 +10,11 @@ use App\Shared\Data\BaseData;
  * Le détail complet est renvoyé pour que le front n'ait AUCUN calcul à refaire :
  * le récapitulatif du tunnel de réservation se contente d'afficher ces valeurs.
  *
- * C'est délibéré. Le formulaire Blade actuel recalcule la majoration horaire en
- * JavaScript (pages/index.blade.php) et a divergé du serveur : il applique la
- * tranche 7h–10h alors que Price::NORMAL_WINDOW_START_HOUR vaut 6. Centraliser le
- * calcul côté API empêche cette classe de bug de réapparaître.
+ * C'est délibéré. Le formulaire Blade recopie les constantes de Price dans son
+ * JavaScript : deux implémentations de la même règle tarifaire, qu'il faut penser à
+ * modifier ensemble. Le texte affiché avait d'ailleurs fini par annoncer une tranche
+ * (7h–10h) différente de celle réellement appliquée (6h–10h). Centraliser le calcul
+ * côté API empêche cette classe de bug de réapparaître.
  */
 class PriceQuoteData extends BaseData
 {

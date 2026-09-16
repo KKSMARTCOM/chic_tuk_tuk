@@ -173,7 +173,7 @@
                         Ce montant doit être le prix <strong>brut</strong> (calculé selon la distance uniquement),
                         <strong>sans la majoration horaire</strong> de 1 000 FCFA. La majoration est appliquée
                         automatiquement à l'enregistrement si l'heure de départ (ou de retour) est en dehors de la tranche
-                        7h–10h.
+                        6h–10h.
                         Ne saisissez pas manuellement un prix qui inclut déjà cette majoration, sinon elle sera comptée deux
                         fois.
                     </p>
