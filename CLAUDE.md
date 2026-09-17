@@ -379,7 +379,10 @@ est déployée : elle doit être compatible avec l'image précédente (rollback)
 - pages/admin/contracts/index → onglets Contrats agents / Contrats propriétaires
 - pages/driver/bookings/available → courses disponibles avec logique visibilité
 - pages/driver/bookings/accepting → courses actives avec label dynamique
-- pages/owner/\* → espace propriétaire (véhicules, paiements, pauses)
+- pages/client/owner/\* → espace propriétaire : index (véhicules), leaves, payments
+  (sous client/, pas de dossier pages/owner). `OwnerVehicleController::show` rend
+  pages.client.owner.vehicles.show, qui n'existe pas : la route owner.vehicles.show
+  est orpheline, aucune vue n'y mène.
 
 ## Points d'attention
 
