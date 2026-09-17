@@ -89,7 +89,22 @@ préexistant, produit un diff massif sans rapport avec la livraison en cours.
 
 - profil : admin | client | driver | owner
 - Rôles Spatie : admin (62 permissions), lecteur (41), driver (7), client (6),
-  proprietaire (5) — 66 permissions au total. `lecteur` est un admin en lecture seule.
+  proprietaire (5) — 66 permissions au total.
+- ⚠️ **`lecteur` n'est PAS un rôle en lecture seule**, contrairement à ce que ce fichier
+  affirmait et à ce que suggère son libellé de production, « Utilisateur ». Sur ses 41
+  permissions, **27 sont des écritures** : `create-drivers`, `edit-drivers`,
+  `manage-payments`, `manage-settings`, `manage-commissions`, `manage-pricing`,
+  `approve-leave-requests`, `delete-leaves`, `moderate-testimonials`… Il ne lui manque,
+  par rapport à `admin`, que la gestion des rôles, des permissions et des véhicules.
+  Vérifié en base le 2026-09-17 ; l'état est conservé sur décision explicite, mais le
+  libellé décrit mal ce niveau d'accès.
+- **La source de vérité des rôles et permissions est
+  `database/seeders/ReferenceRolesAndPermissionsSeeder.php`**, et le code y fait foi :
+  `syncPermissions` remet chaque rôle dans l'état décrit, donc toute attribution faite
+  depuis l'écran d'administration des rôles est **temporaire**. Une permission qui doit
+  durer s'ajoute dans ce fichier. C'est ce qui empêche la base de développement et la
+  production de divergenter — deux écarts avaient été relevés le même jour avant sa
+  mise en place.
 - Relations : driver(), vehicles(), vehicleContracts(), fcmTokens(), pushSubscriptions()
 
 ### Booking

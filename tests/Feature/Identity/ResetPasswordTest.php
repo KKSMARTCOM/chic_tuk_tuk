@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class ResetPasswordTest extends TestCase
@@ -113,9 +114,7 @@ class ResetPasswordTest extends TestCase
             ->assertJsonValidationErrors(['token']);
     }
 
-    /**
-     * @dataProvider jetonsMalFormes
-     */
+    #[DataProvider('jetonsMalFormes')]
     public function test_un_jeton_mal_forme_est_refuse_sans_erreur_serveur(string $jeton, string $cas): void
     {
         // Le préfixe du jeton est comparé à `password_reset_tokens.user_id`, une
