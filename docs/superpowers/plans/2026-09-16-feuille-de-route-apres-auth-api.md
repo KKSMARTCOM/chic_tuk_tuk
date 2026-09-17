@@ -19,29 +19,49 @@ repart d'un cycle conception → spec → plan, comme l'auth API v1
 | Kill-switch du service worker | servi à la racine du landing | `/sw.js` renvoie bien le script de désinscription |
 | Turnstile | actif | POST sans jeton refusé sur `cf_turnstile_token` |
 | API v1 publique | en ligne | `pricing/quote`, `public/bookings` |
-| Auth API v1 | **commitée, pas encore déployée** | 63 tests, 230 assertions |
+| Auth API v1 sur `api-staging.chictuktuk.com` | en ligne | 63 tests, 230 assertions ; `login` en 422, `/me` en 401, `password/forgot` en 200 indifférencié |
 | Redirection des anciens chemins Blade depuis le landing | en ligne | `staging.chictuktuk.com/login` en 302 vers `app-staging`, qui répond 200 |
 
 ## 2. Phase 0 — finir de livrer l'auth (prérequis de tout le reste)
 
 Rien de ce qui suit n'a de sens avant que l'auth réponde sur staging.
 
-1. **Fusionner la branche courante dans `staging`, puis déployer.** Le déploiement
-   exécutera la migration qui recrée `password_reset_tokens` avec `user_id` en clé
-   primaire. Sans risque — la table est vide, l'image précédente n'y écrit jamais —
-   mais c'est un changement de schéma, pas un ajout de code.
-2. **Renseigner un SMTP réellement opérationnel** sur la ressource staging. Le `.env`
-   local pointe sur un bac à sable Mailtrap. Sans expéditeur valide, la
-   réinitialisation échoue silencieusement : le contrôleur journalise et renvoie quand
-   même sa réponse indifférenciée, par nécessité de sécurité.
-3. **Vérifier `FRONT_APP_URL`** : elle a désormais un second rôle au-delà du CORS, celui
-   de base des liens de réinitialisation.
-4. **Éprouver les endpoints contre staging** : connexion par profil, le `409` sur
-   `arsogn991@gmail.com` (compte admin **et** propriétaire, cas réel en base), le verrou
-   après cinq échecs, `/me` et ses permissions.
-5. **Décider du sort d'`APP_DEBUG`.** `/api/v1/health` renvoie `"env":"development"` sur
-   staging. Acceptable là, à exclure en production : les traces d'exception seraient
-   publiques.
+1. ~~**Fusionner la branche courante dans `staging`, puis déployer.**~~ **Fait.**
+   Fusionnée en `b64e88a`, déployée, la migration qui recrée `password_reset_tokens`
+   avec `user_id` en clé primaire est passée sans incident — `/api/v1/health` répond
+   200 et les endpoints d'auth répondent. Avant la fusion, les deux arguments de
+   sûreté ont été contrôlés plutôt que crus : aucune route Blade ne servait la
+   réinitialisation, aucun code hors du nouveau chemin n'écrit dans la table, et le
+   `down()` restaure la table d'origine de Laravel — l'image précédente reste donc
+   déployable.
+2. ~~**Renseigner un SMTP réellement opérationnel** sur la ressource staging.~~ **Fait.**
+   Les identifiants SMTP réels sont en place sur staging ; seul le `.env` local reste
+   sur le bac à sable Mailtrap. À savoir tout de même : sans expéditeur valide, la
+   réinitialisation échouerait silencieusement, le contrôleur journalisant et renvoyant
+   quand même sa réponse indifférenciée, par nécessité de sécurité.
+3. ~~**Vérifier `FRONT_APP_URL`**~~ **Fait.** Renseignée sur staging : le préflight
+   CORS depuis `https://app-staging.chictuktuk.com` revient en 204 avec l'origine en
+   `Access-Control-Allow-Origin`, tandis qu'une origine tierce n'obtient aucun
+   en-tête. C'est la même variable qui sert de base aux liens de réinitialisation,
+   donc son second rôle est couvert par la même vérification.
+4. **Éprouver les endpoints contre staging.** *Partiellement fait.* Vérifiés sans
+   identifiants : `login` sans corps en 422 avec ses erreurs par champ, `login` sur
+   des identifiants faux en 422 sur `email` (donc sans énumération des comptes), `/me`
+   sans jeton en 401 `UNAUTHENTICATED`, `password/forgot` sur une adresse inconnue en
+   200 indifférencié.
+
+   Restent à éprouver, parce qu'ils exigent un mot de passe réel ou produisent un
+   effet de bord sur un compte en service : la connexion aboutie et `/me` avec ses
+   permissions, le `409 PROFIL_AMBIGUOUS` sur `arsogn991@gmail.com` (compte admin
+   **et** propriétaire, cas réel en base), le verrou après cinq échecs — qui bloque
+   véritablement le compte cinq minutes — et l'envoi réel d'un email de
+   réinitialisation, qui écrit dans `password_reset_tokens` et prouverait la migration
+   par l'usage plutôt que par l'absence d'erreur.
+5. ~~**Décider du sort d'`APP_DEBUG`.**~~ **Tranché : vrai sur staging uniquement.**
+   `/api/v1/health` y renvoie donc `"env":"development"`, ce qui est assumé. La
+   production reste à `false` — les traces d'exception y seraient publiques. À
+   revérifier au moment de la bascule des domaines (§8), puisque c'est le moment où
+   une variable d'environnement se recopie d'une ressource à l'autre.
 
 ## 3. Phase 1 — le front `client` : squelette et tunnel d'authentification
 
