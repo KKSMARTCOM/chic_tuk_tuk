@@ -29,13 +29,13 @@ Route::prefix('public')->name('public.')->group(function () {
         // 60/min : le front redemande un devis à chaque changement d'horaire, et les
         // opérateurs mobiles béninois partagent souvent une même IP entre de nombreux
         // abonnés (CGNAT). Le coût réel est borné par le cache de distance.
-        ->middleware('throttle:60,1')
+        ->middleware('throttle:public-quote')
         ->name('pricing.quote');
 
     // Turnstile en plus du throttling : le partage d'IP (CGNAT) interdit de serrer la
     // limite, et un robot distribué la contournerait. Sans TURNSTILE_SECRET configuré,
     // le middleware se retire de lui-même.
     Route::post('/bookings', [BookingController::class, 'store'])
-        ->middleware(['throttle:10,60', 'turnstile'])
+        ->middleware(['throttle:public-bookings', 'turnstile'])
         ->name('bookings.store');
 });

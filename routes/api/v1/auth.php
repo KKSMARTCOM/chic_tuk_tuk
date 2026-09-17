@@ -27,15 +27,15 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->name('auth.')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])
-        ->middleware('throttle:30,1')
+        ->middleware('throttle:auth-login')
         ->name('login');
 
     Route::post('/password/forgot', [PasswordController::class, 'forgot'])
-        ->middleware('throttle:30,1')
+        ->middleware('throttle:auth-password')
         ->name('password.forgot');
 
     Route::post('/password/reset', [PasswordController::class, 'reset'])
-        ->middleware('throttle:30,1')
+        ->middleware('throttle:auth-password')
         ->name('password.reset');
 
     // token.fresh applique la fenêtre d'inactivité glissante. Il n'est posé QUE sur

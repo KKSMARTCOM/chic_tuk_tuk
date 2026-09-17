@@ -2,7 +2,10 @@
 
 namespace App\Providers;
 
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
@@ -63,5 +66,52 @@ class AppServiceProvider extends ServiceProvider
         if (env(key: 'APP_ENV') !== 'local') {
             URL::forceScheme(scheme: 'https');
         }
+
+        $this->registerRateLimiters();
+    }
+
+    /**
+     * Limiteurs nommés, un par route throttlée.
+     *
+     * ⚠️ Indispensable, et non cosmétique. Le throttle anonyme de Laravel partage un
+     * compteur unique par IP entre TOUTES les routes : pour une requête sans
+     * utilisateur, `ThrottleRequests::resolveRequestSignature()` renvoie
+     * `sha1($route->getDomain().'|'.$request->ip())`, sans la route ni l'URI, et la
+     * clé finale vaut ce hachage préfixé d'une chaîne vide.
+     *
+     * Les conséquences étaient réelles, observées sur staging le 2026-09-17 :
+     *
+     * - Le plafond de chaque route se compare à un compteur commun. Épuiser le devis
+     *   public (60/min) bloquait la connexion (30/min) et la réservation (10/h).
+     * - La fenêtre de la route qui crée le minuteur gouverne le blocage de toutes les
+     *   autres. `public/bookings` étant à 10 par heure, dix réservations anonymes
+     *   depuis une IP d'opérateur — qui couvre de nombreux abonnés au Bénin — coupaient
+     *   la connexion des agents pendant une heure.
+     *
+     * Un limiteur nommé résout cela parce que sa clé est `md5($nom.$cle)` : le nom du
+     * limiteur entre dans la clé, donc chaque route a son propre compteur. La clé
+     * reste préfixée du nom côté appelant pour que ce soit lisible dans le cache.
+     *
+     * Couvert par `tests/Feature/Identity/ThrottleIsolationTest.php`, qui épuise
+     * volontairement la route au plafond le PLUS HAUT avant d'éprouver une route au
+     * plafond plus bas — l'inverse passe avec un compteur partagé et ne prouve rien.
+     */
+    private function registerRateLimiters(): void
+    {
+        RateLimiter::for('auth-login', fn (Request $request) => Limit::perMinute(30)
+            ->by('auth-login|'.$request->ip()));
+
+        // Un seul compteur pour « mot de passe oublié » et « réinitialiser » : c'est
+        // le même parcours utilisateur, et les isoler n'apporterait rien.
+        RateLimiter::for('auth-password', fn (Request $request) => Limit::perMinute(30)
+            ->by('auth-password|'.$request->ip()));
+
+        RateLimiter::for('public-quote', fn (Request $request) => Limit::perMinute(60)
+            ->by('public-quote|'.$request->ip()));
+
+        // La seule route volontairement serrée : elle crée des données. Turnstile la
+        // protège en plus. Son isolement est justement ce qui compte le plus ici.
+        RateLimiter::for('public-bookings', fn (Request $request) => Limit::perHour(10)
+            ->by('public-bookings|'.$request->ip()));
     }
 }
