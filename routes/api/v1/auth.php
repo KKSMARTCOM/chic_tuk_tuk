@@ -15,6 +15,14 @@ use Illuminate\Support\Facades\Route;
 | utilisateurs innocents sans gêner un attaquant distribué. La vraie défense est
 | le verrou de compte (cf. config/identity.php).
 |
+| Ce raisonnement vaut pour TOUTES les routes de ce fichier, mot de passe compris.
+| Les deux routes de mot de passe ont longtemps été à 10 requêtes par heure, trente
+| fois plus serré que la connexion, ce qui contredisait l'argument ci-dessus sans
+| le dire. Le 2026-09-17 le défaut est devenu concret : deux personnes derrière la
+| même IP — un développeur qui éprouvait l'API et un utilisateur qui suivait un
+| vrai lien de réinitialisation — ont suffi à produire un 429 au premier essai
+| légitime. Aligné sur la connexion depuis.
+|
 */
 
 Route::prefix('auth')->name('auth.')->group(function () {
@@ -23,11 +31,11 @@ Route::prefix('auth')->name('auth.')->group(function () {
         ->name('login');
 
     Route::post('/password/forgot', [PasswordController::class, 'forgot'])
-        ->middleware('throttle:10,60')
+        ->middleware('throttle:30,1')
         ->name('password.forgot');
 
     Route::post('/password/reset', [PasswordController::class, 'reset'])
-        ->middleware('throttle:10,60')
+        ->middleware('throttle:30,1')
         ->name('password.reset');
 
     // token.fresh applique la fenêtre d'inactivité glissante. Il n'est posé QUE sur
