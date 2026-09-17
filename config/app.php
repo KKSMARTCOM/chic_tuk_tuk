@@ -56,6 +56,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | URL du front authentifié
+    |--------------------------------------------------------------------------
+    |
+    | app.chictuktuk.com, servi par une autre application : Laravel ne peut donc pas
+    | générer ses liens avec route(). Sert de base aux liens de réinitialisation de
+    | mot de passe envoyés par email.
+    |
+    | `?:` et non le second argument de env() : la variable existe dans .env mais peut
+    | y être vide, et env() renvoie alors une chaîne vide sans appliquer son défaut.
+    |
+    */
+
+    'front_app_url' => env('FRONT_APP_URL') ?: 'http://localhost:3000',
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |
