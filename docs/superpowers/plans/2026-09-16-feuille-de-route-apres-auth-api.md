@@ -19,12 +19,15 @@ repart d'un cycle conception → spec → plan, comme l'auth API v1
 | Kill-switch du service worker | servi à la racine du landing | `/sw.js` renvoie bien le script de désinscription |
 | Turnstile | actif | POST sans jeton refusé sur `cf_turnstile_token` |
 | API v1 publique | en ligne | `pricing/quote`, `public/bookings` |
-| Auth API v1 sur `api-staging.chictuktuk.com` | en ligne | 63 tests, 230 assertions ; `login` en 422, `/me` en 401, `password/forgot` en 200 indifférencié |
+| Auth API v1 sur `api-staging.chictuktuk.com` | en ligne, éprouvée | 63 tests, 230 assertions ; contre staging : connexion, `/me`, `logout` en 204, révocation, verrou à 5 échecs et sa levée à 277 s |
 | Redirection des anciens chemins Blade depuis le landing | en ligne | `staging.chictuktuk.com/login` en 302 vers `app-staging`, qui répond 200 |
 
-## 2. Phase 0 — finir de livrer l'auth (prérequis de tout le reste)
+## 2. Phase 0 — finir de livrer l'auth ✅ close
 
-Rien de ce qui suit n'a de sens avant que l'auth réponde sur staging.
+Rien de ce qui suit n'avait de sens avant que l'auth réponde sur staging. C'est fait :
+les cinq étapes sont closes, l'auth est déployée et éprouvée. Le détail est conservé
+ci-dessous parce que la Phase 1 s'appuie dessus, et parce que la bascule en production
+rejouera la même séquence sur un environnement où une erreur coûte cher.
 
 1. ~~**Fusionner la branche courante dans `staging`, puis déployer.**~~ **Fait.**
    Fusionnée en `b64e88a`, déployée, la migration qui recrée `password_reset_tokens`
@@ -44,19 +47,37 @@ Rien de ce qui suit n'a de sens avant que l'auth réponde sur staging.
    `Access-Control-Allow-Origin`, tandis qu'une origine tierce n'obtient aucun
    en-tête. C'est la même variable qui sert de base aux liens de réinitialisation,
    donc son second rôle est couvert par la même vérification.
-4. **Éprouver les endpoints contre staging.** *Partiellement fait.* Vérifiés sans
-   identifiants : `login` sans corps en 422 avec ses erreurs par champ, `login` sur
-   des identifiants faux en 422 sur `email` (donc sans énumération des comptes), `/me`
-   sans jeton en 401 `UNAUTHENTICATED`, `password/forgot` sur une adresse inconnue en
-   200 indifférencié.
+4. ~~**Éprouver les endpoints contre staging.**~~ **Fait**, sur un compte de test
+   `client` créé pour l'occasion plutôt que sur un compte en service — le verrou
+   bloque véritablement cinq minutes.
 
-   Restent à éprouver, parce qu'ils exigent un mot de passe réel ou produisent un
-   effet de bord sur un compte en service : la connexion aboutie et `/me` avec ses
-   permissions, le `409 PROFIL_AMBIGUOUS` sur `arsogn991@gmail.com` (compte admin
-   **et** propriétaire, cas réel en base), le verrou après cinq échecs — qui bloque
-   véritablement le compte cinq minutes — et l'envoi réel d'un email de
-   réinitialisation, qui écrit dans `password_reset_tokens` et prouverait la migration
-   par l'usage plutôt que par l'absence d'erreur.
+   | Contrôle | Résultat |
+   | --- | --- |
+   | Connexion valide | 200, jeton, `dashboard_path: /client/dashboard` |
+   | `/me` avec le jeton | 200 |
+   | `/me` avec un jeton bidon | 401 `UNAUTHENTICATED` |
+   | `logout` | **204**, pas 200 |
+   | Le même jeton après `logout` | 401 — révocation effective |
+   | 5 échecs consécutifs | 5 × 422, sans annoncer le verrou imminent |
+   | Bon mot de passe juste après | 423 `ACCOUNT_LOCKED`, `retry_after: 299` |
+   | Attente du délai | verrou levé à 277 s, `retry_after` décompté fidèlement |
+   | `password/reset`, jeton faux ou malformé | 422 identique dans les deux cas |
+
+   Les deux derniers méritent une phrase. Le verrou **se lève** : un verrou qui
+   resterait fermé serait un déni de service sur son propre compte, et le décompte
+   étant fidèle, le front peut l'afficher sans le recalculer. Et `password/reset`
+   fait interroger `password_reset_tokens` par `user_id` : une migration mal
+   appliquée aurait donné un 500 sur colonne absente, pas un 422.
+
+   Restent hors de portée d'ici, faute d'accès à la base de staging : le `409
+   PROFIL_AMBIGUOUS` sur `arsogn991@gmail.com` et `/me` porteur de permissions
+   réelles — le compte de test n'a ni rôle ni permission. Les deux sont vérifiés en
+   local, sur deux comptes partageant une adresse : 409 avec la liste `profils`,
+   puis 200 sur reprise avec `"profil":"owner"`. Le même passage local a prouvé la
+   migration par l'usage : `password/forgot` a écrit **deux lignes** dans
+   `password_reset_tokens`, une par compte — ce que la table d'origine de Laravel,
+   à clé primaire `email`, ne pouvait pas contenir.
+
 5. ~~**Décider du sort d'`APP_DEBUG`.**~~ **Tranché : vrai sur staging uniquement.**
    `/api/v1/health` y renvoie donc `"env":"development"`, ce qui est assumé. La
    production reste à `false` — les traces d'exception y seraient publiques. À
@@ -88,6 +109,8 @@ Points déjà tranchés, à ne pas rouvrir :
   pas à recalculer où envoyer l'utilisateur après connexion.
 - **Design identique**, comme pour le landing : transposition du markup Tailwind
   existant, pas une refonte.
+- **`logout` répond 204, pas 200**, et sans corps : à traiter comme un succès, sans tenter
+  de lire un JSON. Vérifié contre staging.
 
 Écrans du périmètre : connexion, choix de profil sur ambiguïté, mot de passe oublié,
 `/reset-password?token=…`, changement de mot de passe, et une coquille authentifiée
