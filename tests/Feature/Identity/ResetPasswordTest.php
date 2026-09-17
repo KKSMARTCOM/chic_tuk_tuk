@@ -113,6 +113,37 @@ class ResetPasswordTest extends TestCase
             ->assertJsonValidationErrors(['token']);
     }
 
+    /**
+     * @dataProvider jetonsMalFormes
+     */
+    public function test_un_jeton_mal_forme_est_refuse_sans_erreur_serveur(string $jeton, string $cas): void
+    {
+        // Le préfixe du jeton est comparé à `password_reset_tokens.user_id`, une
+        // colonne uuid de PostgreSQL. Un préfixe qui n'est pas un uuid — « abc.def »,
+        // typiquement un lien tronqué par un client de messagerie — faisait échouer la
+        // conversion côté base et ressortait en 500, là où un 422 est attendu.
+        // Relevé sur staging le 2026-09-17.
+        $this->postJson('/api/v1/auth/password/reset', [
+            'token' => $jeton,
+            'password' => 'nouveau-mot-de-passe',
+            'password_confirmation' => 'nouveau-mot-de-passe',
+        ])
+            ->assertStatus(422, $cas)
+            ->assertJsonValidationErrors(['token']);
+    }
+
+    public static function jetonsMalFormes(): array
+    {
+        return [
+            'préfixe non-uuid' => ['abc.def', 'un préfixe qui n\'est pas un uuid'],
+            'préfixe vide' => ['.abc', 'un jeton commençant par le séparateur'],
+            'aléa vide' => ['abc.', 'un jeton sans partie aléatoire'],
+            'uuid tronqué' => ['a9ff556f-629b.def', 'un uuid coupé au milieu'],
+            'point seul' => ['.', 'le séparateur seul'],
+            'plusieurs points' => ['abc.def.ghi', 'plusieurs séparateurs'],
+        ];
+    }
+
     public function test_la_confirmation_est_exigee(): void
     {
         [, $jeton] = $this->userAvecJeton();

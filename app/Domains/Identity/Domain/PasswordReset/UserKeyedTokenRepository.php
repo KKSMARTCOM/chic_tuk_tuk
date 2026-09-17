@@ -18,7 +18,12 @@ use Illuminate\Support\Str;
  * en base ; sans ce préfixe, retrouver le compte à partir du seul jeton imposerait de
  * parcourir toutes les lignes en comparant les hachages. Le front n'a rien à en
  * savoir : il transmet une chaîne opaque. Un uuid ne contient pas de point, la
- * découpe sur le premier point est donc sûre.
+ * découpe sur le premier point est donc sûre pour un jeton que NOUS avons émis.
+ *
+ * ⚠️ Un jeton REÇU, lui, peut être n'importe quoi — tronqué par un client de
+ * messagerie, recopié à la main, fabriqué. `resolve()` valide donc la forme du
+ * préfixe avant toute requête : `user_id` est une colonne uuid de PostgreSQL, et lui
+ * comparer une valeur qui n'est pas un uuid fait échouer la conversion côté base.
  */
 final class UserKeyedTokenRepository
 {
@@ -51,6 +56,15 @@ final class UserKeyedTokenRepository
 
         $userId = substr($composite, 0, $separator);
         $plain = substr($composite, $separator + 1);
+
+        // Avant toute requête : `user_id` est une colonne uuid, et lui comparer
+        // « abc » fait lever PostgreSQL (SQLSTATE 22P02), ce qui ressortait en 500 là
+        // où un 422 est attendu. Un lien de réinitialisation tronqué suffisait à le
+        // déclencher. Un aléa vide est écarté au même endroit : il ne peut
+        // correspondre à aucun jeton émis, Str::random(48) n'étant jamais vide.
+        if (! Str::isUuid($userId) || $plain === '') {
+            return null;
+        }
 
         $row = DB::table(self::TABLE)->where('user_id', $userId)->first();
 
