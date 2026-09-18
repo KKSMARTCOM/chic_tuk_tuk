@@ -3,11 +3,12 @@
 namespace App\Models;
 
 use App\Traits\HasUuid;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class VehiclePause extends Model
 {
-    use HasUuid;
+    use HasUuid, HasFactory;
 
     protected $fillable = [
         'vehicle_id',
