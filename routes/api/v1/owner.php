@@ -41,4 +41,8 @@ Route::middleware(['token.fresh', 'auth:sanctum', 'abilities:owner'])
         Route::get('/vehicles/{id}/pauses', [VehicleController::class, 'pauses'])
             ->middleware('permission:view-own-leaves')
             ->name('vehicles.pauses');
+
+        Route::get('/vehicles/{id}/payments', [VehicleController::class, 'payments'])
+            ->middleware('permission:view-own-payments')
+            ->name('vehicles.payments');
     });

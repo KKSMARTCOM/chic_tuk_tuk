@@ -2,6 +2,7 @@
 
 namespace App\Domains\Fleet\Presentation\Api\V1\Owner;
 
+use App\Domains\Finance\Application\Actions\BuildMonthlyPayoutRecap;
 use App\Domains\Fleet\Application\Actions\ListOwnerVehicles;
 use App\Domains\Fleet\Application\Data\OwnerVehicleDetailData;
 use App\Domains\Fleet\Application\Data\OwnerVehiclePausesData;
@@ -91,6 +92,31 @@ final class VehicleController
             return response()->json([
                 'message' => 'Les pauses de ce véhicule n\'ont pas pu être chargées. Réessayez.',
                 'code' => 'OWNER_PAUSES_READ_FAILED',
+            ], 500);
+        }
+    }
+
+    public function payments(Request $request, string $id, BuildMonthlyPayoutRecap $recap): JsonResponse
+    {
+        try {
+            $vehicle = $this->owned($request, $id);
+            $contract = $vehicle->activeVehicleContract;
+
+            // Pas de contrat actif : pas de récapitulatif. Un tableau vide, pas un 404 —
+            // le véhicule existe, c'est son contrat qui manque.
+            return response()->json($contract ? $recap($contract) : []);
+        } catch (ValidationException|ApiException|ModelNotFoundException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            Log::error('Erreur lors du calcul du récapitulatif mensuel : '.$e->getMessage(), [
+                'exception' => $e,
+                'user_id' => $request->user()?->id,
+                'vehicle_id' => $id,
+            ]);
+
+            return response()->json([
+                'message' => 'Le récapitulatif de ce véhicule n\'a pas pu être chargé. Réessayez.',
+                'code' => 'OWNER_PAYMENTS_READ_FAILED',
             ], 500);
         }
     }
