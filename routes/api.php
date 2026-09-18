@@ -20,6 +20,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     require __DIR__ . '/api/v1/public.php';
     require __DIR__ . '/api/v1/auth.php';
     require __DIR__ . '/api/v1/owner.php';
+    require __DIR__ . '/api/v1/driver.php';
 
     // Sonde applicative : sert à valider la chaîne CORS + déploiement depuis le front.
     Route::get('/health', fn () => response()->json([

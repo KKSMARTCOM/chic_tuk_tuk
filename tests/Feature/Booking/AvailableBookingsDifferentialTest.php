@@ -22,7 +22,9 @@ class AvailableBookingsDifferentialTest extends TestCase
     use RefreshDatabase;
 
     private Driver $titulaire;
+
     private Driver $autre;
+
     private Driver $tiers;
 
     /** @var array<string, string> nom de la forme => identifiant de la course */

@@ -113,7 +113,7 @@ class StartBookingTest extends TestCase
         $this->service()->start($visee->id, $driver->id);
     }
 
-    public function test_une_course_POSTERIEURE_du_meme_jour_ne_bloque_pas(): void
+    public function test_une_course_posterieure_du_meme_jour_ne_bloque_pas(): void
     {
         // Le garde-fou du correctif : sans lui, une comparaison trop large bloquerait
         // tout, et les tests de refus ci-dessus passeraient encore — pour la mauvaise

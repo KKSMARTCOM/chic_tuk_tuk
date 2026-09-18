@@ -97,7 +97,7 @@ class TakeBookingTest extends TestCase
         $this->service()->take($parent->id, $autre->id);
     }
 
-    public function test_un_enfant_d_abonnement_lie_a_A_reste_acceptable_par_B(): void
+    public function test_un_enfant_d_abonnement_lie_a_a_reste_acceptable_par_b(): void
     {
         // ⚠️ Ce test verrouille un ÉCART, pas une règle souhaitée. isVisibleToDriver()
         // renvoie true dès que !is_recurring, et un enfant d'abonnement porte
