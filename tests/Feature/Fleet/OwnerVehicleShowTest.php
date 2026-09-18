@@ -1,0 +1,141 @@
+<?php
+
+namespace Tests\Feature\Fleet;
+
+use App\Domains\Identity\Domain\Enums\Profil;
+use App\Models\User;
+use App\Models\Vehicle;
+use App\Models\VehicleContract;
+use App\Models\VehiclePause;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use Spatie\Permission\Models\Permission;
+use Tests\TestCase;
+
+class OwnerVehicleShowTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private function loginOwner(): array
+    {
+        $user = User::factory()->profil(Profil::Owner)->create([
+            'password' => Hash::make('bon-mot-de-passe'),
+        ]);
+        Permission::findOrCreate('view-own-contracts', 'web');
+        $user->givePermissionTo('view-own-contracts');
+
+        $token = $this->postJson('/api/v1/auth/login', [
+            'email' => $user->email,
+            'password' => 'bon-mot-de-passe',
+        ])->json('token');
+
+        return [$user, $token];
+    }
+
+    public function test_le_vehicule_d_un_autre_proprietaire_renvoie_404(): void
+    {
+        [$owner, $token] = $this->loginOwner();
+        $mien = Vehicle::factory()->create(['owner_id' => $owner->id]);
+        $autre = Vehicle::factory()->create();
+
+        // ⚠️ La 200 sur MON véhicule est ce qui rend ce test discriminant. Sans elle,
+        // il passerait alors même que la route n'existe pas : une route absente répond
+        // 404 tout comme un refus de portée, et le test ne prouverait rien.
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson("/api/v1/owner/vehicles/{$mien->id}")
+            ->assertOk();
+
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson("/api/v1/owner/vehicles/{$autre->id}")
+            ->assertStatus(404)
+            ->assertJsonPath('code', 'NOT_FOUND');
+    }
+
+    public function test_un_identifiant_inconnu_renvoie_404(): void
+    {
+        [$owner, $token] = $this->loginOwner();
+        $mien = Vehicle::factory()->create(['owner_id' => $owner->id]);
+
+        // Même raison que ci-dessus : la 200 d'abord, sinon l'absence de route suffit
+        // à faire passer le test.
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson("/api/v1/owner/vehicles/{$mien->id}")
+            ->assertOk();
+
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson('/api/v1/owner/vehicles/'.Str::uuid())
+            ->assertStatus(404);
+    }
+
+    public function test_expose_le_contrat_complet_et_ses_charges(): void
+    {
+        [$owner, $token] = $this->loginOwner();
+        $vehicle = Vehicle::factory()->create(['owner_id' => $owner->id]);
+        VehicleContract::factory()->forVehicle($vehicle)->create();
+
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson("/api/v1/owner/vehicles/{$vehicle->id}")
+            ->assertOk()
+            ->assertJsonPath('id', $vehicle->id)
+            ->assertJsonPath('active_pause', null)
+            ->assertJsonPath('contract.contract_months', 24)
+            ->assertJsonPath('contract.unlimited_internet', 5000)
+            ->assertJsonPath('contract.spotify_premium', 2500)
+            ->assertJsonPath('contract.manager_remuneration', 20000)
+            ->assertJsonPath('contract.total_charges', 27500)
+            ->assertJsonStructure(['contract' => [
+                'start_date', 'planned_end_date', 'extended_end_date',
+                'total_amount', 'total_paid', 'remaining_amount', 'daily_net_amount',
+                'progress_percentage', 'months_elapsed', 'months_remaining',
+                'total_contract_days', 'total_pause_days_taken',
+                'remaining_contract_days', 'pause_usage_percentage',
+            ]]);
+    }
+
+    public function test_les_dates_sortent_au_format_iso(): void
+    {
+        [$owner, $token] = $this->loginOwner();
+        $vehicle = Vehicle::factory()->create(['owner_id' => $owner->id]);
+        VehicleContract::factory()->forVehicle($vehicle)->create([
+            'start_date' => '2026-01-15',
+        ]);
+
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson("/api/v1/owner/vehicles/{$vehicle->id}")
+            ->assertOk()
+            // Ni « 15 janv. 2026 » ni un ISO 8601 complet avec heure : le front
+            // formate lui-même, et une date sans heure n'a pas de fuseau.
+            ->assertJsonPath('contract.start_date', '2026-01-15');
+    }
+
+    public function test_expose_la_pause_en_cours_avec_son_libelle_francais(): void
+    {
+        [$owner, $token] = $this->loginOwner();
+        $vehicle = Vehicle::factory()->create(['owner_id' => $owner->id]);
+        $contract = VehicleContract::factory()->forVehicle($vehicle)->create();
+        VehiclePause::factory()->forContract($contract)->ongoing()->create([
+            'reason_type' => 'technical',
+            'start_date' => '2026-09-01',
+        ]);
+
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson("/api/v1/owner/vehicles/{$vehicle->id}")
+            ->assertOk()
+            ->assertJsonPath('active_pause.start_date', '2026-09-01')
+            ->assertJsonPath('active_pause.reason_type', 'technical')
+            // L'écran Blade affichait « Technical » ; le modèle sait dire mieux.
+            ->assertJsonPath('active_pause.reason_label', 'Problème technique');
+    }
+
+    public function test_un_vehicule_sans_contrat_actif_repond_200_avec_contrat_nul(): void
+    {
+        [$owner, $token] = $this->loginOwner();
+        $vehicle = Vehicle::factory()->create(['owner_id' => $owner->id]);
+
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson("/api/v1/owner/vehicles/{$vehicle->id}")
+            ->assertOk()
+            ->assertJsonPath('contract', null);
+    }
+}

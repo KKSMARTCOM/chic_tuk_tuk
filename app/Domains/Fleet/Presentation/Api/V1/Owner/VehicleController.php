@@ -3,8 +3,10 @@
 namespace App\Domains\Fleet\Presentation\Api\V1\Owner;
 
 use App\Domains\Fleet\Application\Actions\ListOwnerVehicles;
+use App\Domains\Fleet\Application\Data\OwnerVehicleDetailData;
 use App\Models\Vehicle;
 use App\Shared\Http\ApiException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -36,6 +38,32 @@ final class VehicleController
             return response()->json([
                 'message' => 'Vos véhicules n\'ont pas pu être chargés. Réessayez.',
                 'code' => 'OWNER_VEHICLES_READ_FAILED',
+            ], 500);
+        }
+    }
+
+    public function show(Request $request, string $id): JsonResponse
+    {
+        try {
+            $vehicle = $this->owned($request, $id);
+            $vehicle->load(['activeVehicleContract', 'activePause']);
+
+            return response()->json(OwnerVehicleDetailData::fromModel($vehicle));
+        } catch (ValidationException|ApiException|ModelNotFoundException $e) {
+            // ⚠️ ModelNotFoundException est relancée AVEC les deux autres : attrapée par
+            // le \Throwable plus bas, le 404 de portée deviendrait un 500, et le
+            // véhicule d'autrui cesserait d'être introuvable pour paraître en panne.
+            throw $e;
+        } catch (\Throwable $e) {
+            Log::error('Erreur lors de la lecture d\'un véhicule du propriétaire : '.$e->getMessage(), [
+                'exception' => $e,
+                'user_id' => $request->user()?->id,
+                'vehicle_id' => $id,
+            ]);
+
+            return response()->json([
+                'message' => 'Ce véhicule n\'a pas pu être chargé. Réessayez.',
+                'code' => 'OWNER_VEHICLE_READ_FAILED',
             ], 500);
         }
     }

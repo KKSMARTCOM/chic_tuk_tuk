@@ -33,4 +33,8 @@ Route::middleware(['token.fresh', 'auth:sanctum', 'abilities:owner'])
         Route::get('/vehicles', [VehicleController::class, 'index'])
             ->middleware('permission:view-own-vehicles')
             ->name('vehicles.index');
+
+        Route::get('/vehicles/{id}', [VehicleController::class, 'show'])
+            ->middleware('permission:view-own-contracts')
+            ->name('vehicles.show');
     });
