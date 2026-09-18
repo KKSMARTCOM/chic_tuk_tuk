@@ -5,6 +5,7 @@ namespace App\Domains\Booking\Application\Actions;
 use App\Models\Booking;
 use App\Models\Driver;
 use App\Services\CommissionService;
+use App\Shared\Http\ApiException;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -28,7 +29,7 @@ final class CompleteBooking
                 $booking->driver_id !== $driverId ||
                 $booking->status !== 'in_progress'
             ) {
-                throw new \Exception('Finalisation non autorisée.');
+                throw new ApiException(409, 'BOOKING_NOT_COMPLETABLE', 'Finalisation non autorisée.');
             }
 
             // Calcul à la completion

@@ -3,6 +3,7 @@
 namespace App\Domains\Booking\Application\Actions;
 
 use App\Models\Booking;
+use App\Shared\Http\ApiException;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -21,11 +22,11 @@ final class RevokeFromSubscription
 
             // Seul l'agent lié peut révoquer
             if ($booking->subscription_driver_id !== $driverId) {
-                throw new \Exception('Vous n\'êtes pas autorisé à révoquer cette course.');
+                throw new ApiException(404, 'NOT_FOUND', 'Vous n\'êtes pas autorisé à révoquer cette course.');
             }
 
             if (!in_array($booking->status, ['pending', 'confirmed'])) {
-                throw new \Exception('Cette course ne peut plus être révoquée.');
+                throw new ApiException(409, 'BOOKING_NOT_REVOCABLE', 'Cette course ne peut plus être révoquée.');
             }
 
             $booking->update([

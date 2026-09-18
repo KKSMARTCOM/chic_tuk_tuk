@@ -4,6 +4,7 @@ namespace App\Domains\Booking\Application\Actions;
 
 use App\Models\Booking;
 use App\Models\Driver;
+use App\Shared\Http\ApiException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -26,11 +27,17 @@ final class AcceptBooking
             $booking = Booking::lockForUpdate()->findOrFail($bookingId);
 
             if ($booking->status !== 'pending' || $booking->driver_id) {
-                throw new \Exception('Réservation déjà prise ou annulée.');
+                // L'acceptation concurrente est le cas le plus fréquent : deux agents
+                // touchent « accepter » à la seconde près, lockForUpdate en désigne un,
+                // et le perdant doit lire « cette course vient d'être prise ».
+                throw new ApiException(409, 'BOOKING_ALREADY_TAKEN', 'Réservation déjà prise ou annulée.');
             }
 
             if (!$booking->isVisibleToDriver($driverId)) {
-                throw new \Exception('Cette course n\'est pas accessible.');
+                // 404 et non 403 : un refus qui révélerait l'existence d'une course la
+                // rend introuvable. Le message reste celui du Blade — le front ne
+                // l'affiche pas, il s'appuie sur le `code`.
+                throw new ApiException(404, 'NOT_FOUND', 'Cette course n\'est pas accessible.');
             }
 
             $driver = Driver::lockForUpdate()->findOrFail($driverId);

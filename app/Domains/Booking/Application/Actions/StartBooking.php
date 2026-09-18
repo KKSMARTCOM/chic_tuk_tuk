@@ -4,6 +4,7 @@ namespace App\Domains\Booking\Application\Actions;
 
 use App\Models\Booking;
 use App\Models\Driver;
+use App\Shared\Http\ApiException;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -25,7 +26,12 @@ final class StartBooking
             $driver = Driver::lockForUpdate()->findOrFail($driverId);
 
             if ($booking->driver_id !== $driverId || $booking->status !== 'confirmed') {
-                throw new \Exception('Démarrage non autorisé.');
+                // ⚠️ Un seul code pour DEUX situations — « pas à cet agent » et « pas
+                // confirmed » — parce que le code d'origine les teste dans une seule
+                // condition. Les séparer donnerait un 404 sur la course d'autrui, donc
+                // un changement de comportement. C'est une simplification qui attend un
+                // test qui la couvre.
+                throw new ApiException(409, 'BOOKING_NOT_STARTABLE', 'Démarrage non autorisé.');
             }
 
             $hasOngoingTrip = Booking::where('driver_id', $driverId)
@@ -34,13 +40,17 @@ final class StartBooking
                 ->exists();
 
             if ($hasOngoingTrip) {
-                throw new \Exception(
+                throw new ApiException(
+                    409,
+                    'BOOKING_ALREADY_IN_PROGRESS',
                     'Vous avez déjà une course en cours.'
                 );
             }
 
             if ($driver->hasBlockingPreviousBookings($booking)) {
-                throw new \Exception(
+                throw new ApiException(
+                    409,
+                    'BOOKING_PREVIOUS_PENDING',
                     'Vous devez terminer ou annuler toutes les courses précédentes avant de démarrer celle-ci.'
                 );
             }

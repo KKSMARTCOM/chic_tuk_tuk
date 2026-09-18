@@ -3,6 +3,7 @@
 namespace App\Domains\Booking\Application\Actions;
 
 use App\Models\Booking;
+use App\Shared\Http\ApiException;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -32,11 +33,11 @@ final class CancelBooking
             $booking = Booking::lockForUpdate()->findOrFail($bookingId);
 
             if ($booking->driver_id !== $driverId) {
-                throw new \Exception('Accès non autorisé.');
+                throw new ApiException(404, 'NOT_FOUND', 'Accès non autorisé.');
             }
 
             if (!$booking->canBeCancelled()) {
-                throw new \Exception('Cette réservation ne peut plus être annulée.');
+                throw new ApiException(409, 'BOOKING_NOT_CANCELLABLE', 'Cette réservation ne peut plus être annulée.');
             }
 
             // CAS 1 — Course enfant d'abonnement → révocation
