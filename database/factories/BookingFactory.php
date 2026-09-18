@@ -15,20 +15,36 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  * test se trompe sans bruit — la course n'apparaît simplement pas là où on l'attendait,
  * et le test conclut à une régression qui n'existe pas.
  *
+ * ⚠️ AUCUN appel à `fake()` ici, et ce n'est pas un choix de style.
+ *
+ * `fakerphp/faker` est une dépendance de DÉVELOPPEMENT, et le Dockerfile déploie avec
+ * `composer install --no-dev` : `fake()` lève « Class "Faker\Factory" not found » dès
+ * qu'on quitte le poste de développement. Or `DriverScenarioSeeder` s'appuie sur cette
+ * fabrique et doit tourner sur staging. Constaté le 2026-09-18, en production de
+ * l'erreur exacte.
+ *
+ * Les valeurs varient par un compteur plutôt que par un générateur aléatoire — ce qui
+ * rend au passage les tests reproductibles.
+ *
  * @extends Factory<Booking>
  */
 class BookingFactory extends Factory
 {
     protected $model = Booking::class;
 
+    /** Fait varier les libellés sans tirer au sort, et sans Faker. */
+    private static int $compteur = 0;
+
     public function definition(): array
     {
+        $n = ++self::$compteur;
+
         return [
             'user_id' => User::factory(),
             // Les sept colonnes NOT NULL sans défaut. `booking_number` n'y figure pas :
             // Booking::boot() l'écrase à la création, le poser ici ne sert à rien.
-            'from_location' => fake()->streetName(),
-            'to_location' => fake()->streetName(),
+            'from_location' => "Lieu de départ {$n}",
+            'to_location' => "Lieu d'arrivée {$n}",
             'distance' => 5,
             'base_price' => 5000,
             'total_price' => 5000,
@@ -37,7 +53,7 @@ class BookingFactory extends Factory
             // Les colonnes à défaut, répétées pour que chaque état parte d'un socle
             // explicite plutôt que du défaut de la base.
             'phone' => '+22997000000',
-            'client_name' => fake()->name(),
+            'client_name' => "Client {$n}",
             'status' => 'pending',
             'days' => 1,
             'remaining_days' => 1,

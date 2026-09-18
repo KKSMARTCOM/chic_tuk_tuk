@@ -451,6 +451,21 @@ est déployée : elle doit être compatible avec l'image précédente (rollback)
 
 ## Points d'attention
 
+- ⚠️ **`fake()` n'existe pas hors développement.** `fakerphp/faker` est en
+  `require-dev` et le `Dockerfile` déploie avec `composer install --no-dev` : tout code
+  atteignable depuis un seeder, une commande ou un contrôleur lève alors
+  « Class "Faker\Factory" not found ». Les **fabriques sont un outil de test** ; celle
+  qu'un seeder utilise doit donc s'en passer (`database/factories/BookingFactory.php`
+  fait varier ses valeurs par un compteur). Attention aussi aux valeurs PARESSEUSES :
+  `'user_id' => User::factory()` ne s'évalue que si l'appelant ne fournit pas la colonne,
+  et réveille alors `UserFactory`, qui appelle `fake()`. Constaté sur staging le
+  2026-09-18.
+- ⚠️ **PostgreSQL est strict sur le type `uuid`.** Comparer une colonne `uuid` à une
+  chaîne qui n'en est pas un ne rend pas « aucun résultat » : cela lève
+  `invalid input syntax for type uuid` et fait échouer la requête ENTIÈRE, y compris les
+  clauses `orWhere` qui auraient trouvé. Tester la forme avant (`Str::isUuid()`) plutôt
+  que de laisser le moteur trancher. Même origine que le piège du `CONCAT` sur les dates :
+  ce qui marcherait en MySQL casse ici.
 - UUID partout (HasUuid trait), keyType=string, incrementing=false
 - PostgreSQL : pas de CONCAT pour dates → (pickup_date::date + pickup_time::time).
   ⚠️ `Driver::hasBlockingPreviousBookings()` violait cette règle et en a payé le prix :
