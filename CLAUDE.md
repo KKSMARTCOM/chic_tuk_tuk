@@ -202,12 +202,24 @@ préexistant, produit un diff massif sans rapport avec la livraison en cours.
 - Enfant abonnement lié → titulaire seul
 - Enfant abonnement révoqué → tout le monde
 - Retour simple liée → agent seul (qui a accepté l'aller)
+- Retour d'abonnement liée → agent seul (branche omise de ce fichier jusqu'au 2026-09-18 ;
+  la requête en compte **neuf**, pas huit)
 - Retour révoquée → tout le monde
+- ⚠️ La transposition en `App\Domains\Booking\Application\Actions\ListAvailableBookings`
+  est prouvée équivalente par `AvailableBookingsDifferentialTest` — dix formes, trois
+  observateurs, listes ordonnées. C'est ce test, et non cette liste, qui fait foi.
 
-### getByDriverId(driverId)
+### getByDriverId(driverId, status = null, search = null)
 
-- driver_id=driverId (courses assignées)
-- OU retour simple pending liée (subscription_driver_id=driverId, status!=pending exclu des "mes courses")
+- driver_id = driverId, et rien d'autre. **Aucune recomposition** avec
+  `subscription_driver_id` : la description antérieure évoquait un « OU retour simple
+  pending liée », que le code ne fait pas et que les deux écrans appelants ne compensent
+  pas. Corrigé le 2026-09-18 après vérification dans le code.
+- Le paramètre `$search` n'est appelé par personne : l'écran d'historique a sa propre
+  requête dans `PageController::historiesBookings`.
+- ⚠️ Cette méthode ne sert PLUS l'API v1. L'espace agent lit par
+  `App\Domains\Booking\Application\Actions\ListAssignedBookings` (courses acceptées) et
+  `ListBookingHistory` (historique, paginé par 10). Elle reste pour le chemin Blade.
 
 ## Services principaux
 
@@ -217,6 +229,13 @@ Tous dans `app/Services`, injectés dans les contrôleurs (pas de logique métie
   cancel, complete, start, revokeFromSubscription, getAvailableBookings,
   getByDriverId, createRecurringBookings, markExpiredBookings,
   calculateEndDate, getNextAllowedDay
+- ⚠️ `take`, `cancel`, `complete`, `start` et `revokeFromSubscription` **DÉLÈGUENT**
+  depuis le 2026-09-18 à `App\Domains\Booking\Application\Actions\*`. Elles ne
+  contiennent plus de logique : toute modification de comportement se fait dans l'action,
+  jamais ici, sous peine de recréer deux implémentations divergentes de la cascade de
+  recréation. Les actions lèvent des `ApiException` portant statut et code ; comme celle-ci
+  hérite d'`Exception`, les `catch (\Exception)` du chemin Blade continuent de fonctionner
+  et affichent les mêmes messages flash.
 - PricingService : getDistance (OpenRouteService, clé dans config('services.openrouteservice.key')), getPrice
 - PaymentService : create, generateDailyContractPayments, generateDailyPaymentForContract
 - VehicleService : create, update, toggleStatus, pauseVehicle, endPause, createAutoAgentPause
@@ -306,6 +325,31 @@ Routes existantes : `GET /api/v1/health`, `GET /api/v1/public/pricing/quote`,
 `POST /api/v1/public/bookings`, et l'authentification : `POST /api/v1/auth/login`,
 `POST /api/v1/auth/logout`, `GET /api/v1/auth/me`, `POST /api/v1/auth/password`,
 `POST /api/v1/auth/password/forgot`, `POST /api/v1/auth/password/reset`.
+
+**Espace propriétaire** (`routes/api/v1/owner.php`) : quatre lectures sous
+`['token.fresh', 'auth:sanctum', 'abilities:owner']` + `permission:view-own-*`.
+
+**Espace agent, sous-lot 3a** (`routes/api/v1/driver.php`) : quatre lectures
+(`bookings/available`, `bookings/assigned`, `bookings/history`, `dashboard`) et cinq
+écritures (`bookings/{id}/accept|start|complete|cancel|revoke-subscription`), sous
+`['token.fresh', 'auth:sanctum', 'abilities:driver']` + `permission:view-bookings` sur
+les lectures et `edit-bookings` sur les écritures. Le vocabulaire reste `bookings`, jamais
+« rides ».
+
+⚠️ **Les routes Blade de l'agent ne portent aucune permission**, seulement
+`profil:driver` : l'API est donc plus stricte. Le rôle `driver` de référence porte bien
+les deux permissions, mais un agent réel à qui elles manqueraient perdrait l'accès.
+
+⚠️ **Deux classes `Data` distinctes** pour une course selon qu'elle est disponible ou
+acceptée. `AvailableBookingData` ne porte **aucune coordonnée client** — ni téléphone, ni
+nom, ni demandes particulières, ni prix — parce que l'écran des courses disponibles n'en
+affiche aucune. C'est une règle de confidentialité portée par la structure, pas par des
+champs facultatifs : ne rien y ajouter de tout cela.
+
+⚠️ **`pickup_at` part en ISO 8601 SANS décalage** (`2026-10-05T08:00:00`). `pickup_date` et
+`pickup_time` décrivent une heure murale, pas un instant ; l'application tourne en UTC et
+le Bénin est à UTC+1, donc suffixer un décalage déplacerait l'affichage d'une heure.
+`started_at` et `completed_at`, eux, viennent de colonnes `timestamp` et gardent le leur.
 
 **Authentification de l'API.** Jeton Bearer Sanctum nommé `api` — jamais du nom du
 profil, car `AuthService::login()` (chemin Blade) supprime les jetons ainsi nommés et
@@ -402,7 +446,13 @@ est déployée : elle doit être compatible avec l'image précédente (rollback)
 ## Points d'attention
 
 - UUID partout (HasUuid trait), keyType=string, incrementing=false
-- PostgreSQL : pas de CONCAT pour dates → (pickup_date::date + pickup_time::time)
+- PostgreSQL : pas de CONCAT pour dates → (pickup_date::date + pickup_time::time).
+  ⚠️ `Driver::hasBlockingPreviousBookings()` violait cette règle et en a payé le prix :
+  elle comparait un `CONCAT` SQL à une chaîne PHP bâtie depuis un Carbon, dont la
+  conversion glisse « 00:00:00 » entre la date et l'heure. Aucune course antérieure du
+  même jour n'était vue comme antérieure. Corrigé le 2026-09-18 — la comparaison porte
+  désormais sur des timestamps. Le piège vaut pour **toute** comparaison qui mélange une
+  expression SQL et une valeur construite en PHP.
 - Spatie : tous les rôles sous guard 'web', model_id en uuid dans model_has_roles
 - DataTables : colonne 0 cachée avec timestamp pour tri, type:'num' dans columnDefs
 - Sanctum + session : Auth::login() obligatoire en plus de createToken()

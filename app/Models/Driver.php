@@ -83,10 +83,40 @@ class Driver extends Model
             ->exists();
     }
 
+    /**
+     * L'agent a-t-il des courses antérieures non soldées ?
+     *
+     * ⚠️ Corrigé le 2026-09-18. La version antérieure comparait deux chaînes qui
+     * n'étaient pas construites de la même façon :
+     *
+     *   - à gauche, PostgreSQL rendait CONCAT(pickup_date, ' ', pickup_time), soit
+     *     « 2026-09-19 07:00:00 » ;
+     *   - à droite, PHP concaténait $booking->pickup_date . ' ' . $booking->pickup_time.
+     *     Or `pickup_date` est casté en `date`, donc en Carbon, et sa conversion en
+     *     chaîne rend « 2026-09-19 00:00:00 ». Le repère valait donc
+     *     « 2026-09-19 00:00:00 10:00 » — la date, MINUIT, puis l'heure collée derrière.
+     *
+     * La comparaison lexicographique butait au douzième caractère ('7' > '0') et aucune
+     * course du même jour n'était jamais vue comme antérieure : un agent pouvait démarrer
+     * sa course de 10:00 en laissant celle de 07:00 en plan, ce que ce refus existe
+     * précisément pour empêcher.
+     *
+     * La comparaison porte désormais sur des TIMESTAMPS et non sur des chaînes. C'est
+     * l'idiome déjà utilisé par ListAvailableBookings pour trier, et il supprime la
+     * classe entière de ces bugs plutôt que cette seule instance : le résultat ne dépend
+     * plus ni du réglage DateStyle de PostgreSQL, ni de la façon dont PHP rend un Carbon.
+     *
+     * La comparaison reste STRICTE : la course visée figure dans $this->bookings() et
+     * porte le même repère qu'elle-même, donc un `<=` ferait qu'aucune course ne pourrait
+     * plus jamais démarrer.
+     */
     public function hasBlockingPreviousBookings(Booking $currentBooking): bool
     {
+        $repere = Carbon::parse($currentBooking->pickup_date)->format('Y-m-d')
+            . ' ' . Carbon::parse($currentBooking->pickup_time)->format('H:i:s');
+
         return $this->bookings()
-            ->whereRaw("CONCAT(pickup_date, ' ', pickup_time) < ?", [$currentBooking->pickup_date . ' ' . $currentBooking->pickup_time])
+            ->whereRaw('(pickup_date::date + pickup_time::time) < ?::timestamp', [$repere])
             ->whereNotIn('status', ['completed', 'cancelled'])
             ->exists();
     }
