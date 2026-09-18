@@ -107,17 +107,27 @@ class BookingDataTest extends TestCase
         $this->assertIsString($json['week_days']);
     }
 
-    public function test_la_duree_d_une_course_terminee_est_en_minutes(): void
+    public function test_la_duree_d_une_course_terminee_est_en_secondes(): void
     {
+        // En secondes et non en minutes : la vue Blade affiche « 00:42:07 » via
+        // gmdate('H:i:s'), et des minutes perdraient les secondes.
         $driver = Driver::factory()->create();
         $booking = Booking::factory()->completed($driver)->create([
-            'started_at' => now()->subMinutes(42),
+            'started_at' => now()->subMinutes(42)->subSeconds(7),
             'completed_at' => now(),
         ]);
 
         $json = BookingHistoryData::fromModel($booking)->toArray();
 
-        $this->assertSame(42, $json['duration_minutes']);
+        $this->assertSame(42 * 60 + 7, $json['duration_seconds']);
+    }
+
+    public function test_une_course_non_terminee_n_a_pas_de_duree(): void
+    {
+        $driver = Driver::factory()->create();
+        $booking = Booking::factory()->cancelled($driver)->create();
+
+        $this->assertNull(BookingHistoryData::fromModel($booking)->toArray()['duration_seconds']);
     }
 
     public function test_on_ne_revoque_que_les_enfants_d_abonnement_dont_on_est_titulaire(): void

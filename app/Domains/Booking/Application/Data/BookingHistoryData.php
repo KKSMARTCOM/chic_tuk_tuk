@@ -33,8 +33,14 @@ final class BookingHistoryData extends BaseData
         public ?string $completedAt,
         public ?string $cancelledAt,
         public ?string $cancellationReason,
-        /** Null tant que la course n'a pas été démarrée ET terminée. */
-        public ?int $durationMinutes,
+        /**
+         * En SECONDES, et null tant que la course n'a pas été démarrée ET terminée.
+         *
+         * La vue Blade affiche `$booking->duration`, dont l'accesseur rend
+         * `gmdate('H:i:s', $seconds)` — soit « 00:42:07 ». Exposer des minutes
+         * perdrait les secondes et empêcherait le front de reproduire ce format.
+         */
+        public ?int $durationSeconds,
         public float $totalPrice,
         public float $commission,
         public float $driverEarning,
@@ -43,7 +49,7 @@ final class BookingHistoryData extends BaseData
     public static function fromModel(Booking $booking): self
     {
         $duree = ($booking->started_at && $booking->completed_at)
-            ? (int) round($booking->started_at->diffInSeconds($booking->completed_at) / 60)
+            ? (int) $booking->started_at->diffInSeconds($booking->completed_at)
             : null;
 
         return new self(
@@ -59,7 +65,7 @@ final class BookingHistoryData extends BaseData
             completedAt: self::instant($booking->completed_at),
             cancelledAt: self::instant($booking->cancelled_at),
             cancellationReason: $booking->cancellation_reason,
-            durationMinutes: $duree,
+            durationSeconds: $duree,
             totalPrice: (float) $booking->total_price,
             commission: (float) $booking->commission,
             driverEarning: (float) $booking->driver_earning,
