@@ -32,8 +32,11 @@ final class DriverDashboardData extends BaseData
         public array $recentAssigned,
     ) {}
 
-    /** @param array<string, mixed> $stats la sortie de BuildDriverDashboard */
-    public static function fromStats(array $stats): self
+    /**
+     * @param  array<string, mixed>  $stats  la sortie de BuildDriverDashboard
+     * @param  string|null  $driverId  l'agent qui regarde — `can_be_revoked` en dépend
+     */
+    public static function fromStats(array $stats, ?string $driverId = null): self
     {
         return new self(
             totalTrips: (int) $stats['total_trips'],
@@ -47,7 +50,7 @@ final class DriverDashboardData extends BaseData
             totalCommission: (float) $stats['total_commission'],
             totalDurationMinutes: (int) $stats['total_duration_minutes'],
             recentAvailable: collect($stats['recent_available'])
-                ->map(fn (Booking $b) => AvailableBookingData::fromModel($b))->all(),
+                ->map(fn (Booking $b) => AvailableBookingData::fromModel($b, $driverId))->all(),
             recentAssigned: collect($stats['recent_assigned'])
                 ->map(fn (Booking $b) => AssignedBookingData::fromModel($b))->all(),
         );

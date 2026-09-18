@@ -41,7 +41,8 @@ final class BookingController
     public function available(Request $request, ListAvailableBookings $list): JsonResponse
     {
         return $this->lire($request, 'available', fn (Driver $driver) => $list($driver->id)
-            ->map(fn (Booking $b) => AvailableBookingData::fromModel($b)));
+            // L'agent est passé au Data : `can_be_revoked` dépend de QUI regarde.
+            ->map(fn (Booking $b) => AvailableBookingData::fromModel($b, $driver->id)));
     }
 
     public function assigned(Request $request, ListAssignedBookings $list): JsonResponse

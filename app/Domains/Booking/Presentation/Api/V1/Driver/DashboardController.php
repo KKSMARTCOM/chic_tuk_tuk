@@ -25,7 +25,7 @@ final class DashboardController
                 );
             }
 
-            return response()->json(DriverDashboardData::fromStats($build($driver)));
+            return response()->json(DriverDashboardData::fromStats($build($driver), $driver->id));
         } catch (ApiException $e) {
             throw $e;
         } catch (\Throwable $e) {

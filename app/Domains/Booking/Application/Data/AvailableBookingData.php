@@ -43,11 +43,37 @@ final class AvailableBookingData extends BaseData
         public ?int $remainingDays,
         /** Le seul nom de client visible avant acceptation. */
         public ?string $parentClientName,
+        /**
+         * Le numéro de la course parente — « Abonnement CTT-XXXXXXXX » sur un enfant,
+         * « Course aller : CTT-XXXXXXXX » sur un retour simple. La vue Blade l'affiche
+         * dans les deux cas ; sans lui, l'agent ne sait pas à quoi la course se rattache.
+         */
+        public ?string $parentBookingNumber,
+        /** L'horaire de la course aller, affiché sur un retour simple. */
+        public ?string $parentPickupAt,
+        /**
+         * Cet agent peut-il révoquer cette course ?
+         *
+         * ⚠️ Transposé du Blade au caractère près :
+         * `@if ($isChild && $booking->subscription_driver_id === auth()->user()->driver?->id)`.
+         * On ne révoque QUE les enfants d'abonnement dont on est le titulaire — jamais un
+         * abonnement parent, qui s'accepte comme une course ordinaire, ni une course
+         * retour. Le titulaire voit ensuite les enfants générés par le cron, et ce sont
+         * eux qu'il peut rendre.
+         */
+        public bool $canBeRevoked,
     ) {}
 
-    /** Attend une course ayant chargé `parentBooking.user`. */
-    public static function fromModel(Booking $booking): self
+    /**
+     * Attend une course ayant chargé `parentBooking.user`.
+     *
+     * `$driverId` est celui de l'agent qui REGARDE : `canBeRevoked` en dépend, et le
+     * calculer sans lui donnerait le même bouton à tout le monde.
+     */
+    public static function fromModel(Booking $booking, ?string $driverId = null): self
     {
+        $parent = $booking->parentBooking;
+
         return new self(
             id: $booking->id,
             tripType: $booking->trip_type,
@@ -66,6 +92,11 @@ final class AvailableBookingData extends BaseData
             days: $booking->days,
             remainingDays: $booking->remaining_days,
             parentClientName: self::nomDuClientParent($booking),
+            parentBookingNumber: $parent?->booking_number,
+            parentPickupAt: $parent ? self::pickupAt($parent) : null,
+            canBeRevoked: $booking->is_subscription_child
+                && $driverId !== null
+                && $booking->subscription_driver_id === $driverId,
         );
     }
 
