@@ -230,41 +230,6 @@ class VehicleService
     }
 
     // Récupère les véhicules d'un propriétaire avec statistiques (contrat, paiements par mois, pauses)
-    public function getOwnerVehiclesWithStats(string $ownerId)
-    {
-        $vehicles = Vehicle::where('owner_id', $ownerId)
-            ->with(['activeVehicleContract', 'activePause'])
-            ->latest()
-            ->get();
-
-        return $vehicles->map(function (Vehicle $vehicle) {
-            $contract = $vehicle->activeVehicleContract;
-
-            return (object) [
-                'vehicle'         => $vehicle,
-                'contract'        => $contract,
-                'total_paid'      => $contract?->total_paid ?? 0,
-                'remaining'       => $contract?->remaining_amount ?? 0,
-                'progress'        => $contract?->progress_percentage ?? 0,
-                'active_pause'    => $vehicle->activePause,
-
-                // Contrat véhicule — mois, montant journalier, fin ajustée
-                'months_elapsed'      => $contract?->months_elapsed ?? 0,
-                'months_remaining'    => $contract?->months_remaining ?? 0,
-                'daily_net_amount'    => $contract?->daily_net_amount ?? 0,
-                'planned_end_date'    => $contract?->planned_end_date,
-                'start_date'          => $contract?->start_date,
-                'extended_end_date'   => $contract?->extended_end_date,
-
-                // Cumul pauses (tous agents)
-                'total_contract_days'     => $contract?->total_contract_days ?? 0,
-                'total_pause_days_taken'  => $contract?->total_pause_days_taken ?? 0,
-                'remaining_contract_days' => $contract?->remaining_contract_days ?? 0,
-                'pause_usage_percentage'  => $contract?->pause_usage_percentage ?? 0,
-            ];
-        });
-    }
-
     // ── Méthodes privées ──────────────────────────────────────────
 
     private function resolveOwner(string $mode, array $data): string

@@ -11,9 +11,13 @@ use Illuminate\Support\Collection;
 /**
  * Le récapitulatif mensuel d'un contrat véhicule.
  *
- * Transposition à l'identique d'OwnerVehicleController::buildMonthlyRecap, du chemin
- * Blade. Rangée dans Finance parce qu'elle répond à une question d'argent ; elle lit du
- * Fleet (pauses véhicule) et du Workforce (congés d'agent) pour y répondre.
+ * Transposition à l'identique de ce qu'OwnerVehicleController::buildMonthlyRecap
+ * calculait sur le chemin Blade. Ce contrôleur a été supprimé à la bascule du
+ * 2026-09-18 ; les chiffres ont été confrontés un à un entre les deux écrans, sur un
+ * véhicule réel de staging, avant de le retirer.
+ *
+ * Rangée dans Finance parce qu'elle répond à une question d'argent ; elle lit du Fleet
+ * (pauses véhicule) et du Workforce (congés d'agent) pour y répondre.
  *
  * Trois règles portées par le code d'origine, à ne pas perdre :
  *
