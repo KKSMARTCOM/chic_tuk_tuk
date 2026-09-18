@@ -87,30 +87,58 @@ class StartBookingTest extends TestCase
         $this->service()->start($visee->id, $driver->id);
     }
 
-    public function test_une_course_anterieure_du_MEME_JOUR_ne_bloque_pas(): void
+    public function test_une_course_anterieure_du_meme_jour_bloque_aussi_le_demarrage(): void
     {
-        // ⚠️ Ce test verrouille un DÉFAUT du code existant, pas une règle voulue.
+        // Ce cas ne passait PAS avant le 2026-09-18 : hasBlockingPreviousBookings()
+        // comparait une chaîne rendue par PostgreSQL — « 2026-09-19 07:00:00 » — à une
+        // chaîne rendue par PHP depuis un Carbon — « 2026-09-19 00:00:00 10:00 ». La
+        // comparaison lexicographique butait au douzième caractère ('7' > '0'), et une
+        // course du même jour n'était jamais vue comme antérieure.
         //
-        // hasBlockingPreviousBookings() compare deux chaînes qui ne sont pas construites
-        // de la même façon :
-        //   - à gauche, SQL : CONCAT(pickup_date, ' ', pickup_time) → "2026-09-19 07:00:00"
-        //   - à droite, PHP : $booking->pickup_date . ' ' . $booking->pickup_time
-        //
-        // `pickup_date` est casté en `date`, donc en Carbon, et sa conversion en chaîne
-        // rend "2026-09-19 00:00:00". Le côté droit vaut donc
-        // "2026-09-19 00:00:00 10:00" — une date, minuit, puis l'heure collée derrière.
-        //
-        // La comparaison lexicographique bute alors au douzième caractère : '7' > '0'.
-        // Une course du même jour à 07:00 n'est PAS vue comme antérieure à celle de
-        // 10:00. Seul un jour strictement antérieur bloque.
-        //
-        // Transposé tel quel, signalé dans le plan (écart E8). Le corriger changerait
-        // qui peut démarrer quoi, et mérite sa propre décision.
+        // Un agent pouvait donc démarrer sa course de 10:00 en laissant celle de 07:00
+        // en plan — exactement ce que ce refus existe pour empêcher. Corrigé.
         $driver = Driver::factory()->create();
         Booking::factory()->confirmed($driver)->create([
             'pickup_date' => now()->addDay()->toDateString(),
             'pickup_time' => '07:00',
         ]);
+        $visee = Booking::factory()->confirmed($driver)->create([
+            'pickup_date' => now()->addDay()->toDateString(),
+            'pickup_time' => '10:00',
+        ]);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Vous devez terminer ou annuler toutes les courses précédentes avant de démarrer celle-ci.');
+
+        $this->service()->start($visee->id, $driver->id);
+    }
+
+    public function test_une_course_POSTERIEURE_du_meme_jour_ne_bloque_pas(): void
+    {
+        // Le garde-fou du correctif : sans lui, une comparaison trop large bloquerait
+        // tout, et les tests de refus ci-dessus passeraient encore — pour la mauvaise
+        // raison.
+        $driver = Driver::factory()->create();
+        Booking::factory()->confirmed($driver)->create([
+            'pickup_date' => now()->addDay()->toDateString(),
+            'pickup_time' => '17:00',
+        ]);
+        $visee = Booking::factory()->confirmed($driver)->create([
+            'pickup_date' => now()->addDay()->toDateString(),
+            'pickup_time' => '10:00',
+        ]);
+
+        $this->service()->start($visee->id, $driver->id);
+
+        $this->assertSame('in_progress', $visee->fresh()->status);
+    }
+
+    public function test_la_course_visee_ne_se_bloque_pas_elle_meme(): void
+    {
+        // La course visée figure dans $driver->bookings() et porte exactement le même
+        // repère qu'elle-même. C'est la comparaison STRICTE qui l'exclut ; passer à
+        // `<=` ferait qu'aucune course ne pourrait plus jamais démarrer.
+        $driver = Driver::factory()->create();
         $visee = Booking::factory()->confirmed($driver)->create([
             'pickup_date' => now()->addDay()->toDateString(),
             'pickup_time' => '10:00',

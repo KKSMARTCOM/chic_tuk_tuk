@@ -11,9 +11,8 @@ use Illuminate\Support\Facades\DB;
  *
  * ⚠️ Deux refus qui se ressemblent et n'ont pas la même cause : une course déjà
  * `in_progress`, et une course antérieure non soldée. Le second repose sur
- * Driver::hasBlockingPreviousBookings(), dont la comparaison ignore les courses
- * antérieures du MÊME JOUR — défaut existant, transposé tel quel et verrouillé par les
- * tests de caractérisation.
+ * Driver::hasBlockingPreviousBookings(), dont la comparaison a été corrigée le
+ * 2026-09-18 — elle ignorait jusque-là les courses antérieures du même jour.
  */
 final class StartBooking
 {
