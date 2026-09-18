@@ -19,15 +19,21 @@ use Illuminate\Database\Seeder;
  * ->option('driver')` lèverait une InvalidArgumentException. À défaut, le seeder demande
  * interactivement.
  *
- * Il refuse de s'exécuter hors des environnements `local` et `staging` : un seeder qui
- * crée des courses `pending` en production les rendrait visibles d'agents réels.
+ * ⚠️ La garde REFUSE LA PRODUCTION au lieu d'autoriser une liste d'environnements. Une
+ * liste blanche `['local', 'staging']` paraissait plus sûre et ne l'était pas :
+ * `api-staging` tourne en réalité avec `APP_ENV=development`, donc le seeder s'y serait
+ * tu poliment sans rien créer, et la vérification en ligne aurait été impossible à mener
+ * sans qu'on comprenne pourquoi. Constaté sur la sonde de santé le 2026-09-18.
+ *
+ * Refuser explicitement ce qui est dangereux couvre les noms d'environnement qu'on ne
+ * connaît pas ; autoriser une liste ne couvre que ceux auxquels on a pensé.
  */
 class DriverScenarioSeeder extends Seeder
 {
     public function run(): void
     {
-        if (! app()->environment(['local', 'staging'])) {
-            $this->command->error('DriverScenarioSeeder est réservé à local et staging.');
+        if (app()->isProduction() || app()->environment(['production', 'prod'])) {
+            $this->command->error('DriverScenarioSeeder ne doit JAMAIS tourner en production.');
 
             return;
         }
