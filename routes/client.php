@@ -32,13 +32,15 @@ Route::middleware(['auth:sanctum', 'profil:client'])->prefix('client')->name('cl
 | `leaves/{vehicle}` mène à `.../pauses` : l'écran affichait les pauses du véhicule et
 | non les congés d'un agent, et l'URL cesse ici de mentir.
 |
-| ⚠️ Conséquence assumée : le front a sa propre authentification (jeton Bearer en
-| localStorage, sur un autre domaine). Un propriétaire qui se connecte au Blade est
-| redirigé ici, puis renvoyé vers l'écran de connexion du front. Deux connexions, donc,
-| tant que les deux applications coexistent.
+| ⚠️ Ces renvois sont PUBLICS, et ce n'est pas un oubli. Gardés par `auth:sanctum` +
+| `profil:owner`, comme ils l'ont été le temps d'une journée, ils étaient inatteignables
+| par la seule personne qu'ils servent : un propriétaire sans session Blade était renvoyé
+| vers `/login`, où son profil n'est pas proposé — cul-de-sac. Une adresse de
+| réexpédition n'a rien à protéger : elle ne révèle que l'URL que la personne a
+| elle-même tapée, et le front applique sa propre authentification à l'arrivée.
 |
 */
-Route::middleware(['auth:sanctum', 'profil:owner'])->prefix('owner')->name('owner.')->group(function () {
+Route::prefix('owner')->name('owner.')->group(function () {
     Route::get('/dashboard', [OwnerRedirectController::class, 'dashboard'])->name('dashboard');
     Route::get('/vehicles/{vehicle}', [OwnerRedirectController::class, 'vehicle'])->name('vehicles.show');
     Route::get('leaves/{vehicle}', [OwnerRedirectController::class, 'pauses'])->name('leaves.show');

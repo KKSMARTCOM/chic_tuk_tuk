@@ -23,16 +23,13 @@ class AuthController extends Controller
         return view('pages.auth.login');
     }
 
-    public function showOwnerLoginForm()
-    {
-        return view('pages.auth.owner-login');
-    }
-
     public function loginStore(Request $request)
     {
         try {
             $credentials = $request->validate([
-                'profil'    => ['required', 'string', 'in:admin,client,driver,owner'],
+                // `owner` retiré le 2026-09-18 : son espace vit sur le front Nuxt, et
+                // une session Blade de propriétaire ne donnerait accès à aucun écran.
+                'profil'    => ['required', 'string', 'in:admin,client,driver'],
                 'email'    => ['required', 'email'],
                 'password' => [
                     'required',

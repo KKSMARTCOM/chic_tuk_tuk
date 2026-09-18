@@ -19,6 +19,19 @@ use Illuminate\Http\RedirectResponse;
  */
 class OwnerRedirectController extends Controller
 {
+    /**
+     * L'ancienne page de connexion dédiée au propriétaire.
+     *
+     * C'était le SEUL chemin par lequel un propriétaire pouvait s'authentifier sur le
+     * Blade — la page générique ne propose que Client, Agent et Administrateur. Le
+     * renvoyer ici est ce qui supprime la double connexion : il s'authentifie sur le
+     * front, une fois, et n'ouvre plus de session Blade devenue sans objet.
+     */
+    public function login(): RedirectResponse
+    {
+        return $this->toFront('/login');
+    }
+
     public function dashboard(): RedirectResponse
     {
         return $this->toFront('/owner/dashboard');

@@ -98,9 +98,12 @@ class AuthService
             'driver' => redirect()->route('driver.dashboard')
                 ->with('success', 'Connexion réussie en tant que conducteur.')
                 ->cookie($cookie),
-            'owner'  => redirect()->route('owner.dashboard')
-                ->with('success', 'Connexion réussie.')
-                ->cookie($cookie),
+            // Inatteignable depuis le 2026-09-18 : `owner` ne fait plus partie des
+            // profils acceptés par la validation de `loginStore`. Conservée comme
+            // mesure défensive, au même titre que le cas `wait` de `resolveGuard` côté
+            // front — si un chemin non prévu y menait, il vaut mieux renvoyer vers la
+            // connexion du front que d'ouvrir une session qui ne mène à aucun écran.
+            'owner'  => redirect()->away(config('app.front_app_url').'/login'),
             default  => redirect()->route('client.dashboard')
                 ->with('success', 'Connexion réussie.')
                 ->cookie($cookie),

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\PricingController;
+use App\Http\Controllers\Client\OwnerRedirectController;
 use App\Http\Controllers\Web\AuthController;
 use App\Http\Controllers\Web\BookingController;
 use App\Http\Controllers\Web\SettingsController;
@@ -18,7 +19,9 @@ Route::post('/bookings', [BookingController::class, 'store'])->name('bookings.st
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-    Route::get('/owner/login', [AuthController::class, 'showOwnerLoginForm'])->name('owner.login');
+    // L'espace propriétaire vit sur le front Nuxt depuis la Phase 2 : sa page de
+    // connexion y renvoie, au lieu d'ouvrir une session Blade qui ne mène à aucun écran.
+    Route::get('/owner/login', [OwnerRedirectController::class, 'login'])->name('owner.login');
     Route::post('/login-store', [AuthController::class, 'loginStore'])->name('login.store');
 });
 
