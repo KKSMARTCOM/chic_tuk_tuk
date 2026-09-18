@@ -95,6 +95,43 @@ class CreatePublicBookingData extends BaseData
                 );
             }
 
+            // Et le PREMIER jour doit tomber dans ces jours de circulation.
+            //
+            // La règle existait déjà, dans calculateEndDate() : elle levait une
+            // \Exception générique depuis BookingService, que le contrôleur public
+            // remplaçait par « La réservation n'a pas pu être enregistrée. Vérifiez
+            // votre trajet et réessayez. » — un message qui envoie sur une fausse piste.
+            // Signalé le 2026-09-18 par quelqu'un qui a dû ouvrir l'application Blade
+            // pour comprendre pourquoi sa réservation était refusée.
+            //
+            // La vérifier ICI la rend visible : elle ressort en 422 sur `pickup_date`,
+            // avec le champ fautif et la cause.
+            if (
+                (int) ($input['days'] ?? 1) > 1
+                && ! empty($input['week_days'])
+                && ! empty($input['pickup_date'])
+            ) {
+                $jours = WeekDays::tryFrom($input['week_days']);
+
+                try {
+                    $depart = Carbon::parse($input['pickup_date']);
+                } catch (\Throwable) {
+                    return; // format déjà signalé par les règles de base
+                }
+
+                // `daysOfWeek()` suit la convention Carbon — dimanche = 0, PAS l'ISO.
+                // C'est la même table que calculateEndDate() : les deux doivent rester
+                // d'accord, sinon la validation laisserait passer ce que le service
+                // refuse ensuite.
+                if ($jours && ! in_array($depart->dayOfWeek, $jours->daysOfWeek(), true)) {
+                    $validator->errors()->add(
+                        'pickup_date',
+                        'Le premier jour ne fait pas partie des jours de circulation choisis ('
+                        .$jours->label().'). Choisissez une autre date de départ.',
+                    );
+                }
+            }
+
             // Anticipation minimale de 24 heures.
             if (empty($input['pickup_date']) || empty($input['pickup_time'])) {
                 return;

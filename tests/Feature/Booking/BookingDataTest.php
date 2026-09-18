@@ -119,4 +119,68 @@ class BookingDataTest extends TestCase
 
         $this->assertSame(42, $json['duration_minutes']);
     }
+
+    public function test_on_ne_revoque_que_les_enfants_d_abonnement_dont_on_est_titulaire(): void
+    {
+        // Transposé du Blade au caractère près :
+        //   @if ($isChild && $booking->subscription_driver_id === auth()->user()->driver?->id)
+        //
+        // On n'accepte PAS un abonnement parent pour le révoquer : on le prend comme une
+        // course ordinaire, et le titulaire voit ensuite les enfants générés par le cron.
+        // Ce sont eux, et eux seuls, qu'il peut rendre.
+        $titulaire = Driver::factory()->create();
+        $autre = Driver::factory()->create();
+        $parent = Booking::factory()->subscriptionParent()->linkedToSubscriptionDriver($titulaire)->create();
+
+        $enfant = Booking::factory()->subscriptionChild($parent)
+            ->linkedToSubscriptionDriver($titulaire)->create()->fresh();
+
+        // L'enfant, vu par son titulaire : révocable.
+        $this->assertTrue(
+            AvailableBookingData::fromModel($enfant, $titulaire->id)->toArray()['can_be_revoked'],
+            "Le titulaire doit pouvoir révoquer l'enfant d'abonnement qui lui est lié."
+        );
+
+        // Le même enfant, vu par un autre agent : pas révocable.
+        $this->assertFalse(
+            AvailableBookingData::fromModel($enfant, $autre->id)->toArray()['can_be_revoked'],
+            "Un autre agent ne révoque pas l'enfant d'abonnement d'autrui."
+        );
+
+        // L'abonnement PARENT, vu par son titulaire : PAS révocable.
+        $this->assertFalse(
+            AvailableBookingData::fromModel($parent->fresh(), $titulaire->id)->toArray()['can_be_revoked'],
+            "Un abonnement parent ne se révoque pas : il s'accepte comme une course."
+        );
+
+        // Une course unique : pas révocable non plus.
+        $this->assertFalse(
+            AvailableBookingData::fromModel(Booking::factory()->create(), $titulaire->id)->toArray()['can_be_revoked']
+        );
+    }
+
+    public function test_la_course_parente_est_identifiee_pour_l_ecran(): void
+    {
+        // Le Blade affiche « Abonnement CTT-XXXXXXXX » sur un enfant et
+        // « Course aller : CTT-XXXXXXXX · <date> » sur un retour simple. Sans ces
+        // champs, l'agent ne sait pas à quoi la course se rattache.
+        $aller = Booking::factory()->roundTrip('18:00')->create([
+            'pickup_date' => '2026-10-05',
+            'pickup_time' => '08:00',
+        ]);
+        $retour = Booking::factory()->returnOf($aller)->create()->fresh();
+
+        $json = AvailableBookingData::fromModel($retour)->toArray();
+
+        $this->assertSame($aller->booking_number, $json['parent_booking_number']);
+        $this->assertSame('2026-10-05T08:00:00', $json['parent_pickup_at']);
+    }
+
+    public function test_une_course_sans_parent_ne_porte_aucune_reference(): void
+    {
+        $json = AvailableBookingData::fromModel(Booking::factory()->create())->toArray();
+
+        $this->assertNull($json['parent_booking_number']);
+        $this->assertNull($json['parent_pickup_at']);
+    }
 }
