@@ -16,27 +16,34 @@ use Illuminate\Support\Str;
  *     php artisan db:seed --class=DriverScenarioSeeder
  *
  * Sans argument, il LISTE les agents et demande lequel utiliser : personne ne connaît
- * un UUID de tête, et la première tentative de lancement a échoué pour cette seule
- * raison. On peut aussi le désigner par son e-mail, son nom ou son UUID :
+ * un UUID de tête. On peut aussi le désigner par son e-mail, son nom ou son UUID :
  *
  *     SCENARIO_DRIVER=agent@exemple.bj php artisan db:seed --class=DriverScenarioSeeder
  *
- * L'identifiant passe par une variable d'environnement et non par une option de ligne de
- * commande : `db:seed` ne déclare pas d'option `--driver`, et `$this->command
- * ->option('driver')` lèverait une InvalidArgumentException. À défaut, le seeder demande
- * interactivement.
+ * ⚠️ AUCUNE FABRIQUE ICI, et ce n'est pas un choix de style.
  *
- * ⚠️ La garde REFUSE LA PRODUCTION au lieu d'autoriser une liste d'environnements. Une
- * liste blanche `['local', 'staging']` paraissait plus sûre et ne l'était pas :
- * `api-staging` tourne en réalité avec `APP_ENV=development`, donc le seeder s'y serait
- * tu poliment sans rien créer, et la vérification en ligne aurait été impossible à mener
- * sans qu'on comprenne pourquoi. Constaté sur la sonde de santé le 2026-09-18.
+ * `Illuminate\Database\Eloquent\Factories\Factory::__construct` fait
+ * `$this->faker = $this->withFaker()` INCONDITIONNELLEMENT : instancier une fabrique
+ * résout `Faker\Generator` par le conteneur, que sa `definition()` appelle `fake()` ou
+ * non. Or `fakerphp/faker` est en `require-dev` et le Dockerfile déploie avec
+ * `composer install --no-dev` — d'où « Class "Faker\Factory" not found » levée depuis
+ * `DatabaseServiceProvider`. Retirer `fake()` des définitions ne suffit donc pas : il
+ * faut n'appeler aucune fabrique du tout.
  *
- * Refuser explicitement ce qui est dangereux couvre les noms d'environnement qu'on ne
- * connaît pas ; autoriser une liste ne couvre que ceux auxquels on a pensé.
+ * Les courses sont créées par `Booking::create()`, sur un socle explicite. La
+ * correspondance avec les formes que `ListAvailableBookings` distingue est verrouillée
+ * par `DriverScenarioSeederTest`, qui compare ce que le seeder produit à ce que l'action
+ * montre réellement — les deux ne partageant aucun code, une divergence se verrait.
+ *
+ * ⚠️ Il refuse la production plutôt que d'autoriser une liste d'environnements :
+ * `api-staging` tourne en réalité avec `APP_ENV=development`, et une liste blanche
+ * `['local', 'staging']` l'aurait fait taire sur la seule machine où il sert.
  */
 class DriverScenarioSeeder extends Seeder
 {
+    /** Repère posé dans `special_requests`, seul champ libre qu'aucune requête de visibilité ne lit. */
+    private const MARQUE = '[SCENARIO]';
+
     public function run(): void
     {
         if (app()->isProduction() || app()->environment(['production', 'prod'])) {
@@ -58,87 +65,190 @@ class DriverScenarioSeeder extends Seeder
         if (! $autre) {
             $this->command->error(
                 'Il faut au moins DEUX agents en base : le second porte l\'abonnement '
-                .'qui doit rester invisible à l\'agent de test.',
+                .'qui doit rester invisible à l\'agent de test.'
             );
 
             return;
         }
 
-        $heure = fn (int $n) => sprintf('%02d:00', 6 + $n);
+        $this->creerLesFormes($driver, $autre);
 
-        // ⚠️ `user_id` est fourni EXPLICITEMENT — ici null, la colonne étant nullable.
-        // BookingFactory pose sinon `User::factory()`, une valeur paresseuse qui ne
-        // s'évalue que faute de colonne fournie… et UserFactory, elle, appelle fake(),
-        // absent hors développement. Le nom du client vient de `client_name`, que les
-        // écrans lisent en premier.
-        $marque = fn (string $forme) => [
-            'special_requests' => "[SCENARIO] {$forme}",
-            'user_id' => null,
-            'client_name' => 'Client de scénario',
-        ];
-
-        // 1 — course unique aller simple : visible de tous.
-        Booking::factory()->create($marque('unique_simple') + ['pickup_time' => $heure(1)]);
-
-        // 2 et 3 — course unique aller-retour, et sa course retour cachée sans titulaire.
-        $allerRetour = Booking::factory()->roundTrip('20:00')
-            ->create($marque('unique_aller_retour') + ['pickup_time' => $heure(2)]);
-        Booking::factory()->returnOf($allerRetour)
-            ->create($marque('retour_cachee_libre') + ['pickup_time' => $heure(3)]);
-
-        // 4 — course retour cachée après acceptation de l'aller par l'agent de test.
-        $allerPris = Booking::factory()->roundTrip('21:00')->confirmed($driver)
-            ->create($marque('aller_pris') + ['pickup_time' => $heure(4)]);
-        Booking::factory()->returnOf($allerPris)->linkedToSubscriptionDriver($driver)
-            ->create($marque('retour_cachee_prise') + ['pickup_time' => $heure(5)]);
-
-        // 5 — abonnement parent sans titulaire.
-        Booking::factory()->subscriptionParent()
-            ->create($marque('abo_parent_libre') + ['pickup_time' => $heure(6)]);
-
-        // 6 — abonnement parent lié à l'agent de test.
-        $aboLie = Booking::factory()->subscriptionParent()->linkedToSubscriptionDriver($driver)
-            ->create($marque('abo_parent_lie') + ['pickup_time' => $heure(7)]);
-
-        // 7 — enfant d'abonnement lié à l'agent de test.
-        Booking::factory()->subscriptionChild($aboLie)->linkedToSubscriptionDriver($driver)
-            ->create($marque('abo_enfant_lie') + ['pickup_time' => $heure(8)]);
-
-        // 8 — enfant d'abonnement révoqué : redevenu libre.
-        Booking::factory()->subscriptionChild($aboLie)->revoked()
-            ->create($marque('abo_enfant_revoque') + ['pickup_time' => $heure(9)]);
-
-        // 9 — course retour d'abonnement liée à l'agent de test.
-        Booking::factory()->returnOf($aboLie)->linkedToSubscriptionDriver($driver)
-            ->create($marque('abo_retour_lie') + ['pickup_time' => $heure(10)]);
-
-        // 10 — course retour révoquée.
-        Booking::factory()->returnOf($aboLie)->revoked()
-            ->create($marque('abo_retour_revoque') + ['pickup_time' => $heure(11)]);
-
-        // Un abonnement lié à QUELQU'UN D'AUTRE : c'est lui qui prouve, en ligne, que
-        // l'agent de test ne voit pas l'abonnement d'un autre.
-        Booking::factory()->subscriptionParent()->linkedToSubscriptionDriver($autre)
-            ->create($marque('abo_d_un_autre_agent') + ['pickup_time' => $heure(12)]);
-
-        // DOUZE créations, pour DIX formes : la matrice compte dix formes, auxquelles
-        // s'ajoutent la course aller déjà acceptée qui porte la forme n°4, et
-        // l'abonnement d'un autre agent qui doit rester invisible. Le compte annoncé
-        // était de onze — il était faux, et un message faux trompe son lecteur.
-        $total = Booking::where('special_requests', 'LIKE', '[SCENARIO]%')->count();
+        $total = Booking::where('special_requests', 'LIKE', self::MARQUE.'%')->count();
 
         $this->command->info("{$total} courses de scénario créées pour l'agent {$driver->id}.");
-        $this->command->info('Elles portent « [SCENARIO] » dans special_requests.');
-        $this->command->info('Pour les retirer : DELETE FROM bookings WHERE special_requests LIKE \'[SCENARIO]%\';');
+        $this->command->info('Elles portent « '.self::MARQUE.' » dans special_requests.');
+        $this->command->info(
+            'Pour les retirer : DELETE FROM bookings WHERE special_requests LIKE \''.self::MARQUE.'%\';'
+        );
+    }
+
+    /**
+     * Les douze créations : les dix formes de la matrice, plus la course aller déjà
+     * acceptée qui porte la forme n°4, plus l'abonnement d'un autre agent.
+     */
+    private function creerLesFormes(Driver $driver, Driver $autre): void
+    {
+        // 1 — course unique aller simple : visible de tous.
+        $this->course('unique_simple', ['pickup_time' => $this->heure(1)]);
+
+        // 2 et 3 — course unique aller-retour, et sa course retour cachée sans titulaire.
+        $allerRetour = $this->course('unique_aller_retour', [
+            'pickup_time' => $this->heure(2),
+            'round_trip' => true,
+            'return_time' => '20:00',
+        ]);
+        $this->courseRetour('retour_cachee_libre', $allerRetour, ['pickup_time' => $this->heure(3)]);
+
+        // 4 et 5 — un aller déjà accepté, et sa course retour réservée à cet agent.
+        $allerPris = $this->course('aller_pris', [
+            'pickup_time' => $this->heure(4),
+            'round_trip' => true,
+            'return_time' => '21:00',
+            'status' => 'confirmed',
+            'driver_id' => $driver->id,
+        ]);
+        $this->courseRetour('retour_cachee_prise', $allerPris, [
+            'pickup_time' => $this->heure(5),
+            'subscription_driver_id' => $driver->id,
+        ]);
+
+        // 6 — abonnement parent sans titulaire : visible de tous.
+        $this->abonnement('abo_parent_libre', ['pickup_time' => $this->heure(6)]);
+
+        // 7 — abonnement parent lié à l'agent de test : lui seul.
+        $aboLie = $this->abonnement('abo_parent_lie', [
+            'pickup_time' => $this->heure(7),
+            'subscription_driver_id' => $driver->id,
+        ]);
+
+        // 8 — enfant d'abonnement lié à l'agent de test : lui seul.
+        $this->course('abo_enfant_lie', [
+            'pickup_time' => $this->heure(8),
+            'parent_booking_id' => $aboLie->id,
+            'subscription_driver_id' => $driver->id,
+        ]);
+
+        // 9 — enfant d'abonnement révoqué : redevenu libre.
+        $this->course('abo_enfant_revoque', [
+            'pickup_time' => $this->heure(9),
+            'parent_booking_id' => $aboLie->id,
+            'is_revoked' => true,
+            'revoked_at' => now()->subHour(),
+        ]);
+
+        // 10 — course retour d'abonnement liée à l'agent de test.
+        $this->courseRetour('abo_retour_lie', $aboLie, [
+            'pickup_time' => $this->heure(10),
+            'subscription_driver_id' => $driver->id,
+        ]);
+
+        // 11 — course retour d'abonnement révoquée : libre.
+        $this->courseRetour('abo_retour_revoque', $aboLie, [
+            'pickup_time' => $this->heure(11),
+            'is_revoked' => true,
+            'revoked_at' => now()->subHour(),
+        ]);
+
+        // 12 — l'abonnement d'un AUTRE agent. C'est lui qui prouve, en ligne, qu'aucune
+        // course ne fuit : il ne doit jamais apparaître à l'agent de test.
+        $this->abonnement('abo_d_un_autre_agent', [
+            'pickup_time' => $this->heure(12),
+            'subscription_driver_id' => $autre->id,
+        ]);
+    }
+
+    /** Une heure de prise en charge distincte par forme, pour un ordre déterministe. */
+    private function heure(int $n): string
+    {
+        return sprintf('%02d:00', 6 + $n);
+    }
+
+    /**
+     * Le socle commun d'une course de scénario.
+     *
+     * Les sept colonnes NOT NULL sans défaut y figurent toutes : `from_location`,
+     * `to_location`, `distance`, `base_price`, `total_price`, `pickup_date` et
+     * `pickup_time`. `booking_number` en est absent — `Booking::boot()` l'écrase.
+     *
+     * @param  array<string, mixed>  $attributs
+     */
+    private function course(string $forme, array $attributs = []): Booking
+    {
+        return Booking::create(array_merge([
+            'from_location' => 'Cadjehoun',
+            'to_location' => 'Fidjrosse',
+            'distance' => 5,
+            'base_price' => 5000,
+            'total_price' => 5000,
+            'pickup_date' => now()->addDay()->toDateString(),
+            'pickup_time' => '08:00',
+            'phone' => '+22997000000',
+            // `user_id` reste null : la colonne est nullable, et les écrans lisent
+            // `client_name` en premier.
+            'user_id' => null,
+            'client_name' => 'Client de scénario',
+            'status' => 'pending',
+            'days' => 1,
+            'remaining_days' => 1,
+            'trip_type' => 'go',
+            'round_trip' => false,
+            'is_recurring' => false,
+            'is_revoked' => false,
+            'parent_booking_id' => null,
+            'subscription_driver_id' => null,
+            'driver_id' => null,
+            'commission' => 0,
+            'driver_earning' => 0,
+            'special_requests' => self::MARQUE.' '.$forme,
+        ], $attributs));
+    }
+
+    /**
+     * Une course retour cachée, rattachée à son aller : lieux inversés, heure de retour
+     * du parent, et `trip_type = 'return'`.
+     *
+     * @param  array<string, mixed>  $attributs
+     */
+    private function courseRetour(string $forme, Booking $parent, array $attributs = []): Booking
+    {
+        return $this->course($forme, array_merge([
+            'parent_booking_id' => $parent->id,
+            'trip_type' => 'return',
+            'round_trip' => true,
+            'return_time' => null,
+            'from_location' => $parent->to_location,
+            'to_location' => $parent->from_location,
+            'pickup_date' => $parent->pickup_date,
+        ], $attributs));
+    }
+
+    /**
+     * Un abonnement parent : `is_recurring` vrai et aucun parent.
+     *
+     * ⚠️ Ses ENFANTS, eux, portent `is_recurring = false` — c'est le parent qui est
+     * récurrent. C'est exactement ce que `getIsSubscriptionChildAttribute()` vérifie.
+     *
+     * @param  array<string, mixed>  $attributs
+     */
+    private function abonnement(string $forme, array $attributs = []): Booking
+    {
+        return $this->course($forme, array_merge([
+            'is_recurring' => true,
+            'parent_booking_id' => null,
+            'days' => 20,
+            'remaining_days' => 20,
+            'week_days' => 'lun_ven',
+            'subscription_end_date' => now()->addDays(30)->toDateString(),
+            'next_recurring_date' => now()->addDay(),
+        ], $attributs));
     }
 
     /**
      * L'agent de test, désigné par UUID, e-mail ou nom — ou choisi dans une liste.
      *
      * Le seeder demandait un UUID et rien d'autre, ce qui le rendait inutilisable :
-     * personne n'a un UUID d'agent en tête, et la première tentative de lancement a
-     * échoué pour cette seule raison. Un outil réservé au diagnostic doit se lancer
-     * sans préparation.
+     * personne n'a un UUID d'agent en tête. Un outil réservé au diagnostic doit se
+     * lancer sans préparation.
      */
     private function resoudreAgent(): ?Driver
     {
@@ -170,7 +280,7 @@ class DriverScenarioSeeder extends Seeder
                 '  %s  %-30s %s',
                 $agent->id,
                 $agent->user?->name ?? '(sans nom)',
-                $agent->user?->email ?? '',
+                $agent->user?->email ?? ''
             ));
         }
 
@@ -185,8 +295,7 @@ class DriverScenarioSeeder extends Seeder
      * ⚠️ La colonne `drivers.id` est de type `uuid`, et PostgreSQL est STRICT : lui
      * comparer une adresse e-mail ne rend pas « aucun résultat », cela lève
      * « invalid input syntax for type uuid » et fait échouer toute la requête, y compris
-     * la partie qui aurait trouvé. C'est pourquoi le test d'UUID précède la clause, au
-     * lieu d'être laissé au moteur. Constaté le 2026-09-18.
+     * la partie qui aurait trouvé. D'où le test d'UUID avant la clause.
      */
     private function chercher(string $valeur): ?Driver
     {

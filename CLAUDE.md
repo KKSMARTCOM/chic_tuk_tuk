@@ -451,15 +451,18 @@ est déployée : elle doit être compatible avec l'image précédente (rollback)
 
 ## Points d'attention
 
-- ⚠️ **`fake()` n'existe pas hors développement.** `fakerphp/faker` est en
-  `require-dev` et le `Dockerfile` déploie avec `composer install --no-dev` : tout code
-  atteignable depuis un seeder, une commande ou un contrôleur lève alors
-  « Class "Faker\Factory" not found ». Les **fabriques sont un outil de test** ; celle
-  qu'un seeder utilise doit donc s'en passer (`database/factories/BookingFactory.php`
-  fait varier ses valeurs par un compteur). Attention aussi aux valeurs PARESSEUSES :
-  `'user_id' => User::factory()` ne s'évalue que si l'appelant ne fournit pas la colonne,
-  et réveille alors `UserFactory`, qui appelle `fake()`. Constaté sur staging le
-  2026-09-18.
+- ⚠️ **Aucune fabrique hors des tests.** `fakerphp/faker` est en `require-dev` et le
+  `Dockerfile` déploie avec `composer install --no-dev` ; tout code qui l'atteint lève
+  « Class "Faker\Factory" not found », depuis `DatabaseServiceProvider`.
+  La règle n'est PAS « éviter `fake()` » — elle est plus forte :
+  `Factory::__construct` fait `$this->faker = $this->withFaker()` **inconditionnellement**,
+  donc **instancier** une fabrique résout `Faker\Generator`, que sa `definition()` appelle
+  `fake()` ou non. Un seeder, une commande ou un contrôleur qui doit tourner ailleurs
+  qu'en développement crée ses données par `Model::create()`.
+  Vérifié le 2026-09-18 en deux temps : retirer `fake()` des définitions n'a PAS suffi.
+  `DriverScenarioSeederTest` pose un piège dans le conteneur — toute résolution de
+  `Faker\Generator` y lève — et c'est le seul test qui reproduise la panne ; les
+  vérifications statiques du source, elles, passaient déjà.
 - ⚠️ **PostgreSQL est strict sur le type `uuid`.** Comparer une colonne `uuid` à une
   chaîne qui n'en est pas un ne rend pas « aucun résultat » : cela lève
   `invalid input syntax for type uuid` et fait échouer la requête ENTIÈRE, y compris les
