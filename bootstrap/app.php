@@ -32,6 +32,16 @@ return Application::configure(basePath: dirname(__DIR__))
             'profil'        => \App\Http\Middleware\CheckProfil::class,
             'turnstile'     => \App\Shared\Http\Middleware\VerifyTurnstile::class,
             'token.fresh'   => \App\Shared\Http\Middleware\EnforceTokenFreshness::class,
+            // Sanctum pose le profil comme ability sur le jeton (AuthenticateUser :
+            // `abilities: [$user->profil]`). Cet alias permet de garder un espace par
+            // l'ability plutôt que par la colonne `users.profil` : la restriction voyage
+            // alors avec la crédence elle-même, et un jeton d'administrateur reste
+            // dehors même si on lui attribuait par erreur les permissions `view-own-*`.
+            //
+            // Le refus lève MissingAbilityException, qui hérite d'AuthorizationException
+            // et qu'ApiExceptionRenderer traduit déjà en 403 FORBIDDEN — vérifié dans le
+            // code du paquet, pas supposé.
+            'abilities'     => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
         ]);
 
         // EnforceTokenFreshness doit s'exécuter AVANT l'authentification : le garde de
