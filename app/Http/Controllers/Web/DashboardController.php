@@ -99,28 +99,4 @@ class DashboardController extends Controller
 
         return view('pages.client.dashboard');
     }
-
-    public function owner()
-    {
-        $user = Auth::user();
-
-        $vehicles = $user->vehicles()->with([
-            'activeVehicleContract',
-            'activeDriverContract.driver.user',
-            'activePause',
-        ])->get();
-
-        $stats = $vehicles->map(function ($vehicle) {
-            $contract = $vehicle->activeVehicleContract;
-            return [
-                'vehicle'      => $vehicle,
-                'contract'     => $contract,
-                'stats'        => $contract ? $this->contractService->getStats($contract) : null,
-                'is_on_pause'  => $vehicle->isOnPause(),
-                'active_driver' => $vehicle->activeDriverContract?->driver?->user,
-            ];
-        });
-
-        return view('pages.client.owner.payments', compact('vehicles', 'stats'));
-    }
 }

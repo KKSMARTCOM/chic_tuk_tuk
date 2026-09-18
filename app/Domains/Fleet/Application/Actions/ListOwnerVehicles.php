@@ -9,9 +9,9 @@ use Illuminate\Support\Collection;
 /**
  * Les véhicules d'un propriétaire, avec ce que la liste affiche.
  *
- * Reprend VehicleService::getOwnerVehiclesWithStats, qui renvoyait des objets anonymes
- * destinés à une vue Blade. Ce service reste en place tant que le Blade sert les
- * propriétaires ; il part avec lui, à la bascule.
+ * Reprenait VehicleService::getOwnerVehiclesWithStats, qui renvoyait des objets
+ * anonymes destinés à une vue Blade. Cette méthode a été supprimée à la bascule du
+ * 2026-09-18 : l'espace propriétaire Blade ne fait plus que rediriger ici.
  */
 final class ListOwnerVehicles
 {
