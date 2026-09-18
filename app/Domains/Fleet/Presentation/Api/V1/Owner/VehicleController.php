@@ -4,6 +4,7 @@ namespace App\Domains\Fleet\Presentation\Api\V1\Owner;
 
 use App\Domains\Fleet\Application\Actions\ListOwnerVehicles;
 use App\Domains\Fleet\Application\Data\OwnerVehicleDetailData;
+use App\Domains\Fleet\Application\Data\OwnerVehiclePausesData;
 use App\Models\Vehicle;
 use App\Shared\Http\ApiException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -64,6 +65,32 @@ final class VehicleController
             return response()->json([
                 'message' => 'Ce véhicule n\'a pas pu être chargé. Réessayez.',
                 'code' => 'OWNER_VEHICLE_READ_FAILED',
+            ], 500);
+        }
+    }
+
+    public function pauses(Request $request, string $id): JsonResponse
+    {
+        try {
+            $vehicle = $this->owned($request, $id);
+            $vehicle->load([
+                'pauses' => fn ($query) => $query->orderByDesc('start_date'),
+                'activeVehicleContract',
+            ]);
+
+            return response()->json(OwnerVehiclePausesData::fromModel($vehicle));
+        } catch (ValidationException|ApiException|ModelNotFoundException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            Log::error('Erreur lors de la lecture des pauses d\'un véhicule : '.$e->getMessage(), [
+                'exception' => $e,
+                'user_id' => $request->user()?->id,
+                'vehicle_id' => $id,
+            ]);
+
+            return response()->json([
+                'message' => 'Les pauses de ce véhicule n\'ont pas pu être chargées. Réessayez.',
+                'code' => 'OWNER_PAUSES_READ_FAILED',
             ], 500);
         }
     }
