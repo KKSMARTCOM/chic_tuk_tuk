@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Booking;
 use App\Models\Driver;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 /**
  * Les dix formes de course de la matrice de visibilité, pour la vérification en ligne.
@@ -64,7 +65,17 @@ class DriverScenarioSeeder extends Seeder
         }
 
         $heure = fn (int $n) => sprintf('%02d:00', 6 + $n);
-        $marque = fn (string $forme) => ['special_requests' => "[SCENARIO] {$forme}"];
+
+        // ⚠️ `user_id` est fourni EXPLICITEMENT — ici null, la colonne étant nullable.
+        // BookingFactory pose sinon `User::factory()`, une valeur paresseuse qui ne
+        // s'évalue que faute de colonne fournie… et UserFactory, elle, appelle fake(),
+        // absent hors développement. Le nom du client vient de `client_name`, que les
+        // écrans lisent en premier.
+        $marque = fn (string $forme) => [
+            'special_requests' => "[SCENARIO] {$forme}",
+            'user_id' => null,
+            'client_name' => 'Client de scénario',
+        ];
 
         // 1 — course unique aller simple : visible de tous.
         Booking::factory()->create($marque('unique_simple') + ['pickup_time' => $heure(1)]);
@@ -110,8 +121,15 @@ class DriverScenarioSeeder extends Seeder
         Booking::factory()->subscriptionParent()->linkedToSubscriptionDriver($autre)
             ->create($marque('abo_d_un_autre_agent') + ['pickup_time' => $heure(12)]);
 
-        $this->command->info('Onze courses de scénario créées pour l\'agent '.$driver->id);
+        // DOUZE créations, pour DIX formes : la matrice compte dix formes, auxquelles
+        // s'ajoutent la course aller déjà acceptée qui porte la forme n°4, et
+        // l'abonnement d'un autre agent qui doit rester invisible. Le compte annoncé
+        // était de onze — il était faux, et un message faux trompe son lecteur.
+        $total = Booking::where('special_requests', 'LIKE', '[SCENARIO]%')->count();
+
+        $this->command->info("{$total} courses de scénario créées pour l'agent {$driver->id}.");
         $this->command->info('Elles portent « [SCENARIO] » dans special_requests.');
+        $this->command->info('Pour les retirer : DELETE FROM bookings WHERE special_requests LIKE \'[SCENARIO]%\';');
     }
 
     /**
@@ -127,9 +145,7 @@ class DriverScenarioSeeder extends Seeder
         $recherche = env('SCENARIO_DRIVER') ?: env('SCENARIO_DRIVER_ID');
 
         if ($recherche) {
-            $driver = Driver::where('id', $recherche)
-                ->orWhereHas('user', fn ($q) => $q->where('email', $recherche)->orWhere('name', $recherche))
-                ->first();
+            $driver = $this->chercher($recherche);
 
             if (! $driver) {
                 $this->command->error("Aucun agent ne correspond à « {$recherche} ».");
@@ -160,8 +176,23 @@ class DriverScenarioSeeder extends Seeder
 
         $choix = $this->command->ask('Lequel ? (UUID, e-mail ou nom)');
 
-        return Driver::where('id', $choix)
-            ->orWhereHas('user', fn ($q) => $q->where('email', $choix)->orWhere('name', $choix))
+        return $choix ? $this->chercher($choix) : null;
+    }
+
+    /**
+     * Cherche un agent par UUID, e-mail ou nom.
+     *
+     * ⚠️ La colonne `drivers.id` est de type `uuid`, et PostgreSQL est STRICT : lui
+     * comparer une adresse e-mail ne rend pas « aucun résultat », cela lève
+     * « invalid input syntax for type uuid » et fait échouer toute la requête, y compris
+     * la partie qui aurait trouvé. C'est pourquoi le test d'UUID précède la clause, au
+     * lieu d'être laissé au moteur. Constaté le 2026-09-18.
+     */
+    private function chercher(string $valeur): ?Driver
+    {
+        return Driver::query()
+            ->when(Str::isUuid($valeur), fn ($q) => $q->orWhere('id', $valeur))
+            ->orWhereHas('user', fn ($q) => $q->where('email', $valeur)->orWhere('name', $valeur))
             ->first();
     }
 }
