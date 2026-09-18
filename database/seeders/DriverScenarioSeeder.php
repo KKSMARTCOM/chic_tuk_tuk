@@ -12,7 +12,13 @@ use Illuminate\Database\Seeder;
  * ⚠️ RÉSERVÉ À STAGING. Jamais appelé par DatabaseSeeder ni par une commande planifiée :
  * il se lance à la main.
  *
- *     SCENARIO_DRIVER_ID=<uuid> php artisan db:seed --class=DriverScenarioSeeder
+ *     php artisan db:seed --class=DriverScenarioSeeder
+ *
+ * Sans argument, il LISTE les agents et demande lequel utiliser : personne ne connaît
+ * un UUID de tête, et la première tentative de lancement a échoué pour cette seule
+ * raison. On peut aussi le désigner par son e-mail, son nom ou son UUID :
+ *
+ *     SCENARIO_DRIVER=agent@exemple.bj php artisan db:seed --class=DriverScenarioSeeder
  *
  * L'identifiant passe par une variable d'environnement et non par une option de ligne de
  * commande : `db:seed` ne déclare pas d'option `--driver`, et `$this->command
@@ -38,12 +44,24 @@ class DriverScenarioSeeder extends Seeder
             return;
         }
 
-        $driverId = env('SCENARIO_DRIVER_ID') ?: $this->command->ask(
-            'Identifiant de l\'agent de test (colonne drivers.id)',
-        );
+        $driver = $this->resoudreAgent();
 
-        $driver = Driver::findOrFail($driverId);
-        $autre = Driver::where('id', '!=', $driver->id)->firstOrFail();
+        if (! $driver) {
+            return;
+        }
+
+        // Il faut un SECOND agent : c'est l'abonnement qui lui est lié qui prouve, en
+        // ligne, que l'agent de test ne voit pas l'abonnement d'un autre.
+        $autre = Driver::where('id', '!=', $driver->id)->first();
+
+        if (! $autre) {
+            $this->command->error(
+                'Il faut au moins DEUX agents en base : le second porte l\'abonnement '
+                .'qui doit rester invisible à l\'agent de test.',
+            );
+
+            return;
+        }
 
         $heure = fn (int $n) => sprintf('%02d:00', 6 + $n);
         $marque = fn (string $forme) => ['special_requests' => "[SCENARIO] {$forme}"];
@@ -94,5 +112,56 @@ class DriverScenarioSeeder extends Seeder
 
         $this->command->info('Onze courses de scénario créées pour l\'agent '.$driver->id);
         $this->command->info('Elles portent « [SCENARIO] » dans special_requests.');
+    }
+
+    /**
+     * L'agent de test, désigné par UUID, e-mail ou nom — ou choisi dans une liste.
+     *
+     * Le seeder demandait un UUID et rien d'autre, ce qui le rendait inutilisable :
+     * personne n'a un UUID d'agent en tête, et la première tentative de lancement a
+     * échoué pour cette seule raison. Un outil réservé au diagnostic doit se lancer
+     * sans préparation.
+     */
+    private function resoudreAgent(): ?Driver
+    {
+        $recherche = env('SCENARIO_DRIVER') ?: env('SCENARIO_DRIVER_ID');
+
+        if ($recherche) {
+            $driver = Driver::where('id', $recherche)
+                ->orWhereHas('user', fn ($q) => $q->where('email', $recherche)->orWhere('name', $recherche))
+                ->first();
+
+            if (! $driver) {
+                $this->command->error("Aucun agent ne correspond à « {$recherche} ».");
+
+                return null;
+            }
+
+            return $driver;
+        }
+
+        $agents = Driver::with('user')->get();
+
+        if ($agents->isEmpty()) {
+            $this->command->error('Aucun agent en base. Créez-en un avant de jouer ce seeder.');
+
+            return null;
+        }
+
+        $this->command->info('Agents disponibles :');
+        foreach ($agents as $agent) {
+            $this->command->line(sprintf(
+                '  %s  %-30s %s',
+                $agent->id,
+                $agent->user?->name ?? '(sans nom)',
+                $agent->user?->email ?? '',
+            ));
+        }
+
+        $choix = $this->command->ask('Lequel ? (UUID, e-mail ou nom)');
+
+        return Driver::where('id', $choix)
+            ->orWhereHas('user', fn ($q) => $q->where('email', $choix)->orWhere('name', $choix))
+            ->first();
     }
 }

@@ -240,6 +240,15 @@ final class ReferenceRolesAndPermissionsSeeder extends Seeder
             'description' => 'Accès aux fonctionnalités liées aux réservations et aux trajets',
             'permissions' => [
                 'create-bookings',
+                // Ajoutée le 2026-09-18 : l'agent a un tableau de bord, en Blade comme
+                // dans le front Nuxt, mais le rôle ne portait pas la permission qui le
+                // désigne. La navigation du front se construisant sur les permissions
+                // EFFECTIVES, l'entrée « Tableau de bord » était filtrée et l'agent
+                // n'avait aucun lien vers son propre écran d'accueil.
+                //
+                // N'ouvre rien d'indu : /admin/dashboard et /client/dashboard portent
+                // aussi `profil:admin` et `profil:client`.
+                'view-dashboard',
                 'edit-bookings',
                 'view-bookings',
                 'view-payments',

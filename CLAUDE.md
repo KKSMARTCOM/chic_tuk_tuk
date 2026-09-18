@@ -88,8 +88,14 @@ préexistant, produit un diff massif sans rapport avec la livraison en cours.
 ### User
 
 - profil : admin | client | driver | owner
-- Rôles Spatie : admin (62 permissions), lecteur (41), driver (7), client (6),
+- Rôles Spatie : admin (62 permissions), lecteur (41), driver (8), client (6),
   proprietaire (5) — 66 permissions au total.
+  ⚠️ `driver` est passé de 7 à 8 le 2026-09-18 : `view-dashboard` lui manquait, alors que
+  l'espace agent a un tableau de bord. La navigation du front se construisant sur les
+  permissions EFFECTIVES, l'agent n'avait aucune entrée de menu vers son écran d'accueil.
+  ⚠️ Le rôle `client` a le même défaut — `routes/client.php` garde `/client/dashboard` par
+  `permission:view-dashboard`, que le rôle `client` ne porte pas. Signalé, non corrigé :
+  l'espace client n'est pas encore migré et le corriger sans l'étudier serait un pari.
 - ⚠️ **`lecteur` n'est PAS un rôle en lecture seule**, contrairement à ce que ce fichier
   affirmait et à ce que suggère son libellé de production, « Utilisateur ». Sur ses 41
   permissions, **27 sont des écritures** : `create-drivers`, `edit-drivers`,
